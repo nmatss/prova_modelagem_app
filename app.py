@@ -4,7 +4,7 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify
 from werkzeug.datastructures import MultiDict
 from werkzeug.utils import secure_filename
-from xhtml2pdf import pisa
+# from xhtml2pdf import pisa  # Comentado temporariamente - instalar: pip install xhtml2pdf
 from flask_login import LoginManager, login_required, current_user
 from auth import auth_bp, get_user_by_id
 from admin import admin_bp
@@ -77,67 +77,75 @@ register_error_handlers(app)
 
 
 def gerar_e_salvar_pdf(relatorio_id, evento="CRIADO"):
-    print(f"Iniciando geração de PDF para o relatório ID: {relatorio_id} (Evento: {evento})")
-    
-    relatorio = Relatorio.query.get(relatorio_id)
-    if not relatorio:
-        print(f"!!! ERRO: Relatório com ID {relatorio_id} não encontrado para gerar PDF.")
-        return False
+    """
+    Geração de PDF desabilitada temporariamente.
+    Para habilitar: pip install xhtml2pdf e descomentar import acima
+    """
+    print(f"PDF não gerado (xhtml2pdf não instalado) para relatório ID: {relatorio_id} (Evento: {evento})")
+    return True  # Retornar True para não quebrar o fluxo
 
-    # Preparar dados para o template (mantendo estrutura compatível)
-    referencias_completas = []
-    for ref in relatorio.referencias:
-        ref_dict = {c.name: getattr(ref, c.name) for c in ref.__table__.columns}
-        
-        provas_completas = []
-        for prova in ref.provas:
-            prova_dict = {c.name: getattr(prova, c.name) for c in prova.__table__.columns}
-            
-            prova_dict['fotos'] = {}
-            for foto in prova.fotos:
-                contexto = foto.contexto
-                if contexto not in prova_dict['fotos']:
-                    prova_dict['fotos'][contexto] = []
-                prova_dict['fotos'][contexto].append({c.name: getattr(foto, c.name) for c in foto.__table__.columns})
-            
-            provas_completas.append(prova_dict)
-        
-        ref_dict['provas'] = provas_completas
-        referencias_completas.append(ref_dict)
-
-    assunto_email = f"RELATÓRIO DE PROVA PEÇA PILOTO {evento}! {relatorio.descricao_geral} COLEÇÃO {relatorio.colecao}"
-    nome_ficheiro_pdf = f"{secure_filename(assunto_email)}.pdf"
-    caminho_ficheiro_pdf = os.path.join(app.config['PDF_FOLDER'], nome_ficheiro_pdf)
-
-    html_renderizado = render_template('relatorio_pdf.html', 
-                                       relatorio=relatorio, 
-                                       referencias=referencias_completas)
-
-    def link_callback(uri, rel):
-        if uri.startswith(url_for('serve_upload', filename='')):
-            path_relativo = uri[len(url_for('serve_upload', filename='')):]
-            caminho_final = os.path.join(app.config['UPLOAD_FOLDER'], path_relativo)
-            return caminho_final
-        return uri
-
-    try:
-        with open(caminho_ficheiro_pdf, "w+b") as pdf_file:
-            pisa_status = pisa.CreatePDF(
-                html_renderizado.encode('utf-8'), 
-                dest=pdf_file, 
-                encoding='utf-8',
-                link_callback=link_callback
-            )
-
-        if not pisa_status.err:
-            print(f"\n--- PDF Gerado: {caminho_ficheiro_pdf} ---\n")
-            return True
-        else:
-            print(f"!!! ERRO AO GERAR PDF: {pisa_status.err}")
-            return False
-    except Exception as e:
-        print(f"!!! EXCEÇÃO AO GERAR PDF: {e}")
-        return False
+    # CÓDIGO COMENTADO - Descomente após instalar xhtml2pdf
+    # print(f"Iniciando geração de PDF para o relatório ID: {relatorio_id} (Evento: {evento})")
+    #
+    # relatorio = Relatorio.query.get(relatorio_id)
+    # if not relatorio:
+    #     print(f"!!! ERRO: Relatório com ID {relatorio_id} não encontrado para gerar PDF.")
+    #     return False
+    #
+    # # Preparar dados para o template (mantendo estrutura compatível)
+    # referencias_completas = []
+    # for ref in relatorio.referencias:
+    #     ref_dict = {c.name: getattr(ref, c.name) for c in ref.__table__.columns}
+    #
+    #     provas_completas = []
+    #     for prova in ref.provas:
+    #         prova_dict = {c.name: getattr(prova, c.name) for c in prova.__table__.columns}
+    #
+    #         prova_dict['fotos'] = {}
+    #         for foto in prova.fotos:
+    #             contexto = foto.contexto
+    #             if contexto not in prova_dict['fotos']:
+    #                 prova_dict['fotos'][contexto] = []
+    #             prova_dict['fotos'][contexto].append({c.name: getattr(foto, c.name) for c in foto.__table__.columns})
+    #
+    #         provas_completas.append(prova_dict)
+    #
+    #     ref_dict['provas'] = provas_completas
+    #     referencias_completas.append(ref_dict)
+    #
+    # assunto_email = f"RELATÓRIO DE PROVA PEÇA PILOTO {evento}! {relatorio.descricao_geral} COLEÇÃO {relatorio.colecao}"
+    # nome_ficheiro_pdf = f"{secure_filename(assunto_email)}.pdf"
+    # caminho_ficheiro_pdf = os.path.join(app.config['PDF_FOLDER'], nome_ficheiro_pdf)
+    #
+    # html_renderizado = render_template('relatorio_pdf.html',
+    #                                    relatorio=relatorio,
+    #                                    referencias=referencias_completas)
+    #
+    # def link_callback(uri, rel):
+    #     if uri.startswith(url_for('serve_upload', filename='')):
+    #         path_relativo = uri[len(url_for('serve_upload', filename='')):]
+    #         caminho_final = os.path.join(app.config['UPLOAD_FOLDER'], path_relativo)
+    #         return caminho_final
+    #     return uri
+    #
+    # try:
+    #     with open(caminho_ficheiro_pdf, "w+b") as pdf_file:
+    #         pisa_status = pisa.CreatePDF(
+    #             html_renderizado.encode('utf-8'),
+    #             dest=pdf_file,
+    #             encoding='utf-8',
+    #             link_callback=link_callback
+    #         )
+    #
+    #     if not pisa_status.err:
+    #         print(f"\n--- PDF Gerado: {caminho_ficheiro_pdf} ---\n")
+    #         return True
+    #     else:
+    #         print(f"!!! ERRO AO GERAR PDF: {pisa_status.err}")
+    #         return False
+    # except Exception as e:
+    #     print(f"!!! EXCEÇÃO AO GERAR PDF: {e}")
+    #     return False
 
 @app.route('/')
 @login_required
