@@ -59,12 +59,12 @@
     </div>
     <div class="card-body">
 
-        {% if prova.fotos.desenho %}
+        {% if prova['fotos'].get('desenho') %}
         <div class="mb-3">
             <h6>Desenho do Produto</h6>
             <div class="d-flex flex-wrap gap-2">
-                {% for foto in prova.fotos.desenho %}
-                <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail"
+                {% for foto in prova['fotos']['desenho'] %}
+                <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}" class="img-thumbnail"
                     style="width: 150px; height: 150px; object-fit: cover;">
                 {% endfor %}
             </div>
@@ -96,29 +96,29 @@
         </div>
 
         <div class="row mb-3">
-            {% if prova.fotos.amostra %}
+            {% if prova['fotos'].get('amostra') %}
             <div class="col-md-6">
                 <h6>Fotos da Amostra</h6>
                 <div class="d-flex flex-wrap gap-2">
-                    {% for foto in prova.fotos.amostra %}
+                    {% for foto in prova['fotos']['amostra'] %}
                     <div class="text-center">
-                        <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail"
+                        <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}" class="img-thumbnail"
                             style="width: 100px; height: 100px; object-fit: cover;">
-                        <small class="d-block text-muted">{{ foto.tamanho }}</small>
+                        <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
                     </div>
                     {% endfor %}
                 </div>
             </div>
             {% endif %}
-            {% if prova.fotos.prova_modelo %}
+            {% if prova['fotos'].get('prova_modelo') %}
             <div class="col-md-6">
                 <h6>Fotos na Modelo</h6>
                 <div class="d-flex flex-wrap gap-2">
-                    {% for foto in prova.fotos.prova_modelo %}
+                    {% for foto in prova['fotos']['prova_modelo'] %}
                     <div class="text-center">
-                        <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail"
+                        <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}" class="img-thumbnail"
                             style="width: 100px; height: 100px; object-fit: cover;">
-                        <small class="d-block text-muted">{{ foto.tamanho }}</small>
+                        <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
                     </div>
                     {% endfor %}
                 </div>
@@ -126,7 +126,7 @@
             {% endif %}
         </div>
 
-        {% if prova.time_qualidade or prova.time_estilo or prova.time_modelagem %}
+        {% if prova.time_qualidade or prova.time_estilo or prova.time_modelagem or prova['fotos'].get('qualidade') or prova['fotos'].get('estilo') %}
         <div class="card bg-light mb-3">
             <div class="card-body">
                 <h6 class="card-title">Feedbacks</h6>
@@ -135,11 +135,27 @@
                         <strong><i class="bi bi-clipboard-check"></i> Qualidade</strong>
                         <p class="text-muted small mb-1">{{ prova.time_qualidade or '-' }}</p>
                         <p class="small">{{ prova.comentarios_qualidade or 'Sem comentários.' }}</p>
+                        {% if prova['fotos'].get('qualidade') %}
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            {% for foto in prova['fotos']['qualidade'] %}
+                            <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}" class="img-thumbnail"
+                                style="width: 60px; height: 60px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#fotoModal{{ loop.index }}" role="button">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
                         <strong><i class="bi bi-palette"></i> Estilo</strong>
                         <p class="text-muted small mb-1">{{ prova.time_estilo or '-' }}</p>
                         <p class="small">{{ prova.comentarios_estilo or 'Sem comentários.' }}</p>
+                        {% if prova['fotos'].get('estilo') %}
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            {% for foto in prova['fotos']['estilo'] %}
+                            <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}" class="img-thumbnail"
+                                style="width: 60px; height: 60px; object-fit: cover;">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
                         <strong><i class="bi bi-rulers"></i> Modelagem</strong>
