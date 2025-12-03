@@ -39,7 +39,7 @@
             </div>
             <div class="card-body">
                 <h5 class="card-title">{{ relatorio['descricao_geral'] }}</h5>
-                <p class="card-text text-muted small">Criado em: {{ relatorio['created_at'].split(' ')[0] }}</p>
+                <p class="card-text text-muted small">Criado em: {{ relatorio['created_at'].strftime('%d/%m/%Y') if relatorio['created_at'] else 'N/A' }}</p>
             </div>
             <div class="card-footer bg-transparent border-top-0">
                 <a href="{{ url_for('detalhes_relatorio', id=relatorio.id) }}" class="btn btn-outline-primary w-100">Ver
