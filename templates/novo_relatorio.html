@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Relatório - Prova de Modelagem{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Novo Relatório de Prova</h1>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancelar</a>
+</div>
+
+<form action="{{ url_for('novo_relatorio') }}" method="post" enctype="multipart/form-data">
+
+    <ul class="nav nav-tabs mb-4" id="newReportTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general"
+                type="button" role="tab">Geral</button>
+        </li>
+        {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="{{ tipo }}-tab" data-bs-toggle="tab" data-bs-target="#{{ tipo }}" type="button"
+                role="tab">{{ tipo | capitalize }}</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div class="tab-content" id="newReportTabsContent">
+        <!-- ABA GERAL -->
+        <div class="tab-pane fade show active" id="general" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Informações Gerais</h5>
+                    <div class="mb-3">
+                        <label for="ppt" class="form-label">PPT (apresentação das peças)</label>
+                        <input type="file" class="form-control" id="ppt" name="ppt">
+                    </div>
+                    <div class="mb-3">
+                        <label for="colecao" class="form-label">Coleção</label>
+                        <input type="text" class="form-control" id="colecao" name="colecao" placeholder="Ex: Verão 26"
+                            value="{{ form_data.get('colecao', '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao_geral" class="form-label">Descrição geral do modelo</label>
+                        <input type="text" class="form-control" id="descricao_geral" name="descricao_geral"
+                            placeholder="Ex: PIJAMA ML VISCO UNI DIAMANTE"
+                            value="{{ form_data.get('descricao_geral', '') }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABAS POR TIPO -->
+        {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
+        <div class="tab-pane fade" id="{{ tipo }}" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Referência {{ tipo | capitalize }}</h5>
+
+                    <div class="mb-3">
+                        <label for="ref_{{ tipo }}" class="form-label">Número da Referência</label>
+                        <input type="text" class="form-control" id="ref_{{ tipo }}" name="ref_{{ tipo }}"
+                            placeholder="Digite a referência para habilitar o preenchimento"
+                            value="{{ form_data.get('ref_' + tipo, '') }}">
+                    </div>
+
+                    <div id="detalhes_{{ tipo }}" style="display: none;">
+                        <hr>
+                        <div class="card mb-3 border-success">
+                            <div class="card-header bg-success text-white">Nova Referência - 1ª Prova</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Desenho do produto</label>
+                                    <input type="file" class="form-control" name="fotos_desenho_{{ tipo }}" multiple>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Origem</label>
+                                        <select class="form-select" name="origem_{{ tipo }}">
+                                            <option value=""></option>
+                                            <option value="Asia">Ásia</option>
+                                            <option value="China">China</option>
+                                            <option value="Faccao">Facção</option>
+                                            <option value="Produto Acabado (Brasil)">Produto Acabado (Brasil)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4"><label class="form-label">Fornecedor</label><input type="text"
+                                            class="form-control" name="fornecedor_{{ tipo }}"></div>
+                                    <div class="col-md-4"><label class="form-label">Matéria prima</label><input
+                                            type="text" class="form-control" name="materia_prima_{{ tipo }}"></div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4"><label class="form-label">Composição</label><input type="text"
+                                            class="form-control" name="composicao_{{ tipo }}"></div>
+                                    <div class="col-md-4"><label class="form-label">Gramatura</label><input type="text"
+                                            class="form-control" name="gramatura_{{ tipo }}"></div>
+                                    <div class="col-md-4"><label class="form-label">Aviamentos</label><input type="text"
+                                            class="form-control" name="aviamentos_{{ tipo }}"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Tabela de Medidas</label>
+                                    <input type="file" class="form-control" name="tabela_medidas_{{ tipo }}">
+                                </div>
+
+                                <hr>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Data de recebimento da amostra</label>
+                                        <input type="date" class="form-control" name="data_recebimento_{{ tipo }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Data da prova</label>
+                                        <input type="date" class="form-control" name="data_prova_{{ tipo }}">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 checkbox-group" data-type="{{ tipo }}">
+                                    <label class="form-label d-block">Tamanhos recebidos das amostras</label>
+                                    {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses'],
+                                    'kids': ['1', '2', '4', '6', '8'], 'teen': ['10', '12', '14'], 'adulto': ['PP', 'P',
+                                    'M', 'G', 'GG']} %}
+                                    <div class="btn-group" role="group">
+                                        {% for tamanho in tamanhos_disponiveis[tipo] %}
+                                        <input type="checkbox" class="btn-check size-checkbox"
+                                            id="btn_new_{{ tipo }}_{{ loop.index }}"
+                                            name="tamanhos_recebidos_{{ tipo }}" value="{{ tamanho }}"
+                                            autocomplete="off">
+                                        <label class="btn btn-outline-success"
+                                            for="btn_new_{{ tipo }}_{{ loop.index }}">{{ tamanho }}</label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Informações de medidas das amostras</label>
+                                    <textarea class="form-control" name="info_medidas_{{ tipo }}" rows="3"></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Fotos da amostra</label>
+                                    <div id="placeholder_fotos_amostra_{{ tipo }}"
+                                        class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Fotos da prova (na modelo)</label>
+                                    <div id="placeholder_fotos_prova_modelo_{{ tipo }}"
+                                        class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">Qualidade</div>
+                                            <div class="card-body">
+                                                <div class="mb-2">
+                                                    <label class="form-label">Responsável</label>
+                                                    <input type="text" class="form-control"
+                                                        name="time_qualidade_{{ tipo }}">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Comentários</label>
+                                                    <textarea class="form-control"
+                                                        name="comentarios_qualidade_{{ tipo }}" rows="3"></textarea>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Fotos</label>
+                                                    <input type="file" class="form-control"
+                                                        name="fotos_qualidade_{{ tipo }}" multiple>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">Estilo</div>
+                                            <div class="card-body">
+                                                <div class="mb-2">
+                                                    <label class="form-label">Responsável</label>
+                                                    <input type="text" class="form-control"
+                                                        name="time_estilo_{{ tipo }}">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Comentários</label>
+                                                    <textarea class="form-control" name="comentarios_estilo_{{ tipo }}"
+                                                        rows="3"></textarea>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Fotos</label>
+                                                    <input type="file" class="form-control"
+                                                        name="fotos_estilo_{{ tipo }}" multiple>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Data de liberação - peça lacre</label>
+                                        <input type="date" class="form-control" name="data_lacre_{{ tipo }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Número do lacre</label>
+                                        <input type="text" class="form-control" name="numero_lacre_{{ tipo }}">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Informações adicionais</label>
+                                    <textarea class="form-control" name="info_adicionais_{{ tipo }}"
+                                        rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="d-grid gap-2 mt-4 mb-5">
+        <button type="submit" class="btn btn-primary btn-lg">Salvar Relatório</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Função para mostrar/esconder seções de referência
+        function setupReferenceListener(type) {
+            const inputField = document.getElementById(`ref_${type}`);
+            const detailsSection = document.getElementById(`detalhes_${type}`);
+            const displayField = document.getElementById(`ref_${type}_display`);
+
+            if (!inputField || !detailsSection || !displayField) return;
+
+            const checkVisibility = () => {
+                const refValue = inputField.value;
+                if (refValue.trim() !== '') {
+                    detailsSection.style.display = 'block';
+                    displayField.textContent = refValue;
+                } else {
+                    detailsSection.style.display = 'none';
+                }
+            };
+            inputField.addEventListener('keyup', checkVisibility);
+            checkVisibility(); // Verifica no carregamento da página
+        }
+
+        // Função para criar campos de upload dinâmicos
+        function createUploadField(contexto, type, size, labelText) {
+            const safeSize = size.replace(/\s+/g, '');
+            const fieldId = `dynamic_${contexto}_${type}_${safeSize}`;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'mb-2';
+            wrapper.id = fieldId;
+
+            const label = document.createElement('label');
+            label.className = 'form-label small';
+            label.textContent = `${labelText} (Tamanho: ${size})`;
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.className = 'form-control form-control-sm';
+            input.name = `fotos_${contexto}_${type}_${safeSize}`;
+            input.multiple = true;
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+            return wrapper;
+        }
+
+        function handleSizeChange(event) {
+            const checkbox = event.target;
+            const size = checkbox.value;
+            const checkboxGroup = checkbox.closest('.checkbox-group');
+            if (!checkboxGroup) return;
+
+            const type = checkboxGroup.getAttribute('data-type');
+            const amostraPlaceholder = document.getElementById(`placeholder_fotos_amostra_${type}`);
+            const provaPlaceholder = document.getElementById(`placeholder_fotos_prova_modelo_${type}`);
+
+            if (!amostraPlaceholder || !provaPlaceholder) return;
+
+            const safeSize = size.replace(/\s+/g, '');
+            const fieldIdAmostra = `dynamic_amostra_${type}_${safeSize}`;
+            const fieldIdProva = `dynamic_prova_modelo_${type}_${safeSize}`;
+
+            if (checkbox.checked) {
+                if (!document.getElementById(fieldIdAmostra)) {
+                    const amostraField = createUploadField('amostra', type, size, 'Fotos da amostra');
+                    amostraPlaceholder.appendChild(amostraField);
+                }
+                if (!document.getElementById(fieldIdProva)) {
+                    const provaField = createUploadField('prova_modelo', type, size, 'Fotos da prova, peça na modelo');
+                    provaPlaceholder.appendChild(provaField);
+                }
+            } else {
+                const amostraField = document.getElementById(fieldIdAmostra);
+                if (amostraField) amostraField.remove();
+                const provaField = document.getElementById(fieldIdProva);
+                if (provaField) provaField.remove();
+            }
+        }
+
+        // Inicia os listeners
+        ['baby', 'kids', 'teen', 'adulto'].forEach(setupReferenceListener);
+        document.querySelectorAll('.size-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', handleSizeChange);
+        });
+    });
+</script>
+{% endblock %}

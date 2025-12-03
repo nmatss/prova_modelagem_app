@@ -1,0 +1,203 @@
+/* --- ESTILOS GERAIS --- */
+:root {
+    --cor-puket-rosa: #e6007e;
+    --cor-fundo: #f8f9fa;
+    --cor-texto: #343a40;
+    --cor-sombra: rgba(0, 0, 0, 0.1);
+    --cor-aprovada: #28a745;
+    --cor-reprovada: #dc3545;
+    --cor-comite: #ffc107;
+    --cor-andamento: #17a2b8;
+}
+
+body { 
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; 
+    background-color: var(--cor-fundo); 
+    margin: 0; 
+}
+
+/* --- ESTILOS BASE (MOBILE-FIRST) --- */
+.main-container { 
+    padding: 1em;
+}
+
+.dashboard-header { 
+    text-align: center; 
+    margin-bottom: 2em; 
+}
+
+.dashboard-logo { 
+    max-width: 180px;
+    height: auto; 
+    margin-bottom: 1em; 
+}
+
+h1 { 
+    color: var(--cor-texto); 
+    font-size: 1.8em;
+    font-weight: 700; 
+    margin: 0; 
+}
+
+.dashboard-header p { 
+    color: #6c757d; 
+    font-size: 1em; 
+    margin-top: 0.5em; 
+}
+
+.search-wrapper { 
+    position: relative; 
+    width: 100%; 
+    max-width: 600px; 
+    margin: auto; 
+}
+
+.search-input { 
+    width: 100%; 
+    padding: 14px 50px 14px 20px;
+    border-radius: 50px; 
+    border: 1px solid #dee2e6; 
+    font-size: 1em; 
+    box-sizing: border-box; 
+    box-shadow: 0 2px 10px var(--cor-sombra); 
+}
+
+.search-icon { 
+    position: absolute; 
+    top: 50%; 
+    right: 20px; 
+    transform: translateY(-50%); 
+    font-size: 1.2em; 
+    color: #adb5bd; 
+}
+
+.reports-grid { 
+    display: grid; 
+    grid-template-columns: 1fr; /* Layout de coluna única para telemóvel */
+    gap: 1em; 
+    width: 100%;
+    margin: 2em auto; 
+}
+
+.report-card { 
+    background: white; 
+    border-radius: 10px; 
+    box-shadow: 0 4px 15px var(--cor-sombra); 
+    padding: 1.5em; 
+    text-align: left; 
+    position: relative; 
+    overflow: hidden; 
+}
+
+.report-card h3 { 
+    margin-top: 0; 
+    color: var(--cor-puket-rosa); 
+    font-size: 1.1em; 
+    padding-right: 70px; 
+}
+
+.report-card p { 
+    margin: 0.5em 0; 
+    color: #6c757d; 
+    font-size: 0.9em; 
+}
+
+.report-card .details-button { 
+    display: inline-block; 
+    margin-top: 1em; 
+    padding: 8px 16px; 
+    background-color: var(--cor-puket-rosa); 
+    color: white; 
+    text-decoration: none; 
+    border-radius: 20px; 
+    font-weight: bold; 
+    font-size: 0.9em; 
+}
+
+.no-reports { 
+    text-align: center; 
+    padding: 2em; 
+    color: #6c757d; 
+}
+
+.add-button { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    width: 55px; 
+    height: 55px; 
+    background-color: var(--cor-puket-rosa); 
+    color: white; 
+    border-radius: 50%; 
+    border: none; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-size: 1.8em; 
+    box-shadow: 0 4px 15px rgba(230, 0, 126, 0.4); 
+    cursor: pointer; 
+    text-decoration: none; 
+    z-index: 1000;
+}
+
+.status-badge {
+    position: absolute;
+    top: 1.5em;
+    right: -50px;
+    transform: rotate(45deg);
+    padding: 5px 50px;
+    color: white;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-align: center;
+}
+.status-badge.Aprovada { background-color: var(--cor-aprovada); }
+.status-badge.Reprovada { background-color: var(--cor-reprovada); }
+.status-badge.Comitê { background-color: var(--cor-comite); color: var(--cor-texto); }
+.status-badge.Em\.Andamento { background-color: var(--cor-andamento); }
+.status-badge.Novo { background-color: #6c757d; }
+
+.flash-messages {
+    padding: 0;
+    margin: 0 auto 1em auto;
+}
+.alert {
+    padding: 15px;
+    margin-bottom: 1em;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 2px 10px var(--cor-sombra);
+}
+.alert-success { background-color: var(--cor-aprovada); }
+.alert-error { background-color: var(--cor-reprovada); }
+
+/* --- ESTILOS PARA ECRÃS MAIORES (TABLET E DESKTOP) --- */
+@media (min-width: 768px) {
+    .main-container { 
+        padding: 2em; 
+    }
+    .dashboard-logo {
+        max-width: 250px;
+    }
+    h1 {
+        font-size: 2.5em;
+    }
+    .dashboard-header p {
+        font-size: 1.2em;
+    }
+    .reports-grid {
+        /* Volta ao layout de grelha em ecrãs maiores */
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5em;
+        max-width: 1200px;
+    }
+    .add-button {
+        bottom: 40px;
+        right: 40px;
+        width: 60px;
+        height: 60px;
+        font-size: 2em;
+    }
+}

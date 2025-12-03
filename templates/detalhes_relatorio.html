@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes - {{ relatorio.descricao_geral }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ relatorio.descricao_geral }}</h1>
+    <div>
+        <a href="{{ url_for('editar_relatorio', id=relatorio.id) }}" class="btn btn-outline-primary me-2">
+            <i class="bi bi-pencil"></i> Editar Relatório
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Informações Gerais</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Coleção:</strong> {{ relatorio.colecao or 'Não informado' }}</p>
+            </div>
+            <div class="col-md-6">
+                {% if relatorio.ppt_path %}
+                <p><strong>PPT:</strong> <a href="{{ url_for('serve_upload', filename=relatorio.ppt_path) }}"
+                        target="_blank" class="btn btn-sm btn-info text-white">Visualizar PPT</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for ref in referencias %}
+<div class="card mb-4 border-primary">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Referência {{ ref.tipo | capitalize }} ({{ ref.numero_ref }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-2"><strong>Origem:</strong> {{ ref.origem or '-' }}</div>
+            <div class="col-md-4 mb-2"><strong>Fornecedor:</strong> {{ ref.fornecedor or '-' }}</div>
+            <div class="col-md-4 mb-2"><strong>Matéria Prima:</strong> {{ ref.materia_prima or '-' }}</div>
+            <div class="col-md-4 mb-2"><strong>Composição:</strong> {{ ref.composicao or '-' }}</div>
+            <div class="col-md-4 mb-2"><strong>Gramatura:</strong> {{ ref.gramatura or '-' }}</div>
+            <div class="col-md-4 mb-2"><strong>Aviamentos:</strong> {{ ref.aviamentos or '-' }}</div>
+        </div>
+    </div>
+</div>
+
+{% for prova in ref.provas %}
+<div class="card mb-4 ms-4 border-secondary">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+        <span>{{ prova.numero_prova }}ª Prova de Modelagem</span>
+        <span class="badge bg-light text-dark">{{ prova.status }}</span>
+    </div>
+    <div class="card-body">
+
+        {% if prova.fotos.desenho %}
+        <div class="mb-3">
+            <h6>Desenho do Produto</h6>
+            <div class="d-flex flex-wrap gap-2">
+                {% for foto in prova.fotos.desenho %}
+                <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail"
+                    style="width: 150px; height: 150px; object-fit: cover;">
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if prova.motivo_ultima_alteracao %}
+        <div class="alert alert-warning">
+            <strong>Motivo da última alteração:</strong> {{ prova.motivo_ultima_alteracao }}
+        </div>
+        {% endif %}
+
+        <div class="row mb-3">
+            <div class="col-md-4"><strong>Data Recebimento:</strong> {{ prova.data_recebimento or '-' }}</div>
+            <div class="col-md-4"><strong>Tamanhos:</strong> {{ prova.tamanhos_recebidos or '-' }}</div>
+            <div class="col-md-4"><strong>Data Prova:</strong> {{ prova.data_prova or '-' }}</div>
+        </div>
+
+        {% if prova.tabela_medidas_path %}
+        <div class="mb-3">
+            <a href="{{ url_for('serve_upload', filename=prova.tabela_medidas_path) }}" target="_blank"
+                class="btn btn-sm btn-outline-info">Ver Tabela de Medidas</a>
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <strong>Informações de Medidas:</strong>
+            <pre class="bg-light p-2 rounded">{{ prova.info_medidas or 'Não informado' }}</pre>
+        </div>
+
+        <div class="row mb-3">
+            {% if prova.fotos.amostra %}
+            <div class="col-md-6">
+                <h6>Fotos da Amostra</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for foto in prova.fotos.amostra %}
+                    <div class="text-center">
+                        <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail"
+                            style="width: 100px; height: 100px; object-fit: cover;">
+                        <small class="d-block text-muted">{{ foto.tamanho }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% if prova.fotos.prova_modelo %}
+            <div class="col-md-6">
+                <h6>Fotos na Modelo</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for foto in prova.fotos.prova_modelo %}
+                    <div class="text-center">
+                        <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail"
+                            style="width: 100px; height: 100px; object-fit: cover;">
+                        <small class="d-block text-muted">{{ foto.tamanho }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if prova.time_qualidade or prova.time_estilo or prova.time_modelagem %}
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                <h6 class="card-title">Feedbacks</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong><i class="bi bi-clipboard-check"></i> Qualidade</strong>
+                        <p class="text-muted small mb-1">{{ prova.time_qualidade or '-' }}</p>
+                        <p class="small">{{ prova.comentarios_qualidade or 'Sem comentários.' }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <strong><i class="bi bi-palette"></i> Estilo</strong>
+                        <p class="text-muted small mb-1">{{ prova.time_estilo or '-' }}</p>
+                        <p class="small">{{ prova.comentarios_estilo or 'Sem comentários.' }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <strong><i class="bi bi-rulers"></i> Modelagem</strong>
+                        <p class="text-muted small mb-1">{{ prova.time_modelagem or '-' }}</p>
+                        <p class="small">{{ prova.comentarios_modelagem or 'Sem comentários.' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <div>
+                <small class="text-muted">Lacre: {{ prova.numero_lacre or '-' }} ({{ prova.data_lacre or '-' }})</small>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success btn-sm" data-prova-id="{{ prova.id }}"
+                    data-novo-status="Aprovada" onclick="openStatusModal(this)">Aprovar</button>
+                <button type="button" class="btn btn-danger btn-sm" data-prova-id="{{ prova.id }}"
+                    data-novo-status="Reprovada" onclick="openStatusModal(this)">Reprovar</button>
+                <button type="button" class="btn btn-warning btn-sm" data-prova-id="{{ prova.id }}"
+                    data-novo-status="Comitê" onclick="openStatusModal(this)">Comitê</button>
+            </div>
+        </div>
+    </div>
+    {% if loop.last and prova.status == 'Reprovada' %}
+    <div class="card-footer text-end">
+        <a href="{{ url_for('adicionar_nova_prova', referencia_id=ref.id) }}" class="btn btn-primary btn-sm">Adicionar
+            Nova Prova</a>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endfor %}
+
+<!-- Modal Status -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Alterar Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('atualizar_status_prova') }}" method="POST">
+                <div class="modal-body">
+                    <p>Por favor, insira o motivo da alteração de status.</p>
+                    <input type="hidden" id="modalProvaId" name="prova_id">
+                    <input type="hidden" id="modalNovoStatus" name="novo_status">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="modalMotivo" name="motivo" rows="3" required
+                            placeholder="Ex: Ajuste na manga necessário..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alteração</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openStatusModal(button) {
+        const provaId = button.getAttribute('data-prova-id');
+        const novoStatus = button.getAttribute('data-novo-status');
+        document.getElementById('modalProvaId').value = provaId;
+        document.getElementById('modalNovoStatus').value = novoStatus;
+
+        var myModal = new bootstrap.Modal(document.getElementById('statusModal'));
+        myModal.show();
+    }
+</script>
+{% endblock %}

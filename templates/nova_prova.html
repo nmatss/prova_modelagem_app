@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Adicionar Nova Prova - {{ referencia.numero_ref }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Adicionar {{ novo_numero_prova }}ª Prova</h1>
+    <a href="{{ url_for('detalhes_relatorio', id=referencia.relatorio_id) }}"
+        class="btn btn-outline-secondary">Cancelar</a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Referência: {{ referencia.numero_ref }} ({{ referencia.tipo | capitalize }})</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('adicionar_nova_prova', referencia_id=referencia.id) }}" method="post"
+            enctype="multipart/form-data">
+            <input type="hidden" name="numero_prova" value="{{ novo_numero_prova }}">
+
+            <div class="mb-3">
+                <label class="form-label">Desenho do produto</label>
+                <input type="file" class="form-control" name="fotos_desenho_{{ referencia.tipo }}" multiple>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Tabela de Medidas</label>
+                <input type="file" class="form-control" name="tabela_medidas_{{ referencia.tipo }}">
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Data de recebimento da amostra</label>
+                    <input type="date" class="form-control" name="data_recebimento_{{ referencia.tipo }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Data da prova</label>
+                    <input type="date" class="form-control" name="data_prova_{{ referencia.tipo }}">
+                </div>
+            </div>
+
+            <div class="mb-3 checkbox-group" data-type="{{ referencia.tipo }}">
+                <label class="form-label d-block">Tamanhos recebidos das amostras</label>
+                {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses'], 'kids': ['1', '2', '4',
+                '6', '8'], 'teen': ['10', '12', '14'], 'adulto': ['PP', 'P', 'M', 'G', 'GG']} %}
+                <div class="btn-group" role="group">
+                    {% for tamanho in tamanhos_disponiveis[referencia.tipo] %}
+                    <input type="checkbox" class="btn-check size-checkbox" id="btn_np_{{ loop.index }}"
+                        name="tamanhos_recebidos_{{ referencia.tipo }}" value="{{ tamanho }}" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="btn_np_{{ loop.index }}">{{ tamanho }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Informações de medidas das amostras</label>
+                <textarea class="form-control" name="info_medidas_{{ referencia.tipo }}" rows="3"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Fotos da amostra</label>
+                <div id="placeholder_fotos_amostra_{{ referencia.tipo }}"
+                    class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Fotos da prova (na modelo)</label>
+                <div id="placeholder_fotos_prova_modelo_{{ referencia.tipo }}"
+                    class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Qualidade</div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">Responsável</label>
+                                <input type="text" class="form-control" name="time_qualidade_{{ referencia.tipo }}">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Comentários</label>
+                                <textarea class="form-control" name="comentarios_qualidade_{{ referencia.tipo }}"
+                                    rows="3"></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Fotos</label>
+                                <input type="file" class="form-control" name="fotos_qualidade_{{ referencia.tipo }}"
+                                    multiple>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Estilo</div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">Responsável</label>
+                                <input type="text" class="form-control" name="time_estilo_{{ referencia.tipo }}">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Comentários</label>
+                                <textarea class="form-control" name="comentarios_estilo_{{ referencia.tipo }}"
+                                    rows="3"></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Fotos</label>
+                                <input type="file" class="form-control" name="fotos_estilo_{{ referencia.tipo }}"
+                                    multiple>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Data de liberação - peça lacre</label>
+                    <input type="date" class="form-control" name="data_lacre_{{ referencia.tipo }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Número do lacre</label>
+                    <input type="text" class="form-control" name="numero_lacre_{{ referencia.tipo }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Informações adicionais</label>
+                <textarea class="form-control" name="info_adicionais_{{ referencia.tipo }}" rows="2"></textarea>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-success btn-lg">Salvar Nova Prova</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function createUploadField(contexto, type, size, labelText) {
+            const safeSize = size.replace(/\s+/g, '');
+            const fieldId = `dynamic_${contexto}_${type}_${safeSize}`;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'mb-2';
+            wrapper.id = fieldId;
+
+            const label = document.createElement('label');
+            label.className = 'form-label small';
+            label.textContent = `${labelText} (Tamanho: ${size})`;
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.className = 'form-control form-control-sm';
+            input.name = `fotos_${contexto}_${type}_${safeSize}`;
+            input.multiple = true;
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+            return wrapper;
+        }
+
+        function handleSizeChange(event) {
+            const checkbox = event.target;
+            const size = checkbox.value;
+            const checkboxGroup = checkbox.closest('.checkbox-group');
+            if (!checkboxGroup) return;
+
+            const type = checkboxGroup.getAttribute('data-type');
+            const amostraPlaceholder = document.getElementById(`placeholder_fotos_amostra_${type}`);
+            const provaPlaceholder = document.getElementById(`placeholder_fotos_prova_modelo_${type}`);
+
+            if (!amostraPlaceholder || !provaPlaceholder) return;
+
+            const safeSize = size.replace(/\s+/g, '');
+            const fieldIdAmostra = `dynamic_amostra_${type}_${safeSize}`;
+            const fieldIdProva = `dynamic_prova_modelo_${type}_${safeSize}`;
+
+            if (checkbox.checked) {
+                if (!document.getElementById(fieldIdAmostra)) {
+                    const amostraField = createUploadField('amostra', type, size, 'Fotos da amostra');
+                    amostraPlaceholder.appendChild(amostraField);
+                }
+                if (!document.getElementById(fieldIdProva)) {
+                    const provaField = createUploadField('prova_modelo', type, size, 'Fotos da prova, peça na modelo');
+                    provaPlaceholder.appendChild(provaField);
+                }
+            } else {
+                const amostraField = document.getElementById(fieldIdAmostra);
+                if (amostraField) amostraField.remove();
+                const provaField = document.getElementById(fieldIdProva);
+                if (provaField) provaField.remove();
+            }
+        }
+
+        document.querySelectorAll('.size-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', handleSizeChange);
+        });
+    });
+</script>
+{% endblock %}

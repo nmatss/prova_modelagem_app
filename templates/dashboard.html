@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Painel - Prova de Modelagem{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Controle de Provas de Modelagem</h1>
+        <p class="text-muted">Gerencie seus relatórios e provas de forma centralizada.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('novo_relatorio') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle"></i> Novo Relatório
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control"
+                placeholder="Buscar por descrição, coleção ou status...">
+        </div>
+    </div>
+</div>
+
+<div class="row" id="reportsGrid">
+    {% if relatorios %}
+    {% for relatorio in relatorios %}
+    <div class="col-md-4 mb-4 report-card-item">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="badge bg-secondary">{{ relatorio['colecao'] }}</span>
+                <span
+                    class="badge bg-{{ 'success' if relatorio.status_atual == 'Aprovado' else 'warning' if relatorio.status_atual == 'Em Andamento' else 'info' }}">
+                    {{ relatorio.status_atual }}
+                </span>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ relatorio['descricao_geral'] }}</h5>
+                <p class="card-text text-muted small">Criado em: {{ relatorio['created_at'].split(' ')[0] }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <a href="{{ url_for('detalhes_relatorio', id=relatorio.id) }}" class="btn btn-outline-primary w-100">Ver
+                    Detalhes</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <p class="lead text-muted">Nenhum relatório encontrado.</p>
+        <a href="{{ url_for('novo_relatorio') }}" class="btn btn-primary">Criar Primeiro Relatório</a>
+    </div>
+    {% endif %}
+</div>
+
+<div id="no-results" class="alert alert-info" style="display: none;">
+    Nenhum relatório encontrado para a sua busca.
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const reportCards = document.querySelectorAll('.report-card-item');
+        const noResultsMessage = document.getElementById('no-results');
+
+        searchInput.addEventListener('keyup', function () {
+            const searchTerm = searchInput.value.toLowerCase();
+            let visibleCount = 0;
+
+            reportCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                const isVisible = text.includes(searchTerm);
+
+                card.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
+            });
+
+            if (noResultsMessage) {
+                noResultsMessage.style.display = (visibleCount === 0 && reportCards.length > 0) ? 'block' : 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

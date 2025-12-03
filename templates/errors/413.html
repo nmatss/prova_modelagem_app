@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Arquivo Muito Grande{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-1">413</h1>
+    <p class="fs-3"><span class="text-danger">Arquivo Muito Grande!</span></p>
+    <p class="lead">O arquivo que você está tentando enviar excede o tamanho máximo permitido (16MB).</p>
+    <a href="javascript:history.back()" class="btn btn-primary">Voltar</a>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Uploads e dados gerados
+uploads/
+relatorios_pdf/
+logs/
+run/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Gunicorn
+gunicorn.pid
+*.pid
+
+# Logs
+*.log

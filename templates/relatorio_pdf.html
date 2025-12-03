@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório - {{ relatorio.descricao_geral }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+            @frame footer {
+                -pdf-frame-content: footer-content;
+                bottom: 1cm;
+                margin-left: 1cm;
+                margin-right: 1cm;
+                height: 1cm;
+            }
+        }
+        body { font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 10pt; color: #333; }
+        h1, h2, h3, h4 { font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; color: #e6007e; font-weight: bold; margin: 0; padding: 0; }
+        h1 { font-size: 22pt; text-align: center; margin-bottom: 0.5cm; border-bottom: 2px solid #e6007e; padding-bottom: 10px; }
+        h2 { font-size: 16pt; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 1cm; }
+        h3 { font-size: 13pt; margin-top: 1cm; border-bottom: 1px dotted #e6007e; padding-bottom: 3px; }
+        h4 { font-size: 11pt; margin-top: 0.8cm; margin-bottom: 0.3cm; }
+        a { color: #0066cc; text-decoration: underline; }
+        .detail-section, .proof-section { margin-bottom: 1cm; page-break-inside: avoid; }
+        .detail-grid { display: block; columns: 2; -pdf-keep-with-next: true; }
+        .detail-item { margin-bottom: 0.5cm; page-break-inside: avoid; }
+        .detail-item strong { display: block; font-weight: bold; color: #000; text-transform: none; font-size: 10pt; }
+        .detail-item span, .detail-item pre { display: block; white-space: pre-wrap; word-wrap: break-word; color: #555; }
+        pre { margin: 0; padding: 0; font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }
+        .photo-gallery { display: block; columns: 3; gap: 0.5cm; margin-top: 0.5cm; }
+        .photo-item { text-align: center; page-break-inside: avoid; margin-bottom: 0.5cm; }
+        .photo-item img { max-width: 100%; height: auto; border: 1px solid #ddd; }
+        .photo-caption { font-size: 8pt; text-align: center; color: #666; margin-top: 2px; }
+        .team-feedback-section { background-color: #f9f9f9; border: 1px solid #eee; padding: 0.5cm; margin-top: 1cm; }
+        #footer-content { text-align: center; font-size: 8pt; color: #888; }
+    </style>
+</head>
+<body>
+    <div id="footer-content">
+        Logo da Empresa | Logo da Marca Puket - Página <pdf:pagenumber>
+    </div>
+
+    <h1>Relatório de Prova - {{ relatorio.descricao_geral }}</h1>
+
+    <section class="detail-section">
+        <h2>Informações Gerais</h2>
+        <div class="detail-grid">
+            {% if relatorio.colecao %}<div class="detail-item"><strong>Coleção:</strong><span>{{ relatorio.colecao }}</span></div>{% endif %}
+            <!-- --- ALTERAÇÃO: Link para o ficheiro PPT --- -->
+            {% if relatorio.ppt_path %}<div class="detail-item"><strong>PPT:</strong><span><a href="{{ url_for('serve_upload', filename=relatorio.ppt_path, _external=True) }}">{{ relatorio.ppt_path }}</a></span></div>{% endif %}
+        </div>
+    </section>
+
+    {% for ref in referencias %}
+    <section class="detail-section">
+        <h2>Referência {{ ref.tipo | capitalize }} ({{ ref.numero_ref }})</h2>
+        <div class="detail-grid">
+            {% if ref.origem %}<div class="detail-item"><strong>Origem:</strong><span>{{ ref.origem }}</span></div>{% endif %}
+            {% if ref.fornecedor %}<div class="detail-item"><strong>Fornecedor:</strong><span>{{ ref.fornecedor }}</span></div>{% endif %}
+            {% if ref.materia_prima %}<div class="detail-item"><strong>Matéria Prima:</strong><span>{{ ref.materia_prima }}</span></div>{% endif %}
+            {% if ref.composicao %}<div class="detail-item"><strong>Composição:</strong><span>{{ ref.composicao }}</span></div>{% endif %}
+            {% if ref.gramatura %}<div class="detail-item"><strong>Gramatura:</strong><span>{{ ref.gramatura }}</span></div>{% endif %}
+            {% if ref.aviamentos %}<div class="detail-item"><strong>Aviamentos:</strong><span>{{ ref.aviamentos }}</span></div>{% endif %}
+        </div>
+    </section>
+
+    {% for prova in ref.provas %}
+    <section class="proof-section">
+        <h3>{{ prova.numero_prova }}ª Prova de Modelagem (Status: {{ prova.status }})</h3>
+        {% if prova.motivo_ultima_alteracao %}<div class="detail-item"><strong>Motivo da Alteração:</strong><span>{{ prova.motivo_ultima_alteracao }}</span></div>{% endif %}
+        
+        {% if prova.fotos.desenho %}<div class="detail-item"><h4>Desenho do Produto</h4><div class="photo-gallery">{% for foto in prova.fotos.desenho %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"></div>{% endfor %}</div></div>{% endif %}
+        
+        <!-- --- ALTERAÇÃO: Link para a Tabela de Medidas --- -->
+        {% if prova.tabela_medidas_path %}<div class="detail-item"><strong>Tabela de Medidas:</strong><span><a href="{{ url_for('serve_upload', filename=prova.tabela_medidas_path, _external=True) }}">{{ prova.tabela_medidas_path }}</a></span></div>{% endif %}
+        
+        <div class="detail-grid">
+            {% if prova.data_recebimento %}<div class="detail-item"><strong>Data de Recebimento:</strong><span>{{ prova.data_recebimento }}</span></div>{% endif %}
+            {% if prova.tamanhos_recebidos %}<div class="detail-item"><strong>Tamanhos Recebidos:</strong><span>{{ prova.tamanhos_recebidos }}</span></div>{% endif %}
+        </div>
+
+        {% if prova.info_medidas %}<div class="detail-item"><strong>Informações de Medidas:</strong><pre>{{ prova.info_medidas }}</pre></div>{% endif %}
+        
+        {% if prova.fotos.amostra %}<div class="detail-item"><h4>Fotos da Amostra</h4><div class="photo-gallery">{% for foto in prova.fotos.amostra %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"><div class="photo-caption">Tamanho: {{ foto.tamanho }}</div></div>{% endfor %}</div></div>{% endif %}
+
+        {% if prova.data_prova %}<div class="detail-item" style="margin-top: 1cm;"><strong>Data da Prova:</strong><span>{{ prova.data_prova }}</span></div>{% endif %}
+
+        {% if prova.time_qualidade or prova.comentarios_qualidade or prova.fotos.qualidade or prova.time_estilo or prova.comentarios_estilo or prova.fotos.estilo %}
+        <section class="team-feedback-section">
+            <h4>Feedbacks</h4>
+            {% if prova.time_qualidade or prova.comentarios_qualidade %}<div class="detail-item"><strong>Qualidade ({{ prova.time_qualidade }}):</strong><pre>{{ prova.comentarios_qualidade or 'Sem comentários.' }}</pre>{% if prova.fotos.qualidade %}<div class="photo-gallery">{% for foto in prova.fotos.qualidade %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"></div>{% endfor %}</div>{% endif %}</div>{% endif %}
+            {% if prova.time_estilo or prova.comentarios_estilo %}<div class="detail-item"><strong>Estilo ({{ prova.time_estilo }}):</strong><pre>{{ prova.comentarios_estilo or 'Sem comentários.' }}</pre>{% if prova.fotos.estilo %}<div class="photo-gallery">{% for foto in prova.fotos.estilo %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"></div>{% endfor %}</div>{% endif %}</div>{% endif %}
+        </section>
+        {% endif %}
+
+        {% if prova.fotos.prova_modelo %}<div class="detail-item"><h4>Fotos da Prova (na modelo)</h4><div class="photo-gallery">{% for foto in prova.fotos.prova_modelo %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"><div class="photo-caption">Tamanho: {{ foto.tamanho }}</div></div>{% endfor %}</div></div>{% endif %}
+
+        <div class="detail-grid" style="margin-top: 1cm;">
+            {% if prova.data_lacre %}<div class="detail-item"><strong>Data de Liberação:</strong><span>{{ prova.data_lacre }}</span></div>{% endif %}
+            {% if prova.numero_lacre %}<div class="detail-item"><strong>Número do Lacre:</strong><span>{{ prova.numero_lacre }}</span></div>{% endif %}
+        </div>
+        
+        {% if prova.info_adicionais %}<div class="detail-item"><strong>Informações Adicionais:</strong><pre>{{ prova.info_adicionais }}</pre></div>{% endif %}
+
+    </section>
+    {% endfor %}
+    {% endfor %}
+</body>
+</html>

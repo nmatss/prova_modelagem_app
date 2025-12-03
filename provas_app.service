@@ -1,0 +1,29 @@
+# Systemd service file para Aplicação de Provas
+# Copie este arquivo para /etc/systemd/system/provas_app.service
+#
+# Comandos:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable provas_app
+#   sudo systemctl start provas_app
+#   sudo systemctl status provas_app
+
+[Unit]
+Description=Aplicação de Provas de Modelagem
+After=network.target postgresql.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/caminho/para/prova_modelagem_app
+Environment="PATH=/caminho/para/prova_modelagem_app/.venv/bin"
+Environment="ENV_FILE=.env.production"
+ExecStart=/caminho/para/prova_modelagem_app/.venv/bin/gunicorn -c gunicorn_config.py wsgi:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
