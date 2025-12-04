@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Novo Usuário - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-person-plus text-primary me-2"></i>
+                    Criar Novo Usuário
+                </h1>
+                <p class="text-muted mb-0">Preencha os dados para criar um novo usuário no sistema</p>
+            </div>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('admin.create_user') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">
+                                <i class="bi bi-person-circle me-1"></i>
+                                Username <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="username"
+                                   name="username"
+                                   required
+                                   placeholder="Ex: joao.silva">
+                            <small class="text-muted">Identificação única do usuário no sistema</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email"
+                                   class="form-control"
+                                   id="email"
+                                   name="email"
+                                   required
+                                   placeholder="joao.silva@example.com">
+                            <small class="text-muted">Email corporativo do usuário</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nome_completo" class="form-label">
+                            <i class="bi bi-person-vcard me-1"></i>
+                            Nome Completo
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="nome_completo"
+                               name="nome_completo"
+                               placeholder="João da Silva Santos">
+                        <small class="text-muted">Nome completo do usuário (opcional)</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="role" class="form-label">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Nível de Acesso <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="usuario" selected>Usuário - Acesso básico</option>
+                            <option value="gestor">Gestor - Pode gerenciar relatórios e provas</option>
+                            <option value="admin">Administrador - Acesso completo</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info border-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Senha Automática:</strong> Uma senha temporária forte será gerada automaticamente e exibida após a criação do usuário. O usuário deverá trocá-la no primeiro acesso.
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus-fill"></i> Criar Usuário
+                        </button>
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card de Explicação dos Níveis -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Sobre os Níveis de Acesso</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="badge bg-danger me-2">
+                        <i class="bi bi-shield-fill-check"></i> Administrador
+                    </span>
+                    <span class="text-muted">Controle total do sistema, incluindo gerenciamento de usuários</span>
+                </div>
+                <div class="mb-3">
+                    <span class="badge bg-warning me-2">
+                        <i class="bi bi-person-badge"></i> Gestor
+                    </span>
+                    <span class="text-muted">Pode criar/editar relatórios, aprovar provas e gerenciar workflows</span>
+                </div>
+                <div>
+                    <span class="badge bg-secondary me-2">
+                        <i class="bi bi-person"></i> Usuário
+                    </span>
+                    <span class="text-muted">Pode visualizar relatórios e adicionar comentários</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,18 +1,21 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify, make_response
+from weasyprint import HTML, CSS
 from werkzeug.datastructures import MultiDict
 from werkzeug.utils import secure_filename
 # from xhtml2pdf import pisa  # Comentado temporariamente - instalar: pip install xhtml2pdf
 from flask_login import LoginManager, login_required, current_user
 from auth import auth_bp, get_user_by_id
 from admin import admin_bp
+# from audit_bp import audit_bp  # Desabilitado - AuditLog não existe no banco
 from db import init_app as init_db
 from models import db, Relatorio, Referencia, Prova, Foto
 from config import Config
 from utils import save_file
 from error_handlers import register_error_handlers
+from security import init_security, SecurityHeaders
 from sqlalchemy import desc
 
 # Configurar logging será feito após criar o app
@@ -57,6 +60,9 @@ else:
 # Inicializar database
 init_db(app)
 
+# Inicializar segurança
+init_security(app)
+
 # Configuração do Flask-Login
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -71,6 +77,7 @@ def load_user(user_id):
 # Registrar Blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
+# app.register_blueprint(audit_bp)  # Desabilitado - AuditLog não existe no banco
 
 # Registrar error handlers
 register_error_handlers(app)
@@ -150,19 +157,115 @@ def gerar_e_salvar_pdf(relatorio_id, evento="CRIADO"):
 @app.route('/')
 @login_required
 def dashboard():
+    # Obter relatórios
     relatorios = Relatorio.query.order_by(desc(Relatorio.created_at)).all()
     relatorios_com_status = []
-    
+
     for relatorio in relatorios:
         relatorio_dict = {c.name: getattr(relatorio, c.name) for c in relatorio.__table__.columns}
-        
+
         # Obter última prova de qualquer referência deste relatório
         ultima_prova = Prova.query.join(Referencia).filter(Referencia.relatorio_id == relatorio.id).order_by(desc(Prova.numero_prova)).first()
-        
+
         relatorio_dict['status_atual'] = ultima_prova.status if ultima_prova else 'Novo'
         relatorios_com_status.append(relatorio_dict)
 
-    return render_template('dashboard.html', relatorios=relatorios_com_status)
+    # ESTATÍSTICAS E INSIGHTS
+    total_relatorios = Relatorio.query.count()
+    total_referencias = Referencia.query.count()
+    total_provas = Prova.query.count()
+
+    # Provas por status
+    provas_aprovadas = Prova.query.filter_by(status='Aprovada').count()
+    provas_reprovadas = Prova.query.filter_by(status='Reprovada').count()
+    provas_em_andamento = Prova.query.filter_by(status='Em Andamento').count()
+    provas_comite = Prova.query.filter_by(status='Comitê').count()
+
+    # Taxa de aprovação
+    taxa_aprovacao = round((provas_aprovadas / total_provas * 100) if total_provas > 0 else 0, 1)
+
+    # Referências por categoria
+    refs_por_categoria = db.session.query(
+        Referencia.tipo_categoria,
+        db.func.count(Referencia.id)
+    ).group_by(Referencia.tipo_categoria).all()
+
+    categorias_stats = {cat: count for cat, count in refs_por_categoria}
+
+    # Relatórios recentes (últimos 30 dias)
+    from datetime import datetime, timedelta
+    trinta_dias_atras = datetime.utcnow() - timedelta(days=30)
+    relatorios_recentes = Relatorio.query.filter(Relatorio.created_at >= trinta_dias_atras).count()
+
+    # Provas com retrabalho (número da prova > 1)
+    provas_retrabalho = Prova.query.filter(Prova.numero_prova > 1).count()
+    taxa_retrabalho = round((provas_retrabalho / total_provas * 100) if total_provas > 0 else 0, 1)
+
+    # Insights
+    insights = []
+
+    if taxa_aprovacao >= 80:
+        insights.append({
+            'tipo': 'success',
+            'icone': 'bi-trophy',
+            'titulo': 'Excelente Performance!',
+            'mensagem': f'Taxa de aprovação de {taxa_aprovacao}% - acima da meta de 80%'
+        })
+    elif taxa_aprovacao >= 60:
+        insights.append({
+            'tipo': 'warning',
+            'icone': 'bi-exclamation-triangle',
+            'titulo': 'Performance Moderada',
+            'mensagem': f'Taxa de aprovação de {taxa_aprovacao}% - pode melhorar'
+        })
+    else:
+        insights.append({
+            'tipo': 'danger',
+            'icone': 'bi-exclamation-circle',
+            'titulo': 'Atenção Necessária',
+            'mensagem': f'Taxa de aprovação baixa: {taxa_aprovacao}% - revisar processos'
+        })
+
+    if taxa_retrabalho > 30:
+        insights.append({
+            'tipo': 'warning',
+            'icone': 'bi-arrow-repeat',
+            'titulo': 'Alto Retrabalho',
+            'mensagem': f'{taxa_retrabalho}% das provas precisaram de retrabalho'
+        })
+
+    if relatorios_recentes > 5:
+        insights.append({
+            'tipo': 'info',
+            'icone': 'bi-calendar-check',
+            'titulo': 'Alta Produtividade',
+            'mensagem': f'{relatorios_recentes} relatórios criados nos últimos 30 dias'
+        })
+
+    if provas_em_andamento > 10:
+        insights.append({
+            'tipo': 'info',
+            'icone': 'bi-hourglass-split',
+            'titulo': 'Provas Pendentes',
+            'mensagem': f'{provas_em_andamento} provas aguardando finalização'
+        })
+
+    stats = {
+        'total_relatorios': total_relatorios,
+        'total_referencias': total_referencias,
+        'total_provas': total_provas,
+        'provas_aprovadas': provas_aprovadas,
+        'provas_reprovadas': provas_reprovadas,
+        'provas_em_andamento': provas_em_andamento,
+        'provas_comite': provas_comite,
+        'taxa_aprovacao': taxa_aprovacao,
+        'taxa_retrabalho': taxa_retrabalho,
+        'categorias': categorias_stats,
+        'relatorios_recentes': relatorios_recentes,
+        'insights': insights
+    }
+
+    return render_template('dashboard.html', relatorios=relatorios_com_status, stats=stats)
 
 @app.route('/uploads/<path:filename>')
 @login_required
@@ -200,6 +303,55 @@ def detalhes_relatorio(id):
 
     return render_template('detalhes_relatorio.html', relatorio=relatorio, referencias=referencias_completas)
 
+@app.route('/relatorio/<int:id>/pdf')
+@login_required
+def relatorio_pdf(id):
+    """Gera e retorna o PDF do relatório"""
+    relatorio = Relatorio.query.get_or_404(id)
+
+    # Preparar dados para o template (mesma estrutura do detalhes_relatorio)
+    referencias_completas = []
+    for ref in relatorio.referencias:
+        ref_dict = {c.name: getattr(ref, c.name) for c in ref.__table__.columns}
+
+        provas_completas = []
+        provas_ordenadas = sorted(ref.provas, key=lambda x: x.numero_prova)
+
+        for prova in provas_ordenadas:
+            prova_dict = {c.name: getattr(prova, c.name) for c in prova.__table__.columns}
+
+            prova_dict['fotos'] = {}
+            for foto in prova.fotos:
+                contexto = foto.contexto
+                if contexto not in prova_dict['fotos']:
+                    prova_dict['fotos'][contexto] = []
+                # Adicionar caminho absoluto para WeasyPrint
+                foto_dict = {c.name: getattr(foto, c.name) for c in foto.__table__.columns}
+                foto_dict['caminho_absoluto'] = os.path.join(app.config['UPLOAD_FOLDER'], foto.file_path)
+                prova_dict['fotos'][contexto].append(foto_dict)
+
+            provas_completas.append(prova_dict)
+
+        ref_dict['provas'] = provas_completas
+        referencias_completas.append(ref_dict)
+
+    # Renderizar o HTML do PDF
+    from datetime import datetime
+    html_string = render_template('relatorio_pdf.html',
+                                   relatorio=relatorio,
+                                   referencias=referencias_completas,
+                                   now=datetime.now)
+
+    # Gerar PDF usando WeasyPrint com base_url do diretório de uploads
+    pdf = HTML(string=html_string, base_url=request.url_root).write_pdf()
+
+    # Criar resposta
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'inline; filename=relatorio_{relatorio.id}_{secure_filename(relatorio.descricao_geral)}.pdf'
+
+    return response
+
 @app.route('/relatorio/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
 def editar_relatorio(id):
@@ -218,17 +370,18 @@ def editar_relatorio(id):
                     continue
 
                 # Verifica se já existe uma referência deste tipo
-                ref_existente = Referencia.query.filter_by(relatorio_id=id, tipo=tipo).first()
+                ref_existente = Referencia.query.filter_by(relatorio_id=id, tipo_categoria=tipo).first()
 
                 if ref_existente:
                     # --- ATUALIZAÇÃO ---
                     ref_existente.numero_ref = ref_numero
-                    ref_existente.origem = request.form.get(f'origem_{tipo}')
-                    ref_existente.fornecedor = request.form.get(f'fornecedor_{tipo}')
-                    ref_existente.materia_prima = request.form.get(f'materia_prima_{tipo}')
-                    ref_existente.composicao = request.form.get(f'composicao_{tipo}')
-                    ref_existente.gramatura = request.form.get(f'gramatura_{tipo}')
-                    ref_existente.aviamentos = request.form.get(f'aviamentos_{tipo}')
+                    # Atualiza dados da referência (busca por ID específico ou por tipo)
+                    ref_existente.origem = request.form.get(f'origem_ref_{ref_existente.id}') or request.form.get(f'origem_{tipo}')
+                    ref_existente.fornecedor = request.form.get(f'fornecedor_ref_{ref_existente.id}') or request.form.get(f'fornecedor_{tipo}')
+                    ref_existente.materia_prima = request.form.get(f'materia_prima_ref_{ref_existente.id}') or request.form.get(f'materia_prima_{tipo}')
+                    ref_existente.composicao = request.form.get(f'composicao_ref_{ref_existente.id}') or request.form.get(f'composicao_{tipo}')
+                    ref_existente.gramatura = request.form.get(f'gramatura_ref_{ref_existente.id}') or request.form.get(f'gramatura_{tipo}')
+                    ref_existente.aviamentos = request.form.get(f'aviamentos_ref_{ref_existente.id}') or request.form.get(f'aviamentos_{tipo}')
                     
                     # Atualiza provas existentes
                     provas_existentes_ids = request.form.getlist(f'prova_id_{tipo}')
@@ -241,14 +394,19 @@ def editar_relatorio(id):
                             prova.data_prova = request.form.get(f'data_prova_{prova_id}')
                             prova.time_qualidade = request.form.get(f'time_qualidade_{prova_id}')
                             prova.comentarios_qualidade = request.form.get(f'comentarios_qualidade_{prova_id}')
+                            prova.obs_qualidade = request.form.get(f'obs_qualidade_{prova_id}')
                             prova.time_estilo = request.form.get(f'time_estilo_{prova_id}')
                             prova.comentarios_estilo = request.form.get(f'comentarios_estilo_{prova_id}')
+                            prova.obs_estilo = request.form.get(f'obs_estilo_{prova_id}')
+                            prova.time_modelagem = request.form.get(f'time_modelagem_{prova_id}')
+                            prova.comentarios_modelagem = request.form.get(f'comentarios_modelagem_{prova_id}')
+                            prova.obs_modelagem = request.form.get(f'obs_modelagem_{prova_id}')
                             prova.data_lacre = request.form.get(f'data_lacre_{prova_id}')
                             prova.numero_lacre = request.form.get(f'numero_lacre_{prova_id}')
                             prova.info_adicionais = request.form.get(f'info_adicionais_{prova_id}')
                             
                             # Adicionar fotos
-                            campos_fotos = ['desenho', 'qualidade', 'estilo']
+                            campos_fotos = ['desenho', 'qualidade', 'estilo', 'modelagem']
                             for contexto in campos_fotos:
                                 for file in request.files.getlist(f'fotos_{contexto}_{prova_id}'):
                                     filename = save_file(file)
@@ -268,7 +426,7 @@ def editar_relatorio(id):
                     # --- CRIAÇÃO ---
                     nova_ref = Referencia(
                         relatorio_id=id,
-                        tipo=tipo,
+                        tipo_categoria=tipo,
                         numero_ref=ref_numero,
                         origem=request.form.get(f'origem_{tipo}'),
                         fornecedor=request.form.get(f'fornecedor_{tipo}'),
@@ -292,8 +450,13 @@ def editar_relatorio(id):
                         data_prova=request.form.get(f'data_prova_{tipo}'),
                         time_qualidade=request.form.get(f'time_qualidade_{tipo}'),
                         comentarios_qualidade=request.form.get(f'comentarios_qualidade_{tipo}'),
+                        obs_qualidade=request.form.get(f'obs_qualidade_{tipo}'),
                         time_estilo=request.form.get(f'time_estilo_{tipo}'),
                         comentarios_estilo=request.form.get(f'comentarios_estilo_{tipo}'),
+                        obs_estilo=request.form.get(f'obs_estilo_{tipo}'),
+                        time_modelagem=request.form.get(f'time_modelagem_{tipo}'),
+                        comentarios_modelagem=request.form.get(f'comentarios_modelagem_{tipo}'),
+                        obs_modelagem=request.form.get(f'obs_modelagem_{tipo}'),
                         data_lacre=request.form.get(f'data_lacre_{tipo}'),
                         numero_lacre=request.form.get(f'numero_lacre_{tipo}'),
                         info_adicionais=request.form.get(f'info_adicionais_{tipo}')
@@ -301,7 +464,7 @@ def editar_relatorio(id):
                     db.session.add(nova_prova)
                     db.session.flush()
                     
-                    campos_fotos = ['desenho', 'qualidade', 'estilo']
+                    campos_fotos = ['desenho', 'qualidade', 'estilo', 'modelagem']
                     for contexto in campos_fotos:
                         for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
                             filename = save_file(file)
@@ -347,14 +510,14 @@ def editar_relatorio(id):
             provas_completas.append(prova_dict)
         
         ref_dict['provas'] = provas_completas
-        referencias_por_tipo[ref.tipo] = ref_dict
+        referencias_por_tipo[ref.tipo_categoria] = ref_dict
 
     return render_template('editar_relatorio.html', relatorio=relatorio, referencias_por_tipo=referencias_por_tipo)
 
 
 @app.route('/prova/atualizar_status', methods=['POST'])
 @login_required
-def atualizar_status_prova():
+def atualizar_status():
     prova_id = request.form.get('prova_id')
     novo_status = request.form.get('novo_status')
     motivo = request.form.get('motivo')
@@ -399,7 +562,7 @@ def novo_relatorio():
                 if request.form.get(f'ref_{tipo}'):
                     nova_ref = Referencia(
                         relatorio_id=novo_relatorio.id,
-                        tipo=tipo,
+                        tipo_categoria=tipo,
                         numero_ref=request.form.get(f'ref_{tipo}'),
                         origem=request.form.get(f'origem_{tipo}'),
                         fornecedor=request.form.get(f'fornecedor_{tipo}'),
@@ -423,8 +586,13 @@ def novo_relatorio():
                         data_prova=request.form.get(f'data_prova_{tipo}'),
                         time_qualidade=request.form.get(f'time_qualidade_{tipo}'),
                         comentarios_qualidade=request.form.get(f'comentarios_qualidade_{tipo}'),
+                        obs_qualidade=request.form.get(f'obs_qualidade_{tipo}'),
                         time_estilo=request.form.get(f'time_estilo_{tipo}'),
                         comentarios_estilo=request.form.get(f'comentarios_estilo_{tipo}'),
+                        obs_estilo=request.form.get(f'obs_estilo_{tipo}'),
+                        time_modelagem=request.form.get(f'time_modelagem_{tipo}'),
+                        comentarios_modelagem=request.form.get(f'comentarios_modelagem_{tipo}'),
+                        obs_modelagem=request.form.get(f'obs_modelagem_{tipo}'),
                         data_lacre=request.form.get(f'data_lacre_{tipo}'),
                         numero_lacre=request.form.get(f'numero_lacre_{tipo}'),
                         info_adicionais=request.form.get(f'info_adicionais_{tipo}')
@@ -432,7 +600,7 @@ def novo_relatorio():
                     db.session.add(nova_prova)
                     db.session.flush()
                     
-                    campos_fotos = ['desenho', 'qualidade', 'estilo']
+                    campos_fotos = ['desenho', 'qualidade', 'estilo', 'modelagem']
                     for contexto in campos_fotos:
                         for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
                             filename = save_file(file)
@@ -471,7 +639,7 @@ def adicionar_nova_prova(referencia_id):
     if request.method == 'POST':
         try:
             novo_numero_prova = request.form.get('numero_prova')
-            tipo = referencia.tipo
+            tipo = referencia.tipo_categoria
 
             tabela_medidas_filename = save_file(request.files.get(f'tabela_medidas_{tipo}'))
 
@@ -485,8 +653,13 @@ def adicionar_nova_prova(referencia_id):
                 data_prova=request.form.get(f'data_prova_{tipo}'),
                 time_qualidade=request.form.get(f'time_qualidade_{tipo}'),
                 comentarios_qualidade=request.form.get(f'comentarios_qualidade_{tipo}'),
+                obs_qualidade=request.form.get(f'obs_qualidade_{tipo}'),
                 time_estilo=request.form.get(f'time_estilo_{tipo}'),
                 comentarios_estilo=request.form.get(f'comentarios_estilo_{tipo}'),
+                obs_estilo=request.form.get(f'obs_estilo_{tipo}'),
+                time_modelagem=request.form.get(f'time_modelagem_{tipo}'),
+                comentarios_modelagem=request.form.get(f'comentarios_modelagem_{tipo}'),
+                obs_modelagem=request.form.get(f'obs_modelagem_{tipo}'),
                 data_lacre=request.form.get(f'data_lacre_{tipo}'),
                 numero_lacre=request.form.get(f'numero_lacre_{tipo}'),
                 info_adicionais=request.form.get(f'info_adicionais_{tipo}')
@@ -494,7 +667,7 @@ def adicionar_nova_prova(referencia_id):
             db.session.add(nova_prova)
             db.session.flush()
             
-            campos_fotos = ['desenho', 'qualidade', 'estilo']
+            campos_fotos = ['desenho', 'qualidade', 'estilo', 'modelagem']
             for contexto in campos_fotos:
                 for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
                     filename = save_file(file)

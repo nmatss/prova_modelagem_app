@@ -12,6 +12,14 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret-key-change-in-production')
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
 
+    # Security
+    SESSION_COOKIE_SECURE = False  # True em produção com HTTPS
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    PERMANENT_SESSION_LIFETIME = 43200  # 12 horas em segundos
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_TIME_LIMIT = None  # Token não expira (válido durante a sessão)
+
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///instance/provas.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False

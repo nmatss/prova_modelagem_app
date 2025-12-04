@@ -2,6 +2,123 @@
 
 {% block title %}Adicionar Nova Prova - {{ referencia.numero_ref }}{% endblock %}
 
+{% block styles %}
+<style>
+    /* Responsive styles for nova_prova */
+    @media (max-width: 768px) {
+        .d-flex.justify-content-between {
+            flex-direction: column !important;
+            gap: 1rem;
+        }
+
+        .d-flex.justify-content-between .btn {
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+        }
+
+        .card {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .card-header {
+            padding: 0.875rem 1rem;
+        }
+
+        .row > [class*='col-'] {
+            margin-bottom: 1rem;
+        }
+
+        .row .col-md-4 {
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-group {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .btn-check + .btn-outline-primary {
+            flex: 0 1 auto;
+            min-width: 60px;
+        }
+
+        .d-grid .btn-lg {
+            font-size: 1.1rem;
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .card-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 0.9rem;
+        }
+
+        .btn-group .btn {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .d-grid .btn-lg {
+            font-size: 1rem;
+            padding: 0.875rem;
+        }
+
+        .card .card-header.bg-success,
+        .card .card-header.bg-info,
+        .card .card-header.bg-warning {
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h1 {
+            font-size: 1.3rem;
+        }
+
+        .card-header h5 {
+            font-size: 0.95rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .btn-group {
+            width: 100%;
+        }
+
+        .btn-group .btn {
+            flex: 1 1 45%;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Adicionar {{ novo_numero_prova }}ª Prova</h1>
@@ -11,7 +128,7 @@
 
 <div class="card">
     <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Referência: {{ referencia.numero_ref }} ({{ referencia.tipo | capitalize }})</h5>
+        <h5 class="mb-0">Referência: {{ referencia.numero_ref }} ({{ referencia.tipo_categoria | capitalize }})</h5>
     </div>
     <div class="card-body">
         <form action="{{ url_for('adicionar_nova_prova', referencia_id=referencia.id) }}" method="post"
@@ -20,32 +137,32 @@
 
             <div class="mb-3">
                 <label class="form-label">Desenho do produto</label>
-                <input type="file" class="form-control" name="fotos_desenho_{{ referencia.tipo }}" multiple>
+                <input type="file" class="form-control" name="fotos_desenho_{{ referencia.tipo_categoria }}" multiple>
             </div>
             <div class="mb-3">
                 <label class="form-label">Tabela de Medidas</label>
-                <input type="file" class="form-control" name="tabela_medidas_{{ referencia.tipo }}">
+                <input type="file" class="form-control" name="tabela_medidas_{{ referencia.tipo_categoria }}">
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Data de recebimento da amostra</label>
-                    <input type="date" class="form-control" name="data_recebimento_{{ referencia.tipo }}">
+                    <input type="date" class="form-control" name="data_recebimento_{{ referencia.tipo_categoria }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Data da prova</label>
-                    <input type="date" class="form-control" name="data_prova_{{ referencia.tipo }}">
+                    <input type="date" class="form-control" name="data_prova_{{ referencia.tipo_categoria }}">
                 </div>
             </div>
 
-            <div class="mb-3 checkbox-group" data-type="{{ referencia.tipo }}">
+            <div class="mb-3 checkbox-group" data-type="{{ referencia.tipo_categoria }}">
                 <label class="form-label d-block">Tamanhos recebidos das amostras</label>
                 {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses'], 'kids': ['1', '2', '4',
                 '6', '8'], 'teen': ['10', '12', '14'], 'adulto': ['PP', 'P', 'M', 'G', 'GG']} %}
                 <div class="btn-group" role="group">
-                    {% for tamanho in tamanhos_disponiveis[referencia.tipo] %}
+                    {% for tamanho in tamanhos_disponiveis[referencia.tipo_categoria] %}
                     <input type="checkbox" class="btn-check size-checkbox" id="btn_np_{{ loop.index }}"
-                        name="tamanhos_recebidos_{{ referencia.tipo }}" value="{{ tamanho }}" autocomplete="off">
+                        name="tamanhos_recebidos_{{ referencia.tipo_categoria }}" value="{{ tamanho }}" autocomplete="off">
                     <label class="btn btn-outline-primary" for="btn_np_{{ loop.index }}">{{ tamanho }}</label>
                     {% endfor %}
                 </div>
@@ -53,59 +170,90 @@
 
             <div class="mb-3">
                 <label class="form-label">Informações de medidas das amostras</label>
-                <textarea class="form-control" name="info_medidas_{{ referencia.tipo }}" rows="3"></textarea>
+                <textarea class="form-control" name="info_medidas_{{ referencia.tipo_categoria }}" rows="3"></textarea>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Fotos da amostra</label>
-                <div id="placeholder_fotos_amostra_{{ referencia.tipo }}"
+                <div id="placeholder_fotos_amostra_{{ referencia.tipo_categoria }}"
                     class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
             </div>
             <div class="mb-3">
                 <label class="form-label">Fotos da prova (na modelo)</label>
-                <div id="placeholder_fotos_prova_modelo_{{ referencia.tipo }}"
+                <div id="placeholder_fotos_prova_modelo_{{ referencia.tipo_categoria }}"
                     class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
             </div>
 
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card">
-                        <div class="card-header">Qualidade</div>
+                        <div class="card-header bg-success text-white">Qualidade</div>
                         <div class="card-body">
                             <div class="mb-2">
                                 <label class="form-label">Responsável</label>
-                                <input type="text" class="form-control" name="time_qualidade_{{ referencia.tipo }}">
+                                <input type="text" class="form-control" name="time_qualidade_{{ referencia.tipo_categoria }}" placeholder="Nome do responsável">
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Comentários</label>
-                                <textarea class="form-control" name="comentarios_qualidade_{{ referencia.tipo }}"
-                                    rows="3"></textarea>
+                                <textarea class="form-control" name="comentarios_qualidade_{{ referencia.tipo_categoria }}"
+                                    rows="2" placeholder="Comentários gerais"></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Observações Adicionais</label>
+                                <textarea class="form-control" name="obs_qualidade_{{ referencia.tipo_categoria }}"
+                                    rows="2" placeholder="Detalhes técnicos, medidas, etc."></textarea>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Fotos</label>
-                                <input type="file" class="form-control" name="fotos_qualidade_{{ referencia.tipo }}"
-                                    multiple>
+                                <input type="file" class="form-control" name="fotos_qualidade_{{ referencia.tipo_categoria }}"
+                                    multiple accept="image/*">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card">
-                        <div class="card-header">Estilo</div>
+                        <div class="card-header bg-info text-white">Estilo</div>
                         <div class="card-body">
                             <div class="mb-2">
                                 <label class="form-label">Responsável</label>
-                                <input type="text" class="form-control" name="time_estilo_{{ referencia.tipo }}">
+                                <input type="text" class="form-control" name="time_estilo_{{ referencia.tipo_categoria }}" placeholder="Nome do responsável">
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Comentários</label>
-                                <textarea class="form-control" name="comentarios_estilo_{{ referencia.tipo }}"
-                                    rows="3"></textarea>
+                                <textarea class="form-control" name="comentarios_estilo_{{ referencia.tipo_categoria }}"
+                                    rows="2" placeholder="Comentários gerais"></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Observações Adicionais</label>
+                                <textarea class="form-control" name="obs_estilo_{{ referencia.tipo_categoria }}"
+                                    rows="2" placeholder="Ajustes, modificações, etc."></textarea>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Fotos</label>
-                                <input type="file" class="form-control" name="fotos_estilo_{{ referencia.tipo }}"
-                                    multiple>
+                                <input type="file" class="form-control" name="fotos_estilo_{{ referencia.tipo_categoria }}"
+                                    multiple accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-warning">Modelagem</div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">Responsável</label>
+                                <input type="text" class="form-control" name="time_modelagem_{{ referencia.tipo_categoria }}" placeholder="Nome do responsável">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Comentários</label>
+                                <textarea class="form-control" name="comentarios_modelagem_{{ referencia.tipo_categoria }}"
+                                    rows="2" placeholder="Comentários gerais"></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Observações Adicionais</label>
+                                <textarea class="form-control" name="obs_modelagem_{{ referencia.tipo_categoria }}"
+                                    rows="2" placeholder="Ajustes técnicos, correções, etc."></textarea>
                             </div>
                         </div>
                     </div>
@@ -115,16 +263,16 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Data de liberação - peça lacre</label>
-                    <input type="date" class="form-control" name="data_lacre_{{ referencia.tipo }}">
+                    <input type="date" class="form-control" name="data_lacre_{{ referencia.tipo_categoria }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Número do lacre</label>
-                    <input type="text" class="form-control" name="numero_lacre_{{ referencia.tipo }}">
+                    <input type="text" class="form-control" name="numero_lacre_{{ referencia.tipo_categoria }}">
                 </div>
             </div>
             <div class="mb-3">
                 <label class="form-label">Informações adicionais</label>
-                <textarea class="form-control" name="info_adicionais_{{ referencia.tipo }}" rows="2"></textarea>
+                <textarea class="form-control" name="info_adicionais_{{ referencia.tipo_categoria }}" rows="2"></textarea>
             </div>
 
             <div class="d-grid gap-2 mt-4">

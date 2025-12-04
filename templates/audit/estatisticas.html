@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Estatísticas - Auditoria{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <a href="{{ url_for('audit.index') }}" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h2 class="mb-3">
+            <i class="bi bi-bar-chart text-primary"></i> Estatísticas de Auditoria
+        </h2>
+    </div>
+</div>
+
+<!-- Estatísticas Gerais -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Total de Logs</h6>
+                <h2 class="mb-0 text-primary">{{ total_logs }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Hoje</h6>
+                <h2 class="mb-0 text-info">{{ logs_hoje }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Última Semana</h6>
+                <h2 class="mb-0 text-warning">{{ logs_semana }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Último Mês</h6>
+                <h2 class="mb-0 text-success">{{ logs_mes }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row mb-4">
+    <!-- Logs por Categoria -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Logs por Categoria</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for cat in logs_por_categoria %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ get_categoria_display(cat.categoria) }}
+                        <span class="badge bg-primary rounded-pill">{{ cat.total }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs por Severidade -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Logs por Severidade</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for sev in logs_por_severidade %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge {{ get_severidade_badge(sev.severidade) }}">
+                                {{ sev.severidade }}
+                            </span>
+                        </span>
+                        <span class="badge bg-secondary rounded-pill">{{ sev.total }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Mais Comuns -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-activity"></i> Ações Mais Comuns</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for acao in logs_por_acao %}
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 d-flex justify-content-between align-items-center">
+                            <span>{{ get_acao_display(acao.acao) }}</span>
+                            <span class="badge bg-primary rounded-pill">{{ acao.total }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Usuários Mais Ativos -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Usuários Mais Ativos (Todos os Tempos)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Usuário</th>
+                                <th>Total de Ações</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios_mais_ativos %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ usuario.usuario_nome }}</td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill">{{ usuario.total }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('audit.por_usuario', usuario_id=usuario.usuario_id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Ver Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Atividade Diária (últimos 30 dias) -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar3"></i> Atividade Diária (Últimos 30 Dias)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Total de Logs</th>
+                                <th>Visualização</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for atividade in atividade_diaria %}
+                            <tr>
+                                <td>{{ atividade.dia }}</td>
+                                <td>
+                                    <span class="badge bg-info rounded-pill">{{ atividade.total }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        {% set max_value = atividade_diaria | map(attribute='total') | max %}
+                                        {% set percentage = (atividade.total / max_value * 100) | int if max_value > 0 else 0 %}
+                                        <div class="progress-bar" role="progressbar" style="width: {{ percentage }}%" aria-valuenow="{{ atividade.total }}" aria-valuemin="0" aria-valuemax="{{ max_value }}">
+                                            {{ atividade.total }}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

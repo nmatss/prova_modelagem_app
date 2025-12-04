@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuário - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-pencil-square text-primary me-2"></i>
+                    Editar Usuário
+                </h1>
+                <p class="text-muted mb-0">Atualize os dados do usuário <strong>{{ user.username }}</strong></p>
+            </div>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">
+                                <i class="bi bi-person-circle me-1"></i>
+                                Username <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="username"
+                                   name="username"
+                                   value="{{ user.username }}"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email"
+                                   class="form-control"
+                                   id="email"
+                                   name="email"
+                                   value="{{ user.email }}"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nome_completo" class="form-label">
+                            <i class="bi bi-person-vcard me-1"></i>
+                            Nome Completo
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="nome_completo"
+                               name="nome_completo"
+                               value="{{ user.nome_completo or '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Nível de Acesso <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="usuario" {% if user.role == 'usuario' %}selected{% endif %}>
+                                Usuário - Acesso básico
+                            </option>
+                            <option value="gestor" {% if user.role == 'gestor' %}selected{% endif %}>
+                                Gestor - Pode gerenciar relatórios e provas
+                            </option>
+                            <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>
+                                Administrador - Acesso completo
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="is_active"
+                                   name="is_active"
+                                   {% if user.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Usuário Ativo
+                            </label>
+                        </div>
+                        <small class="text-muted">Desmarque para desativar o acesso do usuário ao sistema</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="alert alert-light border">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    <strong>Criado em:</strong> {{ user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else 'N/A' }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-light border">
+                                <small class="text-muted">
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    <strong>Último acesso:</strong> {{ user.ultimo_acesso.strftime('%d/%m/%Y %H:%M') if user.ultimo_acesso else 'Nunca acessou' }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle-fill"></i> Salvar Alterações
+                        </button>
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ações Adicionais -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-gear me-2"></i>Ações Adicionais</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-1"><i class="bi bi-key me-2"></i>Resetar Senha</h6>
+                        <p class="text-muted small mb-0">Gerar uma nova senha temporária para este usuário</p>
+                    </div>
+                    <button type="button"
+                            class="btn btn-warning"
+                            data-bs-toggle="modal"
+                            data-bs-target="#resetPasswordModal">
+                        <i class="bi bi-key"></i> Resetar
+                    </button>
+                </div>
+
+                {% if user.id != current_user.id %}
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 text-danger"><i class="bi bi-trash me-2"></i>Desativar Usuário</h6>
+                        <p class="text-muted small mb-0">Remover acesso do usuário ao sistema (reversível)</p>
+                    </div>
+                    <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
+                        <button type="submit"
+                                class="btn btn-outline-danger"
+                                onclick="return confirm('Tem certeza que deseja desativar este usuário?')">
+                            <i class="bi bi-slash-circle"></i> Desativar
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Resetar Senha -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="bi bi-key"></i> Resetar Senha
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja resetar a senha do usuário <strong>{{ user.username }}</strong>?</p>
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Uma nova senha temporária será gerada e exibida na tela. O usuário deverá trocá-la no primeiro acesso.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('admin.reset_password', user_id=user.id) }}" method="POST">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-key"></i> Resetar Senha
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

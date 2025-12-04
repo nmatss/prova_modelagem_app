@@ -1,29 +1,47 @@
-# Byte-compiled / optimized / DLL files
+# ==================================
+# Sistema de Provas Puket - .gitignore
+# ==================================
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
 
 # Virtual environments
 venv/
 .venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 
-# Environment variables
+# Environment variables e configurações sensíveis
 .env
 .env.local
 .env.production
+.env.backup
+*.env
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
 instance/
+data/
 
-# Uploads e dados gerados
-uploads/
+# Uploads e dados gerados (NÃO commitar dados de produção)
+uploads/*
+!uploads/.gitkeep
 relatorios_pdf/
-logs/
+backups/*
+!backups/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+*.log
 run/
 
 # IDE
@@ -31,25 +49,49 @@ run/
 .idea/
 *.swp
 *.swo
+*.sublime-*
 
 # OS
 .DS_Store
 Thumbs.db
 *:Zone.Identifier
+*.tmp
 
 # Testing
 .pytest_cache/
 htmlcov/
 .coverage
+.tox/
+.coverage.*
+coverage.xml
+*.cover
 
 # Archives
 *.zip
 *.tar.gz
 *.rar
+*.7z
 
-# Gunicorn
+# Gunicorn/Process
 gunicorn.pid
 *.pid
+*.sock
 
-# Logs
-*.log
+# Docker volumes (apenas local)
+postgres_data/
+
+# Certificados SSL (NÃO commitar)
+ssl/
+*.pem
+*.key
+*.crt
+
+# Backups de banco (NÃO commitar)
+*.sql
+*.sql.gz
+*.dump
+
+# Arquivos temporários
+*.bak
+*.backup
+*~

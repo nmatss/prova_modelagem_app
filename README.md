@@ -1,175 +1,401 @@
-# Aplicação de Provas de Modelagem
+# 🎨 Sistema de Gestão de Provas de Modelagem - Puket
 
-Sistema web para gerenciamento de provas de peças piloto, controle de qualidade e acompanhamento de modelagem.
+<div align="center">
 
-## 🎯 Funcionalidades
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
+![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-- Gestão de relatórios de provas por coleção
-- Upload e organização de fotos (desenho, qualidade, estilo, amostras)
-- Controle de múltiplas provas por referência
-- Geração automática de PDF para cada relatório
-- Sistema de status e acompanhamento
-- Gestão de usuários e permissões
-- Painel administrativo
+Sistema profissional para gestão de provas de modelagem, criado especificamente para a **Puket**.
 
-## 🛠️ Tecnologias
+[🚀 Começar](#-quick-start) •
+[📖 Documentação](#-documentação) •
+[🐳 Deploy](#-deploy) •
+[🤝 Suporte](#-suporte)
 
-- **Backend:** Flask 3.0
-- **Banco de Dados:** SQLite (dev) / PostgreSQL (prod)
-- **Servidor WSGI:** Gunicorn
-- **Proxy Reverso:** Nginx
-- **PDF:** xhtml2pdf
-- **Excel:** openpyxl
-- **Autenticação:** Flask-Login
+</div>
 
-## 📦 Estrutura do Projeto
+---
 
-```
-prova_modelagem_app/
-├── app.py                    # Aplicação principal
-├── wsgi.py                   # Entry point WSGI
-├── config.py                 # Configurações
-├── models.py                 # Modelos do banco
-├── auth.py                   # Autenticação
-├── admin.py                  # Painel admin
-├── utils.py                  # Utilitários
-├── requirements.txt          # Dependências
-├── .env.production          # Variáveis de ambiente (produção)
-├── gunicorn_config.py       # Config Gunicorn
-├── nginx.conf               # Config Nginx
-├── start.sh                 # Script de inicialização
-├── stop.sh                  # Script para parar
-├── restart.sh               # Script de reinício
-├── status.sh                # Verificar status
-├── templates/               # Templates HTML
-├── static/                  # CSS, JS, imagens
-├── uploads/                 # Arquivos enviados
-├── relatorios_pdf/         # PDFs gerados
-└── instance/               # Banco SQLite (dev)
-```
+## 📋 Índice
 
-## 🚀 Quick Start - Desenvolvimento
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Funcionalidades](#-funcionalidades)
+- [Tecnologias](#-tecnologias)
+- [Quick Start](#-quick-start)
+- [Deploy](#-deploy)
+- [Documentação](#-documentação)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Contribuindo](#-contribuindo)
+- [Suporte](#-suporte)
+- [Licença](#-licença)
+
+---
+
+## 🎯 Sobre o Projeto
+
+Sistema web completo para gerenciar todo o ciclo de vida das provas de modelagem, desde o recebimento das amostras até a aprovação final, incluindo:
+
+- **Gestão de Referências** (Baby, Kids, Teen, Adulto)
+- **Múltiplas Provas** por referência
+- **Feedbacks** de 3 equipes (Qualidade, Estilo, Modelagem)
+- **Upload de Fotos** organizadas por contexto
+- **Relatórios PDF** profissionais com fotos
+- **Painel Administrativo** completo
+- **Dashboard** com estatísticas e insights
+
+---
+
+## ✨ Funcionalidades
+
+### 📝 Gestão de Relatórios
+- Criar relatórios de provas com múltiplas referências
+- Organização por coleção e categoria
+- Upload de apresentação (PPT)
+- Histórico completo de alterações
+
+### 🎨 Referências e Provas
+- 4 categorias: Baby, Kids, Teen, Adulto
+- Múltiplas provas por referência
+- Controle de status (Em Andamento, Aprovada, Reprovada, Comitê)
+- Rastreamento de motivos de alteração
+
+### 📷 Gestão de Fotos
+- Upload organizado por contexto:
+  - Desenho do produto
+  - Fotos da amostra
+  - Fotos na modelo
+  - Fotos de qualidade
+  - Fotos de estilo
+  - Fotos de modelagem
+- Associação por tamanho
+- Visualização em galeria
+
+### 👥 Feedbacks Multi-Equipe
+- **Time de Qualidade**: Comentários e observações
+- **Time de Estilo**: Feedbacks visuais
+- **Time de Modelagem**: Análise técnica
+- Histórico completo de todos os feedbacks
+
+### 📊 Dashboard e Relatórios
+- Estatísticas em tempo real
+- Taxa de aprovação
+- Taxa de retrabalho
+- Insights automáticos
+- Exportação de PDF profissional
+
+### 🔐 Segurança e Admin
+- Sistema de autenticação robusto
+- Painel administrativo completo
+- Gerenciamento de usuários
+- Rate limiting
+- Logs de auditoria
+- Sessões seguras
+
+---
+
+## 🛠 Tecnologias
+
+### Backend
+- **Python 3.11+**
+- **Flask 3.0+** - Framework web
+- **PostgreSQL 15** - Banco de dados
+- **SQLAlchemy** - ORM
+- **Flask-Login** - Autenticação
+- **Flask-Limiter** - Rate limiting
+
+### Frontend
+- **Bootstrap 5.3** - UI framework
+- **Bootstrap Icons** - Ícones
+- **JavaScript** - Interatividade
+
+### PDF Generation
+- **WeasyPrint** - Geração de PDF com CSS
+
+### Deploy
+- **Docker & Docker Compose** - Containerização
+- **Gunicorn** - WSGI server
+- **Nginx** - Reverse proxy (opcional)
+
+---
+
+## 🚀 Quick Start
+
+### Pré-requisitos
+
+- Python 3.11+
+- PostgreSQL 15+ (ou Docker)
+- Git
+
+### Instalação Local (Desenvolvimento)
 
 ```bash
-# Clonar repositório
-git clone <url-repositorio>
-cd prova_modelagem_app
+# 1. Clonar repositório
+git clone https://github.com/TIUnicoWeb/prova-modelagem-puket.git
+cd prova-modelagem-puket
 
-# Criar virtual environment
+# 2. Criar ambiente virtual
 python3 -m venv .venv
 source .venv/bin/activate  # Linux/Mac
-# ou .venv\Scripts\activate  # Windows
+# ou
+.venv\Scripts\activate  # Windows
 
-# Instalar dependências
+# 3. Instalar dependências
 pip install -r requirements.txt
 
-# Criar banco e usuário admin
-python3 create_test_user.py
+# 4. Configurar ambiente
+cp .env.example .env
+nano .env  # Editar configurações
 
-# Executar em modo desenvolvimento
+# 5. Inicializar banco
+python3 -c "from app import app, db; app.app_context().push(); db.create_all()"
+
+# 6. Iniciar aplicação
 python3 app.py
 ```
 
 Acesse: http://localhost:5000
 
-## 🏭 Deploy em Produção
+**Login padrão:**
+- Usuário: `admin`
+- Senha: (configurada no .env)
 
-Para deploy em servidor de produção, consulte o guia completo: **[DEPLOY.md](DEPLOY.md)**
+---
 
-### Quick Deploy
+## 🐳 Deploy
 
-```bash
-# 1. Configurar .env.production
-cp .env.example .env.production
-nano .env.production
-
-# 2. Instalar dependências
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# 3. Configurar banco de dados
-python3 migrate_to_postgres.py
-python3 create_test_user.py
-
-# 4. Iniciar aplicação
-./start.sh
-```
-
-## 📝 Configuração
-
-### Variáveis de Ambiente (.env.production)
-
-```env
-SECRET_KEY=<chave-secreta-gerada>
-FLASK_ENV=production
-FLASK_DEBUG=False
-DATABASE_URL=postgresql://usuario:senha@localhost:5432/provas_db
-HOST=0.0.0.0
-PORT=8000
-WORKERS=4
-LOG_LEVEL=INFO
-```
-
-### Banco de Dados Suportados
-
-- **PostgreSQL** (recomendado para produção)
-- **MySQL/MariaDB** (suportado)
-- **SQLite** (apenas desenvolvimento)
-
-## 🔒 Segurança
-
-- Senhas hasheadas com Werkzeug
-- Autenticação via Flask-Login
-- SECRET_KEY única por instalação
-- HTTPS recomendado
-- Validação de tipos de arquivo
-- Proteção contra CSRF
-
-## 📊 Gerenciamento
-
-### Comandos Úteis
+### Deploy com Docker (Recomendado)
 
 ```bash
-./start.sh      # Iniciar aplicação
-./stop.sh       # Parar aplicação
-./restart.sh    # Reiniciar aplicação
-./status.sh     # Ver status
+# 1. Clonar repositório
+git clone https://github.com/TIUnicoWeb/prova-modelagem-puket.git
+cd prova-modelagem-puket
+
+# 2. Configurar ambiente
+cp .env.example .env
+nano .env  # Configurar SECRET_KEY, senhas, etc
+
+# 3. Iniciar containers
+docker compose up -d --build
+
+# 4. Ver logs
+docker compose logs -f
+
+# 5. Criar usuário admin (se necessário)
+docker compose exec web python3 -c "
+from app import app, db
+from models import User
+from werkzeug.security import generate_password_hash
+import os
+
+with app.app_context():
+    admin = User(
+        username=os.getenv('ADMIN_USERNAME', 'admin'),
+        email=os.getenv('ADMIN_EMAIL', 'admin@puket.com'),
+        password_hash=generate_password_hash(os.getenv('ADMIN_PASSWORD')),
+        is_admin=True
+    )
+    db.session.add(admin)
+    db.session.commit()
+"
 ```
+
+**Acesse:** http://seu-servidor:8000
+
+Para deploy completo com Nginx e SSL, veja: **[COMECE_AQUI.md](COMECE_AQUI.md)**
+
+---
+
+## 📖 Documentação
+
+### Guias de Deploy
+
+| Guia | Descrição | Tempo |
+|------|-----------|-------|
+| **[COMECE_AQUI.md](COMECE_AQUI.md)** | Quick start - 5 minutos ⭐ | 5 min |
+| **[INICIO_RAPIDO_DOCKER.md](INICIO_RAPIDO_DOCKER.md)** | Deploy Docker detalhado | 10 min |
+| **[DEPLOY_DOCKER.md](DEPLOY_DOCKER.md)** | Documentação Docker completa | - |
+| **[DEPLOY_PRODUCAO.md](DEPLOY_PRODUCAO.md)** | Deploy manual tradicional | 30 min |
+| **[README_DEPLOY.md](README_DEPLOY.md)** | Índice de documentação | - |
+
+### Manuais
+
+| Manual | Descrição |
+|--------|-----------|
+| **[MANUAL_USUARIO.md](MANUAL_USUARIO.md)** | Como usar o sistema |
+| **[ACESSO_ADMIN.md](ACESSO_ADMIN.md)** | Painel administrativo |
+| **[DOCUMENTACAO_INSTALACAO.md](DOCUMENTACAO_INSTALACAO.md)** | Instalação detalhada |
+
+### Técnica
+
+| Documento | Descrição |
+|-----------|-----------|
+| **[IMPLEMENTACAO_COMPLETA.md](IMPLEMENTACAO_COMPLETA.md)** | Arquitetura e implementação |
+| **[NOMENCLATURA_PADRAO.md](NOMENCLATURA_PADRAO.md)** | Padrões de código |
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+prova-modelagem-puket/
+├── app.py                      # Aplicação principal
+├── models.py                   # Modelos do banco
+├── auth.py                     # Autenticação
+├── admin.py                    # Painel admin
+├── security.py                 # Segurança
+├── config.py                   # Configurações
+├── utils.py                    # Utilitários
+├── error_handlers.py           # Tratamento de erros
+│
+├── templates/                  # Templates HTML
+│   ├── base.html
+│   ├── dashboard.html
+│   ├── novo_relatorio.html
+│   ├── detalhes_relatorio.html
+│   ├── relatorio_pdf.html     # Template do PDF
+│   └── admin/                 # Painel admin
+│
+├── static/                     # Arquivos estáticos
+│   ├── css/
+│   ├── js/
+│   └── img/
+│
+├── scripts/                    # Scripts de deploy
+│   ├── deploy.sh
+│   ├── docker-backup.sh
+│   └── nginx.conf
+│
+├── docker-compose.yml          # Docker Compose
+├── Dockerfile                  # Imagem Docker
+├── gunicorn_config.py         # Servidor Gunicorn
+├── requirements.txt           # Dependências Python
+│
+└── docs/                      # Documentação
+    ├── COMECE_AQUI.md        ⭐
+    ├── DEPLOY_DOCKER.md
+    ├── DEPLOY_PRODUCAO.md
+    └── ...
+```
+
+---
+
+## 🔧 Comandos Úteis
+
+### Desenvolvimento
+
+```bash
+# Iniciar aplicação
+python3 app.py
+
+# Criar usuário admin
+python3 -c "from app import app, db; from models import User; ..."
+
+# Backup do banco
+pg_dump prova_modelagem_db > backup.sql
+```
+
+### Docker
+
+```bash
+# Iniciar
+docker compose up -d
+
+# Logs
+docker compose logs -f
+
+# Reiniciar
+docker compose restart web
+
+# Parar
+docker compose stop
+
+# Backup
+./scripts/docker-backup.sh
+
+# Limpar
+docker compose down -v
+```
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Para contribuir:
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/NovaFuncionalidade`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
+5. Abra um Pull Request
+
+---
+
+## 🆘 Suporte
+
+### Problemas Comuns
+
+**Erro ao gerar PDF:**
+- Verifique se WeasyPrint está instalado
+- Verifique permissões da pasta uploads
+
+**Erro de conexão com banco:**
+- Verifique se PostgreSQL está rodando
+- Confirme DATABASE_URL no .env
+
+**Erro 502:**
+- Reinicie o Gunicorn/Docker
+- Verifique logs em /logs
 
 ### Logs
 
 ```bash
-tail -f /var/log/provas_app/app.log
-tail -f /var/log/provas_app/error.log
+# Docker
+docker compose logs -f web
+
+# Manual
+tail -f /opt/prova_app/logs/app.log
 ```
 
-## 🧪 Testes
+### Contato
 
-```bash
-# Executar testes
-python3 -m pytest tests/
-
-# Com cobertura
-python3 -m pytest --cov=. tests/
-```
-
-## 📄 Licença
-
-Uso interno - Todos os direitos reservados
-
-## 👥 Autores
-
-Imaginarium - Equipe de Desenvolvimento
-
-## 📞 Suporte
-
-Para problemas ou dúvidas, consulte:
-1. [DEPLOY.md](DEPLOY.md) - Guia completo de deploy
-2. Logs da aplicação
-3. Equipe de TI
+- **Issues**: [GitHub Issues](https://github.com/TIUnicoWeb/prova-modelagem-puket/issues)
+- **Email**: suporte@unicoweb.com.br
 
 ---
 
-**Versão:** 1.0.0
-**Última Atualização:** 2024
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 👥 Equipe
+
+Desenvolvido com ❤️ pela equipe **TI Unico Web** para **Puket**.
+
+- **Desenvolvedor**: Nicolas Matsuda
+- **Cliente**: Puket
+
+---
+
+## 🙏 Agradecimentos
+
+- Equipe Puket pelo feedback constante
+- Comunidade Flask pela documentação excelente
+- WeasyPrint pelo motor de PDF
+
+---
+
+<div align="center">
+
+**[⬆ Voltar ao topo](#-sistema-de-gestão-de-provas-de-modelagem---puket)**
+
+---
+
+**Sistema de Gestão de Provas de Modelagem - Puket**
+© 2024 TI Unico Web. Todos os direitos reservados.
+
+</div>

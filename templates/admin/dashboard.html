@@ -1,78 +1,178 @@
 {% extends "base.html" %}
 
+{% block title %}Painel Administrativo{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8 text-gray-800">Painel Administrativo</h1>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="mb-4">
+            <i class="bi bi-speedometer2 text-primary"></i> Painel Administrativo
+        </h2>
+    </div>
+</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Card Usuários -->
-        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 uppercase font-bold">Usuários</p>
-                    <p class="text-3xl font-bold text-gray-800">{{ users_count }}</p>
+<!-- Cards de Estatísticas -->
+<div class="row g-4 mb-4">
+    <!-- Card Usuários -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-start border-primary border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">Usuários</h6>
+                        <h2 class="mb-0">{{ users_count }}</h2>
+                    </div>
+                    <div class="text-primary">
+                        <i class="bi bi-people-fill" style="font-size: 2.5rem;"></i>
+                    </div>
                 </div>
-                <div class="text-blue-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-            </div>
-            <div class="mt-4">
-                <a href="{{ url_for('admin.users') }}" class="text-sm text-blue-600 hover:underline">Gerenciar Usuários
-                    &rarr;</a>
-            </div>
-        </div>
-
-        <!-- Card Relatórios -->
-        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 uppercase font-bold">Relatórios</p>
-                    <p class="text-3xl font-bold text-gray-800">{{ relatorios_count }}</p>
-                </div>
-                <div class="text-green-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </div>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-gear"></i> Gerenciar Usuários
+                </a>
             </div>
         </div>
+    </div>
 
-        <!-- Card Referências -->
-        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 uppercase font-bold">Referências</p>
-                    <p class="text-3xl font-bold text-gray-800">{{ referencias_count }}</p>
+    <!-- Card Relatórios -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-start border-success border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">Relatórios</h6>
+                        <h2 class="mb-0">{{ relatorios_count }}</h2>
+                    </div>
+                    <div class="text-success">
+                        <i class="bi bi-file-earmark-text-fill" style="font-size: 2.5rem;"></i>
+                    </div>
                 </div>
-                <div class="text-yellow-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-success w-100">
+                    <i class="bi bi-eye"></i> Ver Relatórios
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Referências -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-start border-warning border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">Referências</h6>
+                        <h2 class="mb-0">{{ referencias_count }}</h2>
+                    </div>
+                    <div class="text-warning">
+                        <i class="bi bi-tag-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-warning w-100">
+                    <i class="bi bi-search"></i> Ver Referências
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Provas -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-start border-info border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">Provas</h6>
+                        <h2 class="mb-0">{{ provas_count }}</h2>
+                    </div>
+                    <div class="text-info">
+                        <i class="bi bi-clipboard-check-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-info w-100">
+                    <i class="bi bi-list"></i> Ver Provas
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Menu de Administração -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill"></i> Menu de Administração</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Gerenciar Usuários -->
+                    <div class="col-md-4">
+                        <div class="card border-primary h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-people text-primary" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">Gerenciar Usuários</h5>
+                                <p class="text-muted">Criar, editar e gerenciar usuários do sistema</p>
+                                <a href="{{ url_for('admin.users') }}" class="btn btn-primary">
+                                    <i class="bi bi-box-arrow-in-right"></i> Acessar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sistema de Auditoria - Desabilitado temporariamente
+                    <div class="col-md-4">
+                        <div class="card border-success h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-clock-history text-success" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">Auditoria</h5>
+                                <p class="text-muted">Visualizar logs e atividades do sistema</p>
+                                <a href="{{ url_for('audit.index') }}" class="btn btn-success">
+                                    <i class="bi bi-box-arrow-in-right"></i> Acessar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    -->
+
+                    <!-- Estatísticas -->
+                    <div class="col-md-4">
+                        <div class="card border-info h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-bar-chart text-info" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">Estatísticas</h5>
+                                <p class="text-muted">Ver estatísticas e métricas do sistema</p>
+                                <a href="{{ url_for('audit.estatisticas') }}" class="btn btn-info">
+                                    <i class="bi bi-box-arrow-in-right"></i> Acessar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Card Provas -->
-        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 uppercase font-bold">Provas</p>
-                    <p class="text-3xl font-bold text-gray-800">{{ provas_count }}</p>
-                </div>
-                <div class="text-purple-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
+<!-- Informação do Sistema -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3"><i class="bi bi-info-circle"></i> Informações do Sistema</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success"></i> Sistema de Auditoria: <strong>Ativo</strong></li>
+                            <li><i class="bi bi-check-circle text-success"></i> Logs de Atividades: <strong>Habilitado</strong></li>
+                            <li><i class="bi bi-check-circle text-success"></i> Gerenciamento de Usuários: <strong>Habilitado</strong></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3"><i class="bi bi-shield-check"></i> Segurança</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-lock-fill text-primary"></i> Controle de Acesso: <strong>Baseado em Roles</strong></li>
+                            <li><i class="bi bi-lock-fill text-primary"></i> Senhas: <strong>Criptografadas</strong></li>
+                            <li><i class="bi bi-lock-fill text-primary"></i> Sessões: <strong>Seguras</strong></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

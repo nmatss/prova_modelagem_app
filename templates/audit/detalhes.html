@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Log - Auditoria{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <a href="{{ url_for('audit.index') }}" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h2 class="mb-3">
+            <i class="bi bi-file-text text-primary"></i> Detalhes do Log
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Informações Principais -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informações Principais</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 200px;">ID do Log:</th>
+                        <td>{{ log.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Data/Hora:</th>
+                        <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Usuário:</th>
+                        <td>
+                            <a href="{{ url_for('audit.por_usuario', usuario_id=log.usuario_id) }}">
+                                {{ log.usuario_nome }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Ação:</th>
+                        <td>
+                            <span class="badge bg-secondary">{{ get_acao_display(log.acao) }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Categoria:</th>
+                        <td>{{ get_categoria_display(log.categoria) }}</td>
+                    </tr>
+                    <tr>
+                        <th>Severidade:</th>
+                        <td>
+                            <span class="badge {{ get_severidade_badge(log.severidade) }}">
+                                {{ log.severidade }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Entidade:</th>
+                        <td>
+                            {{ log.entidade }}
+                            {% if log.entidade_id %}
+                                (ID: {{ log.entidade_id }})
+                                {% if log.entidade and log.entidade_id %}
+                                <a href="{{ url_for('audit.timeline', entidade=log.entidade, entidade_id=log.entidade_id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-clock-history"></i> Ver Timeline
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Descrição:</th>
+                        <td>{{ log.descricao }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Dados Antes/Depois -->
+        {% if dados_antes or dados_depois %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-file-diff"></i> Alterações</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if dados_antes %}
+                    <div class="col-md-6">
+                        <h6 class="text-danger"><i class="bi bi-dash-circle"></i> Antes</h6>
+                        <pre class="bg-light p-3 rounded"><code>{{ dados_antes | tojson(indent=2) }}</code></pre>
+                    </div>
+                    {% endif %}
+                    {% if dados_depois %}
+                    <div class="col-md-6">
+                        <h6 class="text-success"><i class="bi bi-plus-circle"></i> Depois</h6>
+                        <pre class="bg-light p-3 rounded"><code>{{ dados_depois | tojson(indent=2) }}</code></pre>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Informações Técnicas -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-gear"></i> Informações Técnicas</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <th>IP Address:</th>
+                        <td><code>{{ log.ip_address or 'N/A' }}</code></td>
+                    </tr>
+                    <tr>
+                        <th>Método HTTP:</th>
+                        <td><span class="badge bg-info">{{ log.metodo_http or 'N/A' }}</span></td>
+                    </tr>
+                    <tr>
+                        <th>URL:</th>
+                        <td><small><code>{{ log.url or 'N/A' }}</code></small></td>
+                    </tr>
+                    <tr>
+                        <th>User Agent:</th>
+                        <td><small>{{ log.user_agent or 'N/A' }}</small></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Contexto -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Contexto</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('audit.por_usuario', usuario_id=log.usuario_id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-person"></i> Todas Ações deste Usuário
+                    </a>
+                    {% if log.entidade and log.entidade_id %}
+                    <a href="{{ url_for('audit.timeline', entidade=log.entidade, entidade_id=log.entidade_id) }}" class="btn btn-outline-info">
+                        <i class="bi bi-clock-history"></i> Timeline desta Entidade
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('audit.index', categoria=log.categoria) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-filter"></i> Logs desta Categoria
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

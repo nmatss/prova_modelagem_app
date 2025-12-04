@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Atividades - {{ usuario.username }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <a href="{{ url_for('audit.index') }}" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h2 class="mb-3">
+            <i class="bi bi-person-circle text-primary"></i> Atividades - {{ usuario.username }}
+        </h2>
+    </div>
+</div>
+
+<!-- Estatísticas do Usuário -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-primary">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Total de Ações</h6>
+                <h3 class="mb-0">{{ total_acoes }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-info">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Última Atividade</h6>
+                <p class="mb-0">
+                    {% if ultima_atividade %}
+                    {{ ultima_atividade.created_at.strftime('%d/%m/%Y %H:%M') }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Nome Completo</h6>
+                <p class="mb-0">{{ usuario.nome_completo or 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações por Categoria -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Ações por Categoria</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for cat_stat in acoes_por_categoria %}
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <h6>{{ get_categoria_display(cat_stat.categoria) }}</h6>
+                            <h4 class="mb-0 text-primary">{{ cat_stat.total }}</h4>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs do Usuário -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Histórico de Atividades</h5>
+    </div>
+    <div class="card-body">
+        {% if logs.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Ação</th>
+                        <th>Categoria</th>
+                        <th>Descrição</th>
+                        <th>Severidade</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ get_acao_display(log.acao) }}</span>
+                        </td>
+                        <td>{{ get_categoria_display(log.categoria) }}</td>
+                        <td>{{ log.descricao[:80] }}{% if log.descricao|length > 80 %}...{% endif %}</td>
+                        <td>
+                            <span class="badge {{ get_severidade_badge(log.severidade) }}">
+                                {{ log.severidade }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('audit.detalhes', log_id=log.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if logs.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if logs.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('audit.por_usuario', usuario_id=usuario.id, page=logs.prev_num) }}">Anterior</a>
+                </li>
+                {% endif %}
+
+                {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == logs.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('audit.por_usuario', usuario_id=usuario.id, page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if logs.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('audit.por_usuario', usuario_id=usuario.id, page=logs.next_num) }}">Próximo</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nenhum log encontrado para este usuário.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

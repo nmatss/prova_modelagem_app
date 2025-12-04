@@ -2,6 +2,139 @@
 
 {% block title %}Novo Relatório - Prova de Modelagem{% endblock %}
 
+{% block styles %}
+<style>
+    /* Responsive styles for novo_relatorio */
+    @media (max-width: 768px) {
+        .d-flex.justify-content-between {
+            flex-direction: column !important;
+            gap: 1rem;
+        }
+
+        .d-flex.justify-content-between .btn {
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+        }
+
+        .nav-tabs {
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tabs .nav-link {
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .card {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .row > [class*='col-'] {
+            margin-bottom: 1rem;
+        }
+
+        .row .col-md-4 {
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-group {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .btn-check + .btn-outline-success {
+            flex: 0 1 auto;
+            min-width: 60px;
+        }
+
+        .d-grid .btn-lg {
+            font-size: 1.1rem;
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .card-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .nav-tabs .nav-link {
+            padding: 0.65rem 0.875rem;
+            font-size: 0.85rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 0.9rem;
+        }
+
+        .btn-group .btn {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .d-grid .btn-lg {
+            font-size: 1rem;
+            padding: 0.875rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h1 {
+            font-size: 1.3rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+        }
+
+        .nav-tabs .nav-link {
+            padding: 0.6rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .btn-group {
+            width: 100%;
+        }
+
+        .btn-group .btn {
+            flex: 1 1 45%;
+        }
+
+        .card .card-header.bg-success {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Novo Relatório de Prova</h1>
@@ -64,37 +197,63 @@
 
                     <div id="detalhes_{{ tipo }}" style="display: none;">
                         <hr>
-                        <div class="card mb-3 border-success">
-                            <div class="card-header bg-success text-white">Nova Referência - 1ª Prova</div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Desenho do produto</label>
-                                    <input type="file" class="form-control" name="fotos_desenho_{{ tipo }}" multiple>
-                                </div>
 
+                        <!-- INFORMAÇÕES DA REFERÊNCIA -->
+                        <div class="card mb-4 border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="bi bi-tag-fill me-2"></i>Informações da Referência</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Preencha as informações sobre origem, fornecedor e materiais da referência
+                                </p>
                                 <div class="row mb-3">
                                     <div class="col-md-4">
-                                        <label class="form-label">Origem</label>
+                                        <label class="form-label"><strong>Origem</strong></label>
                                         <select class="form-select" name="origem_{{ tipo }}">
-                                            <option value=""></option>
+                                            <option value="">Selecione...</option>
                                             <option value="Asia">Ásia</option>
                                             <option value="China">China</option>
                                             <option value="Faccao">Facção</option>
                                             <option value="Produto Acabado (Brasil)">Produto Acabado (Brasil)</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4"><label class="form-label">Fornecedor</label><input type="text"
-                                            class="form-control" name="fornecedor_{{ tipo }}"></div>
-                                    <div class="col-md-4"><label class="form-label">Matéria prima</label><input
-                                            type="text" class="form-control" name="materia_prima_{{ tipo }}"></div>
+                                    <div class="col-md-4">
+                                        <label class="form-label"><strong>Fornecedor</strong></label>
+                                        <input type="text" class="form-control" name="fornecedor_{{ tipo }}" placeholder="Nome do fornecedor">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label"><strong>Matéria Prima</strong></label>
+                                        <input type="text" class="form-control" name="materia_prima_{{ tipo }}" placeholder="Ex: Algodão">
+                                    </div>
                                 </div>
                                 <div class="row mb-3">
-                                    <div class="col-md-4"><label class="form-label">Composição</label><input type="text"
-                                            class="form-control" name="composicao_{{ tipo }}"></div>
-                                    <div class="col-md-4"><label class="form-label">Gramatura</label><input type="text"
-                                            class="form-control" name="gramatura_{{ tipo }}"></div>
-                                    <div class="col-md-4"><label class="form-label">Aviamentos</label><input type="text"
-                                            class="form-control" name="aviamentos_{{ tipo }}"></div>
+                                    <div class="col-md-4">
+                                        <label class="form-label"><strong>Composição</strong></label>
+                                        <input type="text" class="form-control" name="composicao_{{ tipo }}" placeholder="Ex: 100% Algodão">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label"><strong>Gramatura</strong></label>
+                                        <input type="text" class="form-control" name="gramatura_{{ tipo }}" placeholder="Ex: 180g/m²">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label"><strong>Aviamentos</strong></label>
+                                        <input type="text" class="form-control" name="aviamentos_{{ tipo }}" placeholder="Ex: Botões, zíper">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PRIMEIRA PROVA -->
+                        <div class="card mb-3 border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>1ª Prova de Modelagem</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Desenho do produto</label>
+                                    <input type="file" class="form-control" name="fotos_desenho_{{ tipo }}" multiple>
                                 </div>
 
                                 <div class="mb-3">
@@ -149,46 +308,78 @@
                                 </div>
 
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="card">
-                                            <div class="card-header">Qualidade</div>
+                                            <div class="card-header bg-success text-white">Qualidade</div>
                                             <div class="card-body">
                                                 <div class="mb-2">
                                                     <label class="form-label">Responsável</label>
                                                     <input type="text" class="form-control"
-                                                        name="time_qualidade_{{ tipo }}">
+                                                        name="time_qualidade_{{ tipo }}" placeholder="Nome do responsável">
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Comentários</label>
                                                     <textarea class="form-control"
-                                                        name="comentarios_qualidade_{{ tipo }}" rows="3"></textarea>
+                                                        name="comentarios_qualidade_{{ tipo }}" rows="2" placeholder="Comentários gerais"></textarea>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Observações Adicionais</label>
+                                                    <textarea class="form-control"
+                                                        name="obs_qualidade_{{ tipo }}" rows="2" placeholder="Detalhes técnicos, medidas, etc."></textarea>
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Fotos</label>
                                                     <input type="file" class="form-control"
-                                                        name="fotos_qualidade_{{ tipo }}" multiple>
+                                                        name="fotos_qualidade_{{ tipo }}" multiple accept="image/*">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="card">
-                                            <div class="card-header">Estilo</div>
+                                            <div class="card-header bg-info text-white">Estilo</div>
                                             <div class="card-body">
                                                 <div class="mb-2">
                                                     <label class="form-label">Responsável</label>
                                                     <input type="text" class="form-control"
-                                                        name="time_estilo_{{ tipo }}">
+                                                        name="time_estilo_{{ tipo }}" placeholder="Nome do responsável">
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Comentários</label>
                                                     <textarea class="form-control" name="comentarios_estilo_{{ tipo }}"
-                                                        rows="3"></textarea>
+                                                        rows="2" placeholder="Comentários gerais"></textarea>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Observações Adicionais</label>
+                                                    <textarea class="form-control"
+                                                        name="obs_estilo_{{ tipo }}" rows="2" placeholder="Ajustes, modificações, etc."></textarea>
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Fotos</label>
                                                     <input type="file" class="form-control"
-                                                        name="fotos_estilo_{{ tipo }}" multiple>
+                                                        name="fotos_estilo_{{ tipo }}" multiple accept="image/*">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-header bg-warning">Modelagem</div>
+                                            <div class="card-body">
+                                                <div class="mb-2">
+                                                    <label class="form-label">Responsável</label>
+                                                    <input type="text" class="form-control"
+                                                        name="time_modelagem_{{ tipo }}" placeholder="Nome do responsável">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Comentários</label>
+                                                    <textarea class="form-control" name="comentarios_modelagem_{{ tipo }}"
+                                                        rows="2" placeholder="Comentários gerais"></textarea>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Observações Adicionais</label>
+                                                    <textarea class="form-control"
+                                                        name="obs_modelagem_{{ tipo }}" rows="2" placeholder="Ajustes técnicos, correções, etc."></textarea>
                                                 </div>
                                             </div>
                                         </div>

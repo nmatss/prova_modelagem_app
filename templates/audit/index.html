@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Auditoria - Sistema{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="mb-3">
+            <i class="bi bi-clock-history text-primary"></i> Auditoria do Sistema
+        </h2>
+    </div>
+</div>
+
+<!-- Estatísticas Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Total de Logs</h6>
+                <h3 class="mb-0">{{ total_logs }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Hoje</h6>
+                <h3 class="mb-0">{{ logs_hoje }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Última Semana</h6>
+                <h3 class="mb-0">{{ logs_semana }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body">
+                <a href="{{ url_for('audit.estatisticas') }}" class="text-decoration-none">
+                    <h6 class="text-muted mb-2">Estatísticas</h6>
+                    <h3 class="mb-0"><i class="bi bi-bar-chart"></i></h3>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtros</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('audit.index') }}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Usuário</label>
+                    <select class="form-select" name="usuario_id">
+                        <option value="">Todos</option>
+                        {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}" {% if filtro_usuario_id == usuario.id %}selected{% endif %}>
+                            {{ usuario.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Categoria</label>
+                    <select class="form-select" name="categoria">
+                        <option value="">Todas</option>
+                        {% for cat in categorias_opcoes %}
+                        <option value="{{ cat }}" {% if filtro_categoria == cat %}selected{% endif %}>
+                            {{ get_categoria_display(cat) }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ação</label>
+                    <select class="form-select" name="acao">
+                        <option value="">Todas</option>
+                        {% for acao in acoes_opcoes %}
+                        <option value="{{ acao }}" {% if filtro_acao == acao %}selected{% endif %}>
+                            {{ get_acao_display(acao) }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Severidade</label>
+                    <select class="form-select" name="severidade">
+                        <option value="">Todas</option>
+                        {% for sev in severidades_opcoes %}
+                        <option value="{{ sev }}" {% if filtro_severidade == sev %}selected{% endif %}>
+                            {{ sev }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Data Início</label>
+                    <input type="date" class="form-control" name="data_inicio" value="{{ filtro_data_inicio or '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Data Fim</label>
+                    <input type="date" class="form-control" name="data_fim" value="{{ filtro_data_fim or '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" class="form-control" name="busca" value="{{ filtro_busca or '' }}" placeholder="Descrição, usuário, entidade...">
+                </div>
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                    <a href="{{ url_for('audit.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Limpar
+                    </a>
+                    <a href="{{ url_for('audit.exportar_csv', **request.args) }}" class="btn btn-success float-end">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabela de Logs -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Logs de Auditoria</h5>
+    </div>
+    <div class="card-body">
+        {% if logs.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Usuário</th>
+                        <th>Ação</th>
+                        <th>Categoria</th>
+                        <th>Descrição</th>
+                        <th>Severidade</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                        <td>
+                            <a href="{{ url_for('audit.por_usuario', usuario_id=log.usuario_id) }}">
+                                {{ log.usuario_nome }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ get_acao_display(log.acao) }}</span>
+                        </td>
+                        <td>{{ get_categoria_display(log.categoria) }}</td>
+                        <td>{{ log.descricao[:100] }}{% if log.descricao|length > 100 %}...{% endif %}</td>
+                        <td>
+                            <span class="badge {{ get_severidade_badge(log.severidade) }}">
+                                {{ log.severidade }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('audit.detalhes', log_id=log.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if logs.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if logs.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('audit.index', page=logs.prev_num, **request.args) }}">Anterior</a>
+                </li>
+                {% endif %}
+
+                {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == logs.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('audit.index', page=page_num, **request.args) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if logs.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('audit.index', page=logs.next_num, **request.args) }}">Próximo</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nenhum log encontrado.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Resumos Rápidos -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-people"></i> Usuários Mais Ativos (7 dias)</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for usuario in usuarios_ativos %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('audit.por_usuario', usuario_id=usuario.usuario_id) }}">
+                            {{ usuario.usuario_nome }}
+                        </a>
+                        <span class="badge bg-primary rounded-pill">{{ usuario.total }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-activity"></i> Ações Mais Comuns (7 dias)</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for acao in acoes_comuns %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ get_acao_display(acao.acao) }}
+                        <span class="badge bg-secondary rounded-pill">{{ acao.total }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

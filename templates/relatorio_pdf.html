@@ -6,105 +6,668 @@
     <style>
         @page {
             size: A4;
-            margin: 1.5cm;
-            @frame footer {
-                -pdf-frame-content: footer-content;
-                bottom: 1cm;
-                margin-left: 1cm;
-                margin-right: 1cm;
-                height: 1cm;
+            margin: 1.5cm 1.2cm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 8pt;
+                color: #666;
             }
         }
-        body { font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 10pt; color: #333; }
-        h1, h2, h3, h4 { font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; color: #e6007e; font-weight: bold; margin: 0; padding: 0; }
-        h1 { font-size: 22pt; text-align: center; margin-bottom: 0.5cm; border-bottom: 2px solid #e6007e; padding-bottom: 10px; }
-        h2 { font-size: 16pt; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 1cm; }
-        h3 { font-size: 13pt; margin-top: 1cm; border-bottom: 1px dotted #e6007e; padding-bottom: 3px; }
-        h4 { font-size: 11pt; margin-top: 0.8cm; margin-bottom: 0.3cm; }
-        a { color: #0066cc; text-decoration: underline; }
-        .detail-section, .proof-section { margin-bottom: 1cm; page-break-inside: avoid; }
-        .detail-grid { display: block; columns: 2; -pdf-keep-with-next: true; }
-        .detail-item { margin-bottom: 0.5cm; page-break-inside: avoid; }
-        .detail-item strong { display: block; font-weight: bold; color: #000; text-transform: none; font-size: 10pt; }
-        .detail-item span, .detail-item pre { display: block; white-space: pre-wrap; word-wrap: break-word; color: #555; }
-        pre { margin: 0; padding: 0; font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }
-        .photo-gallery { display: block; columns: 3; gap: 0.5cm; margin-top: 0.5cm; }
-        .photo-item { text-align: center; page-break-inside: avoid; margin-bottom: 0.5cm; }
-        .photo-item img { max-width: 100%; height: auto; border: 1px solid #ddd; }
-        .photo-caption { font-size: 8pt; text-align: center; color: #666; margin-top: 2px; }
-        .team-feedback-section { background-color: #f9f9f9; border: 1px solid #eee; padding: 0.5cm; margin-top: 1cm; }
-        #footer-content { text-align: center; font-size: 8pt; color: #888; }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 9.5pt;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        /* Header com Logo - Mais compacto e elegante */
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 0.6cm;
+            padding-bottom: 0.4cm;
+            border-bottom: 3px solid #ec4899;
+            background: linear-gradient(135deg, #fef2f7 0%, #fff 100%);
+            padding: 0.4cm;
+        }
+
+        .pdf-header img {
+            width: 70px;
+            height: auto;
+            margin-bottom: 0.2cm;
+        }
+
+        .pdf-header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #ec4899;
+            margin: 0;
+            padding: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .pdf-header .subtitle {
+            font-size: 10pt;
+            color: #64748b;
+            margin-top: 0.15cm;
+            font-weight: 500;
+        }
+
+        /* Typography - Mais compacta */
+        h2 {
+            font-size: 14pt;
+            color: #ec4899;
+            border-bottom: 2px solid #ec4899;
+            padding-bottom: 0.15cm;
+            margin-top: 0.6cm;
+            margin-bottom: 0.3cm;
+            page-break-after: avoid;
+            font-weight: 700;
+        }
+
+        h3 {
+            font-size: 11.5pt;
+            color: #8b5cf6;
+            margin-top: 0.4cm;
+            margin-bottom: 0.25cm;
+            padding-left: 0.3cm;
+            border-left: 4px solid #8b5cf6;
+            page-break-after: avoid;
+            font-weight: 600;
+        }
+
+        h4 {
+            font-size: 10pt;
+            color: #6366f1;
+            margin-top: 0.35cm;
+            margin-bottom: 0.15cm;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Sections - Mais compactas */
+        .info-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #ec4899;
+            padding: 0.3cm;
+            margin-bottom: 0.4cm;
+            page-break-inside: avoid;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #fef2f7 0%, #fce7f3 100%);
+            border: 2px solid #ec4899;
+            padding: 0.4cm;
+            margin-bottom: 0.6cm;
+            border-radius: 6px;
+            page-break-inside: avoid;
+        }
+
+        .reference-box {
+            background-color: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 5px;
+            padding: 0.35cm;
+            margin-bottom: 0.5cm;
+            page-break-inside: avoid;
+        }
+
+        .proof-box {
+            background-color: #f0fdf4;
+            border: 2px solid #22c55e;
+            border-radius: 5px;
+            padding: 0.4cm;
+            margin-bottom: 0.6cm;
+            margin-left: 0.3cm;
+            page-break-inside: avoid;
+        }
+
+        .feedback-box {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 0.3cm;
+            margin-bottom: 0.3cm;
+            page-break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .feedback-box.qualidade {
+            background-color: #fef3c7;
+            border-left-color: #f59e0b;
+        }
+
+        .feedback-box.estilo {
+            background-color: #fce7f3;
+            border-left-color: #ec4899;
+        }
+
+        .feedback-box.modelagem {
+            background-color: #dbeafe;
+            border-left-color: #3b82f6;
+        }
+
+        /* Detail Grid - Mais compacta */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.25cm;
+            margin-bottom: 0.25cm;
+        }
+
+        .detail-item {
+            margin-bottom: 0.15cm;
+            page-break-inside: avoid;
+        }
+
+        .detail-item strong {
+            display: block;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 8.5pt;
+            margin-bottom: 0.05cm;
+        }
+
+        .detail-item span {
+            display: block;
+            color: #475569;
+            font-size: 9pt;
+        }
+
+        .detail-item pre {
+            display: block;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #475569;
+            background-color: #f8fafc;
+            padding: 0.15cm;
+            border-radius: 3px;
+            font-size: 8.5pt;
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 0.08cm 0.25cm;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 8.5pt;
+            margin-left: 0.2cm;
+            vertical-align: middle;
+        }
+
+        .status-aprovada { background-color: #dcfce7; color: #166534; border: 1px solid #22c55e; }
+        .status-reprovada { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .status-andamento { background-color: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .status-comite { background-color: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+
+        /* Photos - Grid otimizado para PDF */
+        .photo-section {
+            margin-top: 0.3cm;
+            margin-bottom: 0.3cm;
+            page-break-inside: avoid;
+        }
+
+        .photo-section h4 {
+            background: linear-gradient(to right, #f1f5f9, transparent);
+            padding: 0.15cm 0.2cm;
+            margin-bottom: 0.2cm;
+            border-left: 3px solid #6366f1;
+        }
+
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.25cm;
+            margin-top: 0.25cm;
+        }
+
+        .photo-item {
+            text-align: center;
+            page-break-inside: avoid;
+            border: 1px solid #e2e8f0;
+            padding: 0.1cm;
+            background: white;
+            border-radius: 3px;
+        }
+
+        .photo-item img {
+            width: 100%;
+            max-height: 5cm;
+            height: auto;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+
+        .photo-caption {
+            font-size: 7.5pt;
+            color: #64748b;
+            margin-top: 0.08cm;
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.25cm 0;
+            font-size: 9pt;
+        }
+
+        table th {
+            background: linear-gradient(135deg, #ec4899, #d946a6);
+            color: white;
+            font-weight: 600;
+            padding: 0.2cm;
+            text-align: left;
+            border-bottom: 2px solid #ec4899;
+            font-size: 9pt;
+        }
+
+        table td {
+            padding: 0.15cm 0.2cm;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 8.5pt;
+        }
+
+        table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Page breaks */
+        .page-break { page-break-after: always; }
+        .no-break { page-break-inside: avoid; }
+
+        /* Rodapé */
+        .footer-final {
+            margin-top: 0.8cm;
+            padding-top: 0.4cm;
+            border-top: 2px solid #ec4899;
+            text-align: center;
+            color: #64748b;
+            font-size: 8.5pt;
+        }
+
+        .footer-final strong {
+            color: #ec4899;
+            font-size: 9.5pt;
+        }
+
+        /* Emojis/Icons */
+        .emoji {
+            font-size: 11pt;
+            margin-right: 0.1cm;
+        }
     </style>
 </head>
 <body>
-    <div id="footer-content">
-        Logo da Empresa | Logo da Marca Puket - Página <pdf:pagenumber>
+    <!-- Header -->
+    <div class="pdf-header">
+        <img src="{{ url_for('static', filename='img/Puket.png', _external=True) }}" alt="Puket Logo">
+        <h1>Relatório de Prova de Modelagem</h1>
+        <div class="subtitle">{{ relatorio.descricao_geral }}</div>
     </div>
 
-    <h1>Relatório de Prova - {{ relatorio.descricao_geral }}</h1>
-
-    <section class="detail-section">
-        <h2>Informações Gerais</h2>
+    <!-- Informações Gerais -->
+    <section class="summary-box">
+        <h2>Informações Gerais do Relatório</h2>
         <div class="detail-grid">
-            {% if relatorio.colecao %}<div class="detail-item"><strong>Coleção:</strong><span>{{ relatorio.colecao }}</span></div>{% endif %}
-            <!-- --- ALTERAÇÃO: Link para o ficheiro PPT --- -->
-            {% if relatorio.ppt_path %}<div class="detail-item"><strong>PPT:</strong><span><a href="{{ url_for('serve_upload', filename=relatorio.ppt_path, _external=True) }}">{{ relatorio.ppt_path }}</a></span></div>{% endif %}
+            <div class="detail-item">
+                <strong>Código:</strong>
+                <span>{{ relatorio.codigo or 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Coleção:</strong>
+                <span>{{ relatorio.colecao or 'Não informada' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Data de Criação:</strong>
+                <span>{{ relatorio.created_at.strftime('%d/%m/%Y às %H:%M') if relatorio.created_at else 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Última Atualização:</strong>
+                <span>{{ relatorio.updated_at.strftime('%d/%m/%Y às %H:%M') if relatorio.updated_at else 'N/A' }}</span>
+            </div>
         </div>
+        {% if relatorio.ppt_path %}
+        <div class="detail-item">
+            <strong>Apresentação (PPT):</strong>
+            <span>✓ Arquivo disponível no sistema</span>
+        </div>
+        {% endif %}
     </section>
 
+    <!-- Resumo Estatístico -->
+    <section class="info-box">
+        <h3>Resumo Estatístico</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Métrica</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Total de Referências</td>
+                    <td><strong>{{ referencias|length }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Total de Provas</td>
+                    <td><strong>{% set total_provas = namespace(count=0) %}{% for ref in referencias %}{% set total_provas.count = total_provas.count + ref.provas|length %}{% endfor %}{{ total_provas.count }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Categorias Incluídas</td>
+                    <td>{% set categorias = namespace(list=[]) %}{% for ref in referencias %}{% if ref.tipo_categoria not in categorias.list %}{% set _ = categorias.list.append(ref.tipo_categoria|capitalize) %}{% endif %}{% endfor %}<strong>{{ categorias.list|join(', ') }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Referências e Provas -->
     {% for ref in referencias %}
-    <section class="detail-section">
-        <h2>Referência {{ ref.tipo | capitalize }} ({{ ref.numero_ref }})</h2>
+    <div class="no-break">
+        <h2><span class="emoji">📋</span>Referência {{ ref.tipo_categoria|capitalize }} - {{ ref.numero_ref }}</h2>
+    </div>
+
+    <section class="reference-box">
+        <h3>Dados da Referência</h3>
         <div class="detail-grid">
-            {% if ref.origem %}<div class="detail-item"><strong>Origem:</strong><span>{{ ref.origem }}</span></div>{% endif %}
-            {% if ref.fornecedor %}<div class="detail-item"><strong>Fornecedor:</strong><span>{{ ref.fornecedor }}</span></div>{% endif %}
-            {% if ref.materia_prima %}<div class="detail-item"><strong>Matéria Prima:</strong><span>{{ ref.materia_prima }}</span></div>{% endif %}
-            {% if ref.composicao %}<div class="detail-item"><strong>Composição:</strong><span>{{ ref.composicao }}</span></div>{% endif %}
-            {% if ref.gramatura %}<div class="detail-item"><strong>Gramatura:</strong><span>{{ ref.gramatura }}</span></div>{% endif %}
-            {% if ref.aviamentos %}<div class="detail-item"><strong>Aviamentos:</strong><span>{{ ref.aviamentos }}</span></div>{% endif %}
+            <div class="detail-item">
+                <strong>Número da Referência:</strong>
+                <span>{{ ref.numero_ref or '-' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Categoria:</strong>
+                <span>{{ ref.tipo_categoria|capitalize }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Origem:</strong>
+                <span>{{ ref.origem or '-' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Fornecedor:</strong>
+                <span>{{ ref.fornecedor or '-' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Matéria Prima:</strong>
+                <span>{{ ref.materia_prima or '-' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Composição:</strong>
+                <span>{{ ref.composicao or '-' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Gramatura:</strong>
+                <span>{{ ref.gramatura or '-' }}</span>
+            </div>
+            <div class="detail-item">
+                <strong>Aviamentos:</strong>
+                <span>{{ ref.aviamentos or '-' }}</span>
+            </div>
         </div>
     </section>
 
     {% for prova in ref.provas %}
-    <section class="proof-section">
-        <h3>{{ prova.numero_prova }}ª Prova de Modelagem (Status: {{ prova.status }})</h3>
-        {% if prova.motivo_ultima_alteracao %}<div class="detail-item"><strong>Motivo da Alteração:</strong><span>{{ prova.motivo_ultima_alteracao }}</span></div>{% endif %}
-        
-        {% if prova.fotos.desenho %}<div class="detail-item"><h4>Desenho do Produto</h4><div class="photo-gallery">{% for foto in prova.fotos.desenho %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"></div>{% endfor %}</div></div>{% endif %}
-        
-        <!-- --- ALTERAÇÃO: Link para a Tabela de Medidas --- -->
-        {% if prova.tabela_medidas_path %}<div class="detail-item"><strong>Tabela de Medidas:</strong><span><a href="{{ url_for('serve_upload', filename=prova.tabela_medidas_path, _external=True) }}">{{ prova.tabela_medidas_path }}</a></span></div>{% endif %}
-        
-        <div class="detail-grid">
-            {% if prova.data_recebimento %}<div class="detail-item"><strong>Data de Recebimento:</strong><span>{{ prova.data_recebimento }}</span></div>{% endif %}
-            {% if prova.tamanhos_recebidos %}<div class="detail-item"><strong>Tamanhos Recebidos:</strong><span>{{ prova.tamanhos_recebidos }}</span></div>{% endif %}
+    <section class="proof-box">
+        <div class="no-break">
+            <h3><span class="emoji">✓</span>{{ prova.numero_prova }}ª Prova de Modelagem
+                <span class="status-badge status-{{ prova.status|lower|replace(' ', '-')|replace('ã', 'a') }}">
+                    {{ prova.status }}
+                </span>
+            </h3>
         </div>
 
-        {% if prova.info_medidas %}<div class="detail-item"><strong>Informações de Medidas:</strong><pre>{{ prova.info_medidas }}</pre></div>{% endif %}
-        
-        {% if prova.fotos.amostra %}<div class="detail-item"><h4>Fotos da Amostra</h4><div class="photo-gallery">{% for foto in prova.fotos.amostra %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"><div class="photo-caption">Tamanho: {{ foto.tamanho }}</div></div>{% endfor %}</div></div>{% endif %}
-
-        {% if prova.data_prova %}<div class="detail-item" style="margin-top: 1cm;"><strong>Data da Prova:</strong><span>{{ prova.data_prova }}</span></div>{% endif %}
-
-        {% if prova.time_qualidade or prova.comentarios_qualidade or prova.fotos.qualidade or prova.time_estilo or prova.comentarios_estilo or prova.fotos.estilo %}
-        <section class="team-feedback-section">
-            <h4>Feedbacks</h4>
-            {% if prova.time_qualidade or prova.comentarios_qualidade %}<div class="detail-item"><strong>Qualidade ({{ prova.time_qualidade }}):</strong><pre>{{ prova.comentarios_qualidade or 'Sem comentários.' }}</pre>{% if prova.fotos.qualidade %}<div class="photo-gallery">{% for foto in prova.fotos.qualidade %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"></div>{% endfor %}</div>{% endif %}</div>{% endif %}
-            {% if prova.time_estilo or prova.comentarios_estilo %}<div class="detail-item"><strong>Estilo ({{ prova.time_estilo }}):</strong><pre>{{ prova.comentarios_estilo or 'Sem comentários.' }}</pre>{% if prova.fotos.estilo %}<div class="photo-gallery">{% for foto in prova.fotos.estilo %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"></div>{% endfor %}</div>{% endif %}</div>{% endif %}
-        </section>
+        {% if prova.motivo_ultima_alteracao %}
+        <div class="info-box">
+            <strong>Motivo da Última Alteração:</strong>
+            <pre>{{ prova.motivo_ultima_alteracao }}</pre>
+        </div>
         {% endif %}
 
-        {% if prova.fotos.prova_modelo %}<div class="detail-item"><h4>Fotos da Prova (na modelo)</h4><div class="photo-gallery">{% for foto in prova.fotos.prova_modelo %}<div class="photo-item"><img src="{{ url_for('serve_upload', filename=foto.file_path) }}"><div class="photo-caption">Tamanho: {{ foto.tamanho }}</div></div>{% endfor %}</div></div>{% endif %}
-
-        <div class="detail-grid" style="margin-top: 1cm;">
-            {% if prova.data_lacre %}<div class="detail-item"><strong>Data de Liberação:</strong><span>{{ prova.data_lacre }}</span></div>{% endif %}
-            {% if prova.numero_lacre %}<div class="detail-item"><strong>Número do Lacre:</strong><span>{{ prova.numero_lacre }}</span></div>{% endif %}
+        <!-- Desenho do Produto -->
+        {% if prova.fotos.desenho %}
+        <div class="photo-section">
+            <h4><span class="emoji">🎨</span>Desenho do Produto</h4>
+            <div class="photo-gallery">
+                {% for foto in prova.fotos.desenho %}
+                <div class="photo-item">
+                    <img src="file://{{ foto.caminho_absoluto }}" alt="Desenho">
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        
-        {% if prova.info_adicionais %}<div class="detail-item"><strong>Informações Adicionais:</strong><pre>{{ prova.info_adicionais }}</pre></div>{% endif %}
+        {% endif %}
+
+        <!-- Informações da Prova -->
+        <div class="detail-grid">
+            {% if prova.data_recebimento %}
+            <div class="detail-item">
+                <strong>Data de Recebimento:</strong>
+                <span>{{ prova.data_recebimento }}</span>
+            </div>
+            {% endif %}
+            {% if prova.data_prova %}
+            <div class="detail-item">
+                <strong>Data da Prova:</strong>
+                <span>{{ prova.data_prova }}</span>
+            </div>
+            {% endif %}
+            {% if prova.tamanhos_recebidos %}
+            <div class="detail-item">
+                <strong>Tamanhos Recebidos:</strong>
+                <span>{{ prova.tamanhos_recebidos }}</span>
+            </div>
+            {% endif %}
+            {% if prova.tabela_medidas_path %}
+            <div class="detail-item">
+                <strong>Tabela de Medidas:</strong>
+                <span>✓ Disponível no sistema</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if prova.info_medidas %}
+        <div class="detail-item">
+            <strong>Informações de Medidas:</strong>
+            <pre>{{ prova.info_medidas }}</pre>
+        </div>
+        {% endif %}
+
+        <!-- Fotos da Amostra -->
+        {% if prova.fotos.amostra %}
+        <div class="photo-section">
+            <h4><span class="emoji">📷</span>Fotos da Amostra</h4>
+            <div class="photo-gallery">
+                {% for foto in prova.fotos.amostra %}
+                <div class="photo-item">
+                    <img src="file://{{ foto.caminho_absoluto }}" alt="Amostra">
+                    {% if foto.tamanho %}
+                    <div class="photo-caption">Tamanho: {{ foto.tamanho }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Fotos na Modelo -->
+        {% if prova.fotos.prova_modelo %}
+        <div class="photo-section">
+            <h4><span class="emoji">👗</span>Fotos da Prova (na Modelo)</h4>
+            <div class="photo-gallery">
+                {% for foto in prova.fotos.prova_modelo %}
+                <div class="photo-item">
+                    <img src="file://{{ foto.caminho_absoluto }}" alt="Prova Modelo">
+                    {% if foto.tamanho %}
+                    <div class="photo-caption">Tamanho: {{ foto.tamanho }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Feedbacks -->
+        {% if prova.time_qualidade or prova.time_estilo or prova.time_modelagem %}
+        <div class="no-break">
+            <h4><span class="emoji">💬</span>Feedbacks das Equipes</h4>
+        </div>
+
+        <!-- Qualidade -->
+        {% if prova.time_qualidade or prova.comentarios_qualidade or prova.obs_qualidade or prova.fotos.qualidade %}
+        <div class="feedback-box qualidade">
+            <strong><span class="emoji">✓</span>Qualidade</strong>
+            {% if prova.time_qualidade %}
+            <div class="detail-item">
+                <strong>Responsável:</strong>
+                <span>{{ prova.time_qualidade }}</span>
+            </div>
+            {% endif %}
+            {% if prova.comentarios_qualidade %}
+            <div class="detail-item">
+                <strong>Comentários:</strong>
+                <pre>{{ prova.comentarios_qualidade }}</pre>
+            </div>
+            {% endif %}
+            {% if prova.obs_qualidade %}
+            <div class="detail-item">
+                <strong>Observações Adicionais:</strong>
+                <pre>{{ prova.obs_qualidade }}</pre>
+            </div>
+            {% endif %}
+            {% if prova.fotos.qualidade %}
+            <div class="photo-section">
+                <h4>Fotos - Qualidade</h4>
+                <div class="photo-gallery">
+                    {% for foto in prova.fotos.qualidade %}
+                    <div class="photo-item">
+                        <img src="file://{{ foto.caminho_absoluto }}" alt="Qualidade">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Estilo -->
+        {% if prova.time_estilo or prova.comentarios_estilo or prova.obs_estilo or prova.fotos.estilo %}
+        <div class="feedback-box estilo">
+            <strong><span class="emoji">🎨</span>Estilo</strong>
+            {% if prova.time_estilo %}
+            <div class="detail-item">
+                <strong>Responsável:</strong>
+                <span>{{ prova.time_estilo }}</span>
+            </div>
+            {% endif %}
+            {% if prova.comentarios_estilo %}
+            <div class="detail-item">
+                <strong>Comentários:</strong>
+                <pre>{{ prova.comentarios_estilo }}</pre>
+            </div>
+            {% endif %}
+            {% if prova.obs_estilo %}
+            <div class="detail-item">
+                <strong>Observações Adicionais:</strong>
+                <pre>{{ prova.obs_estilo }}</pre>
+            </div>
+            {% endif %}
+            {% if prova.fotos.estilo %}
+            <div class="photo-section">
+                <h4>Fotos - Estilo</h4>
+                <div class="photo-gallery">
+                    {% for foto in prova.fotos.estilo %}
+                    <div class="photo-item">
+                        <img src="file://{{ foto.caminho_absoluto }}" alt="Estilo">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Modelagem -->
+        {% if prova.time_modelagem or prova.comentarios_modelagem or prova.obs_modelagem or prova.fotos.modelagem %}
+        <div class="feedback-box modelagem">
+            <strong><span class="emoji">📐</span>Modelagem</strong>
+            {% if prova.time_modelagem %}
+            <div class="detail-item">
+                <strong>Responsável:</strong>
+                <span>{{ prova.time_modelagem }}</span>
+            </div>
+            {% endif %}
+            {% if prova.comentarios_modelagem %}
+            <div class="detail-item">
+                <strong>Comentários:</strong>
+                <pre>{{ prova.comentarios_modelagem }}</pre>
+            </div>
+            {% endif %}
+            {% if prova.obs_modelagem %}
+            <div class="detail-item">
+                <strong>Observações Adicionais:</strong>
+                <pre>{{ prova.obs_modelagem }}</pre>
+            </div>
+            {% endif %}
+            {% if prova.fotos.modelagem %}
+            <div class="photo-section">
+                <h4>Fotos - Modelagem</h4>
+                <div class="photo-gallery">
+                    {% for foto in prova.fotos.modelagem %}
+                    <div class="photo-item">
+                        <img src="file://{{ foto.caminho_absoluto }}" alt="Modelagem">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Lacre e Liberação -->
+        {% if prova.numero_lacre or prova.data_lacre %}
+        <div class="info-box">
+            <strong><span class="emoji">🔒</span>Informações de Lacre e Liberação</strong>
+            <div class="detail-grid">
+                {% if prova.numero_lacre %}
+                <div class="detail-item">
+                    <strong>Número do Lacre:</strong>
+                    <span>{{ prova.numero_lacre }}</span>
+                </div>
+                {% endif %}
+                {% if prova.data_lacre %}
+                <div class="detail-item">
+                    <strong>Data de Liberação:</strong>
+                    <span>{{ prova.data_lacre }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Informações Adicionais -->
+        {% if prova.info_adicionais %}
+        <div class="detail-item">
+            <strong>Informações Adicionais:</strong>
+            <pre>{{ prova.info_adicionais }}</pre>
+        </div>
+        {% endif %}
 
     </section>
     {% endfor %}
     {% endfor %}
+
+    <!-- Rodapé Final -->
+    <div class="footer-final">
+        <p><strong>Fim do Relatório</strong></p>
+        <p>Gerado em {{ now().strftime('%d/%m/%Y às %H:%M') }} | Sistema de Gestão de Provas de Modelagem Puket</p>
+    </div>
 </body>
 </html>

@@ -1,0 +1,82 @@
+# ==================================
+# Sistema de Provas Puket - .dockerignore
+# ==================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment (será copiado manualmente)
+.env.local
+.env.production
+.env.backup
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+
+# Documentação de desenvolvimento
+docs/
+*.md
+!README.md
+!COMECE_AQUI.md
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+tests/
+
+# Uploads e dados (volumes externos)
+uploads/*
+!uploads/.gitkeep
+logs/*
+!logs/.gitkeep
+backups/*
+!backups/.gitkeep
+data/
+instance/
+postgres_data/
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+prova_app.tar.gz
+
+# Arquivos temporários
+*.bak
+*.backup
+*~
+*.tmp
+*.log
+
+# Docker próprio
+Dockerfile.sqlite
+docker-compose.sqlite.yml
+entrypoint.sqlite.sh
+
+# Scripts de desenvolvimento
+scripts/setup_*.sh
+scripts/test_*.sh
