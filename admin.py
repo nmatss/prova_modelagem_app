@@ -184,11 +184,54 @@ def edit_user(user_id):
 
     return render_template('admin/edit_user.html', user=user)
 
+@admin_bp.route('/users/set_password/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def set_password(user_id):
+    """Define uma nova senha para um usuário (digitada pelo admin)"""
+    user = User.query.get_or_404(user_id)
+
+    try:
+        nova_senha = request.form.get('nova_senha')
+        confirmar_senha = request.form.get('confirmar_senha')
+        senha_temporaria = request.form.get('senha_temporaria') == 'on'
+
+        # Validações
+        if not nova_senha or not confirmar_senha:
+            flash("Todos os campos são obrigatórios.", "error")
+            return redirect(url_for('admin.users'))
+
+        if nova_senha != confirmar_senha:
+            flash("As senhas não coincidem.", "error")
+            return redirect(url_for('admin.users'))
+
+        if len(nova_senha) < 6:
+            flash("A senha deve ter pelo menos 6 caracteres.", "error")
+            return redirect(url_for('admin.users'))
+
+        # Atualizar senha
+        user.password_hash = generate_password_hash(nova_senha)
+        user.senha_temporaria = senha_temporaria
+
+        db.session.commit()
+
+        # Log de reset de senha
+        log_reset_senha(user.id, user.username)
+
+        flash(f"Senha do usuário '{user.username}' definida com sucesso!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao definir senha: {e}", "error")
+
+    return redirect(url_for('admin.users'))
+
+
 @admin_bp.route('/users/reset_password/<int:user_id>', methods=['POST'])
 @login_required
 @admin_required
 def reset_password(user_id):
-    """Redefine a senha de um usuário"""
+    """Redefine a senha de um usuário (gera senha aleatória) - mantido para compatibilidade"""
     user = User.query.get_or_404(user_id)
 
     try:
@@ -264,3 +307,59 @@ def delete_user(user_id):
     db.session.commit()
     flash(f"Usuário '{user.username}' desativado com sucesso.", "success")
     return redirect(url_for('admin.users'))
+
+@admin_bp.route('/change-my-password', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def change_my_password():
+    """Permite ao admin alterar sua própria senha"""
+    if request.method == 'POST':
+        try:
+            senha_atual = request.form.get('senha_atual')
+            nova_senha = request.form.get('nova_senha')
+            confirmar_senha = request.form.get('confirmar_senha')
+
+            # Validações
+            if not senha_atual or not nova_senha or not confirmar_senha:
+                flash("Todos os campos são obrigatórios.", "error")
+                return redirect(url_for('admin.change_my_password'))
+
+            # Verificar senha atual
+            from werkzeug.security import check_password_hash
+            if not check_password_hash(current_user.password_hash, senha_atual):
+                flash("Senha atual incorreta.", "error")
+                return redirect(url_for('admin.change_my_password'))
+
+            # Verificar se as senhas coincidem
+            if nova_senha != confirmar_senha:
+                flash("A nova senha e a confirmação não coincidem.", "error")
+                return redirect(url_for('admin.change_my_password'))
+
+            # Verificar força da senha (mínimo 6 caracteres)
+            if len(nova_senha) < 6:
+                flash("A nova senha deve ter pelo menos 6 caracteres.", "error")
+                return redirect(url_for('admin.change_my_password'))
+
+            # Atualizar senha
+            current_user.password_hash = generate_password_hash(nova_senha)
+            current_user.senha_temporaria = False
+            db.session.commit()
+
+            # Log de alteração de senha
+            log_atualizacao(
+                entidade=AuditEntity.USUARIO,
+                entidade_id=current_user.id,
+                descricao=f"Usuário '{current_user.username}' alterou sua própria senha",
+                dados_antes={},
+                dados_depois={'senha_alterada': True}
+            )
+
+            flash("Senha alterada com sucesso!", "success")
+            return redirect(url_for('admin.users'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro ao alterar senha: {e}", "error")
+            return redirect(url_for('admin.change_my_password'))
+
+    return render_template('admin/change_password.html')

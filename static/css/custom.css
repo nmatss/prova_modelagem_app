@@ -429,14 +429,47 @@ input[type="file"].form-control::-webkit-file-upload-button:hover {
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px);
-    z-index: 9999;
+    z-index: 1030; /* Well below Bootstrap modals (1050+) */
     display: none;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
 }
 
 #loadingOverlay.show {
     display: flex;
+    pointer-events: auto;
+}
+
+/* Garantir que modais sempre funcionem */
+.modal {
+    z-index: 1055 !important;
+}
+
+.modal-backdrop {
+    z-index: 1050 !important;
+}
+
+.modal-dialog {
+    z-index: 1056 !important;
+    pointer-events: auto !important;
+}
+
+.modal-content {
+    pointer-events: auto !important;
+}
+
+.modal-content input,
+.modal-content button,
+.modal-content select,
+.modal-content textarea {
+    pointer-events: auto !important;
+}
+
+/* Esconder loading quando modal está aberto */
+body.modal-open #loadingOverlay {
+    display: none !important;
+    pointer-events: none !important;
 }
 
 .spinner-container {

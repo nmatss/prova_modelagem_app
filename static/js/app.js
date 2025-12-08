@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showLoading() {
+        // NUNCA mostrar loading se houver modal aberto
+        if (document.querySelector('.modal.show')) {
+            return;
+        }
         createLoadingOverlay();
         document.getElementById('loadingOverlay').classList.add('show');
     }
@@ -33,12 +37,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const overlay = document.getElementById('loadingOverlay');
         if (overlay) {
             overlay.classList.remove('show');
+            overlay.style.display = 'none';
         }
     }
 
-    // Show loading on form submit
+    // Show loading on form submit (except forms inside modals and admin pages)
     document.querySelectorAll('form').forEach(form => {
         form.addEventListener('submit', function(e) {
+            // Skip loading for forms inside modals
+            if (form.closest('.modal')) {
+                return;
+            }
+            // Skip loading for admin user management forms
+            if (window.location.pathname.includes('/admin/users')) {
+                return;
+            }
             // Check if form is valid
             if (form.checkValidity()) {
                 showLoading();
@@ -48,6 +61,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Hide loading when page loads
     window.addEventListener('load', hideLoading);
+
+    // IMPORTANT: Hide loading overlay when any modal opens or is about to open
+    document.addEventListener('show.bs.modal', function(e) {
+        hideLoading();
+        // Garantir que o overlay está completamente escondido
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.style.pointerEvents = 'none';
+        }
+    });
+
+    // Também esconder quando modal estiver visível
+    document.addEventListener('shown.bs.modal', function(e) {
+        hideLoading();
+    });
 
 
     // ========================================
@@ -332,6 +361,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let isSubmitting = false;
 
         form.addEventListener('submit', function(e) {
+            // Skip for forms inside modals
+            if (form.closest('.modal')) {
+                return;
+            }
+
             if (isSubmitting) {
                 e.preventDefault();
                 return false;

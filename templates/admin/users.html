@@ -2,6 +2,43 @@
 
 {% block title %}Gerenciar Usuários - Admin{% endblock %}
 
+{% block styles %}
+<style>
+    /* Garantir que o modal de senha SEMPRE funcione */
+    #modalDefinirSenha {
+        z-index: 9999 !important;
+        pointer-events: auto !important;
+    }
+    #modalDefinirSenha .modal-dialog {
+        pointer-events: auto !important;
+    }
+    #modalDefinirSenha .modal-content {
+        pointer-events: auto !important;
+    }
+    #modalDefinirSenha input,
+    #modalDefinirSenha button,
+    #modalDefinirSenha .form-check-input {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+    #modalDefinirSenha input[type="text"],
+    #modalDefinirSenha input[type="password"] {
+        cursor: text !important;
+    }
+    /* Backdrop do modal */
+    .modal-backdrop.show {
+        z-index: 9998 !important;
+    }
+    /* Esconder qualquer loading overlay quando o modal estiver aberto */
+    body.modal-open #loadingOverlay {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -47,7 +84,7 @@
                             <span class="badge bg-info ms-2">Você</span>
                             {% endif %}
                             {% if user.senha_temporaria %}
-                            <span class="badge bg-warning ms-2" data-bs-toggle="tooltip" title="Precisa trocar senha">
+                            <span class="badge bg-warning ms-2" title="Precisa trocar senha">
                                 <i class="bi bi-key-fill"></i>
                             </span>
                             {% endif %}
@@ -82,68 +119,37 @@
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
                                 {% if user.id != current_user.id %}
-                                <!-- Editar -->
                                 <a href="{{ url_for('admin.edit_user', user_id=user.id) }}"
                                    class="btn btn-outline-primary"
-                                   data-bs-toggle="tooltip"
                                    title="Editar usuário">
                                     <i class="bi bi-pencil"></i>
                                 </a>
 
-                                <!-- Resetar Senha -->
                                 <button type="button"
                                         class="btn btn-outline-warning"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#resetPasswordModal{{ user.id }}"
-                                        title="Resetar senha">
+                                        onclick="abrirModalSenha({{ user.id }}, '{{ user.username }}')"
+                                        title="Redefinir senha">
                                     <i class="bi bi-key"></i>
                                 </button>
 
-                                <!-- Ativar/Desativar -->
                                 <form action="{{ url_for('admin.toggle_active', user_id=user.id) }}"
                                       method="POST"
-                                      class="d-inline">
+                                      class="d-inline"
+                                      onsubmit="return confirm('{{ 'Desativar' if user.is_active else 'Ativar' }} usuário {{ user.username }}?')">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit"
                                             class="btn btn-outline-{{ 'danger' if user.is_active else 'success' }}"
-                                            data-bs-toggle="tooltip"
                                             title="{{ 'Desativar' if user.is_active else 'Ativar' }}">
                                         <i class="bi bi-{{ 'slash-circle' if user.is_active else 'check-circle' }}"></i>
                                     </button>
                                 </form>
                                 {% else %}
-                                <span class="text-muted small fst-italic px-2">Seu usuário</span>
+                                <a href="{{ url_for('admin.change_my_password') }}"
+                                   class="btn btn-outline-primary"
+                                   title="Alterar minha senha">
+                                    <i class="bi bi-key-fill"></i>
+                                </a>
                                 {% endif %}
-                            </div>
-
-                            <!-- Modal de Resetar Senha -->
-                            <div class="modal fade" id="resetPasswordModal{{ user.id }}" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-warning text-dark">
-                                            <h5 class="modal-title">
-                                                <i class="bi bi-key"></i> Resetar Senha
-                                            </h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p>Tem certeza que deseja resetar a senha do usuário <strong>{{ user.username }}</strong>?</p>
-                                            <div class="alert alert-info mb-0">
-                                                <i class="bi bi-info-circle me-2"></i>
-                                                Uma nova senha temporária será gerada e exibida na tela.
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                            <form action="{{ url_for('admin.reset_password', user_id=user.id) }}" method="POST">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="btn btn-warning">
-                                                    <i class="bi bi-key"></i> Resetar Senha
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </td>
                     </tr>
@@ -157,6 +163,70 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Definir Nova Senha -->
+<div class="modal fade modal-reset-senha" id="modalDefinirSenha" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="formDefinirSenha" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">
+                        <i class="bi bi-key me-2"></i>Definir Nova Senha
+                    </h5>
+                    <button type="button" class="btn-close" onclick="fecharModal()"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Definir nova senha para o usuário: <strong id="nomeUsuarioModal"></strong></p>
+
+                    <div class="mb-3">
+                        <label for="novaSenha" class="form-label">Nova Senha</label>
+                        <div class="input-group">
+                            <input type="password"
+                                   class="form-control"
+                                   id="novaSenha"
+                                   name="nova_senha"
+                                   required
+                                   minlength="6"
+                                   placeholder="Digite a nova senha">
+                            <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha()">
+                                <i class="bi bi-eye" id="iconeSenha"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">Mínimo 6 caracteres</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirmarSenha" class="form-label">Confirmar Senha</label>
+                        <input type="password"
+                               class="form-control"
+                               id="confirmarSenha"
+                               name="confirmar_senha"
+                               required
+                               minlength="6"
+                               placeholder="Confirme a nova senha">
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="senhaTemporaria" name="senha_temporaria" checked>
+                        <label class="form-check-label" for="senhaTemporaria">
+                            Marcar como senha temporária (usuário deverá trocar no primeiro acesso)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-warning" id="btnSalvarSenha">
+                        <i class="bi bi-check-lg me-1"></i>Salvar Senha
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -207,12 +277,134 @@
 
 {% block scripts %}
 <script>
-    // Inicializar tooltips
-    document.addEventListener('DOMContentLoaded', function () {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+// Variáveis globais
+var modalSenha = null;
+var modalElement = null;
+
+// Inicialização quando DOM carrega
+document.addEventListener('DOMContentLoaded', function() {
+    modalElement = document.getElementById('modalDefinirSenha');
+    if (modalElement) {
+        modalSenha = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: true
         });
+    }
+
+    // Validação do formulário
+    var form = document.getElementById('formDefinirSenha');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            var senha = document.getElementById('novaSenha').value;
+            var confirmar = document.getElementById('confirmarSenha').value;
+
+            if (senha !== confirmar) {
+                e.preventDefault();
+                alert('As senhas não coincidem!');
+                return false;
+            }
+
+            if (senha.length < 6) {
+                e.preventDefault();
+                alert('A senha deve ter pelo menos 6 caracteres!');
+                return false;
+            }
+
+            // Mostrar loading no botão
+            var btn = document.getElementById('btnSalvarSenha');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...';
+        });
+    }
+
+    // Limpar formulário quando modal fecha
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            limparFormulario();
+        });
+    }
+});
+
+// Abrir modal para definir senha
+function abrirModalSenha(userId, username) {
+    // FORÇAR remoção de qualquer overlay que possa estar bloqueando
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('show');
+        loadingOverlay.style.display = 'none';
+        loadingOverlay.style.visibility = 'hidden';
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.pointerEvents = 'none';
+        loadingOverlay.style.zIndex = '-1';
+    }
+
+    // Remover qualquer outro overlay que possa existir
+    document.querySelectorAll('[class*="overlay"], [class*="loading"]').forEach(function(el) {
+        if (el.id !== 'modalDefinirSenha' && !el.classList.contains('modal-backdrop')) {
+            el.style.display = 'none';
+            el.style.pointerEvents = 'none';
+        }
     });
+
+    // Configurar form
+    var form = document.getElementById('formDefinirSenha');
+    form.action = '/admin/users/set_password/' + userId;
+
+    // Mostrar nome do usuário
+    document.getElementById('nomeUsuarioModal').textContent = username;
+
+    // Limpar campos
+    limparFormulario();
+
+    // Abrir modal
+    if (modalSenha) {
+        modalSenha.show();
+    }
+
+    // Focar no campo de senha após modal abrir completamente
+    setTimeout(function() {
+        var inputSenha = document.getElementById('novaSenha');
+        if (inputSenha) {
+            inputSenha.focus();
+            inputSenha.click();
+        }
+    }, 500);
+}
+
+// Fechar modal
+function fecharModal() {
+    if (modalSenha) {
+        modalSenha.hide();
+    }
+}
+
+// Limpar formulário
+function limparFormulario() {
+    document.getElementById('novaSenha').value = '';
+    document.getElementById('confirmarSenha').value = '';
+    document.getElementById('senhaTemporaria').checked = true;
+
+    var btn = document.getElementById('btnSalvarSenha');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Salvar Senha';
+
+    // Reset do campo de senha para password
+    document.getElementById('novaSenha').type = 'password';
+    document.getElementById('iconeSenha').className = 'bi bi-eye';
+}
+
+// Toggle mostrar/esconder senha
+function toggleSenha() {
+    var input = document.getElementById('novaSenha');
+    var icone = document.getElementById('iconeSenha');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icone.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password';
+        icone.className = 'bi bi-eye';
+    }
+}
 </script>
 {% endblock %}
