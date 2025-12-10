@@ -243,6 +243,24 @@
                 <div class="card-body">
                     <h5 class="card-title mb-3">Informações Gerais</h5>
                     <div class="mb-3">
+                        <label for="ppt" class="form-label">PPT (apresentação das peças)</label>
+                        {% if relatorio.ppt_path %}
+                        <div class="mb-2">
+                            <span class="badge bg-success me-2">
+                                <i class="bi bi-file-earmark-ppt me-1"></i>PPT anexado
+                            </span>
+                            <a href="{{ url_for('serve_upload', filename=relatorio.ppt_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i> Ver atual
+                            </a>
+                        </div>
+                        {% endif %}
+                        <input type="file" class="form-control" id="ppt" name="ppt" accept=".ppt,.pptx,.pdf">
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            {% if relatorio.ppt_path %}Selecione um novo arquivo para substituir o atual.{% else %}Formatos aceitos: PPT, PPTX ou PDF (máx. 16MB){% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
                         <label for="colecao" class="form-label">Coleção</label>
                         <input type="text" class="form-control" id="colecao" name="colecao"
                             value="{{ relatorio.colecao or '' }}">

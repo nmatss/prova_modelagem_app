@@ -362,6 +362,18 @@ def editar_relatorio(id):
             # 1. Atualiza as informações gerais do relatório
             relatorio.colecao = request.form.get('colecao')
             relatorio.descricao_geral = request.form.get('descricao_geral')
+
+            # Atualiza PPT se um novo arquivo foi enviado
+            ppt_file = request.files.get('ppt')
+            if ppt_file and ppt_file.filename:
+                # Excluir PPT antigo se existir
+                if relatorio.ppt_path:
+                    from utils import delete_file
+                    delete_file(relatorio.ppt_path)
+                # Salvar novo PPT
+                ppt_filename = save_file(ppt_file)
+                if ppt_filename:
+                    relatorio.ppt_path = ppt_filename
             
             # 2. Itera sobre todos os tipos possíveis
             for tipo in ['baby', 'kids', 'teen', 'adulto']:
@@ -630,6 +642,50 @@ def novo_relatorio():
             return render_template('novo_relatorio.html', form_data=request.form)
 
     return render_template('novo_relatorio.html', form_data=MultiDict())
+
+@app.route('/relatorio/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_relatorio(id):
+    """Exclui um relatório e todos os seus arquivos associados"""
+    relatorio = Relatorio.query.get_or_404(id)
+
+    try:
+        # Coletar todos os arquivos para excluir
+        arquivos_para_excluir = []
+
+        # PPT do relatório
+        if relatorio.ppt_path:
+            arquivos_para_excluir.append(relatorio.ppt_path)
+
+        # Arquivos de referências e provas
+        for ref in relatorio.referencias:
+            for prova in ref.provas:
+                # Tabela de medidas
+                if prova.tabela_medidas_path:
+                    arquivos_para_excluir.append(prova.tabela_medidas_path)
+                # Fotos
+                for foto in prova.fotos:
+                    if foto.file_path:
+                        arquivos_para_excluir.append(foto.file_path)
+
+        # Excluir do banco (cascade delete cuida das referências, provas e fotos)
+        descricao = relatorio.descricao_geral
+        db.session.delete(relatorio)
+        db.session.commit()
+
+        # Excluir arquivos físicos
+        from utils import delete_file
+        for arquivo in arquivos_para_excluir:
+            delete_file(arquivo)
+
+        flash(f"Relatório '{descricao}' excluído com sucesso!", "success")
+        return redirect(url_for('dashboard'))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir o relatório: {e}", "error")
+        return redirect(url_for('detalhes_relatorio', id=id))
+
 
 @app.route('/referencia/<int:referencia_id>/nova_prova', methods=['GET', 'POST'])
 @login_required

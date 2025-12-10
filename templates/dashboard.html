@@ -408,6 +408,11 @@
         color: #ec4899;
     }
 
+    .btn-delete-report:hover {
+        background: #fef2f2 !important;
+        color: #dc2626 !important;
+    }
+
     /* Empty State */
     .empty-state {
         text-align: center;
@@ -651,13 +656,21 @@
                 </div>
 
                 <div class="report-actions">
-                    <a href="{{ url_for('detalhes_relatorio', id=relatorio.id) }}" class="btn-view">
+                    <a href="{{ url_for('detalhes_relatorio', id=relatorio['id']) }}" class="btn-view">
                         <i class="bi bi-eye"></i>
                         Ver Detalhes
                     </a>
-                    <a href="{{ url_for('relatorio_pdf', id=relatorio.id) }}" class="btn-export" target="_blank" title="Exportar PDF">
+                    <a href="{{ url_for('relatorio_pdf', id=relatorio['id']) }}" class="btn-export" target="_blank" title="Exportar PDF">
                         <i class="bi bi-file-pdf"></i>
                     </a>
+                    <button type="button" class="btn-export btn-delete-report"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteModalDashboard"
+                            data-relatorio-id="{{ relatorio['id'] }}"
+                            data-relatorio-nome="{{ relatorio['descricao_geral'] }}"
+                            title="Excluir relatório">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
             </div>
             {% endfor %}
@@ -681,6 +694,38 @@
             </a>
         </div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Modal Excluir Relatório Dashboard -->
+<div class="modal fade" id="deleteModalDashboard" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning border-0 mb-3">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p>Você está prestes a excluir o relatório:</p>
+                <p class="fw-bold text-center fs-5" id="deleteRelatorioNome"></p>
+                <p class="text-muted small">Isso irá excluir permanentemente todas as referências, provas e arquivos associados.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash"></i> Sim, Excluir
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -741,6 +786,35 @@ document.addEventListener('DOMContentLoaded', function() {
             searchInput?.focus();
         }
     });
+
+    // Delete Modal
+    let currentDeleteId = null;
+    const deleteModal = document.getElementById('deleteModalDashboard');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            if (button) {
+                currentDeleteId = button.getAttribute('data-relatorio-id');
+                const relatorioNome = button.getAttribute('data-relatorio-nome');
+                document.getElementById('deleteRelatorioNome').textContent = relatorioNome || '';
+            }
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (currentDeleteId) {
+                // Criar form dinamicamente
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/relatorio/' + currentDeleteId + '/excluir';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
