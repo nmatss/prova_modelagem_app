@@ -421,17 +421,6 @@
         color: #dc2626 !important;
     }
 
-    /* Modal delete button */
-    #confirmDeleteBtn {
-        cursor: pointer;
-        position: relative;
-        z-index: 1060;
-    }
-
-    #confirmDeleteBtn i {
-        pointer-events: none;
-    }
-
     /* Empty State */
     .empty-state {
         text-align: center;
@@ -740,9 +729,11 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x"></i> Cancelar
                 </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-                    <i class="bi bi-trash"></i> Sim, Excluir
-                </button>
+                <form id="deleteFormDashboard" method="POST" action="">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Sim, Excluir
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -806,31 +797,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Delete Modal
-    let currentDeleteId = null;
-    const deleteModal = document.getElementById('deleteModalDashboard');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    // Delete Modal - Simples e direto
+    const deleteModalEl = document.getElementById('deleteModalDashboard');
+    if (deleteModalEl) {
+        deleteModalEl.addEventListener('show.bs.modal', function(event) {
+            const btn = event.relatedTarget;
+            if (btn) {
+                const id = btn.getAttribute('data-relatorio-id');
+                const nome = btn.getAttribute('data-relatorio-nome');
 
-    if (deleteModal) {
-        deleteModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            if (button) {
-                currentDeleteId = button.getAttribute('data-relatorio-id');
-                const relatorioNome = button.getAttribute('data-relatorio-nome');
-                document.getElementById('deleteRelatorioNome').textContent = relatorioNome || '';
-            }
-        });
-    }
-
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', function() {
-            if (currentDeleteId) {
-                // Criar form dinamicamente
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/relatorio/' + currentDeleteId + '/excluir';
-                document.body.appendChild(form);
-                form.submit();
+                document.getElementById('deleteRelatorioNome').textContent = nome || '';
+                document.getElementById('deleteFormDashboard').action = '/relatorio/' + id + '/excluir';
             }
         });
     }
