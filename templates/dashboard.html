@@ -401,6 +401,9 @@
         display: inline-flex;
         align-items: center;
         transition: all 0.2s;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
     }
 
     .btn-export:hover {
@@ -408,9 +411,25 @@
         color: #ec4899;
     }
 
+    .btn-export i,
+    .btn-delete-report i {
+        pointer-events: none;
+    }
+
     .btn-delete-report:hover {
         background: #fef2f2 !important;
         color: #dc2626 !important;
+    }
+
+    /* Modal delete button */
+    #confirmDeleteBtn {
+        cursor: pointer;
+        position: relative;
+        z-index: 1060;
+    }
+
+    #confirmDeleteBtn i {
+        pointer-events: none;
     }
 
     /* Empty State */
