@@ -427,20 +427,20 @@
         function setupReferenceListener(type) {
             const inputField = document.getElementById(`ref_${type}`);
             const detailsSection = document.getElementById(`detalhes_${type}`);
-            const displayField = document.getElementById(`ref_${type}_display`);
 
-            if (!inputField || !detailsSection || !displayField) return;
+            if (!inputField || !detailsSection) return;
 
             const checkVisibility = () => {
                 const refValue = inputField.value;
                 if (refValue.trim() !== '') {
                     detailsSection.style.display = 'block';
-                    displayField.textContent = refValue;
                 } else {
                     detailsSection.style.display = 'none';
                 }
             };
             inputField.addEventListener('keyup', checkVisibility);
+            inputField.addEventListener('input', checkVisibility);
+            inputField.addEventListener('change', checkVisibility);
             checkVisibility(); // Verifica no carregamento da página
         }
 

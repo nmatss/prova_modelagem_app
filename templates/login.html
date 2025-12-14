@@ -312,6 +312,117 @@
             .login-title {
                 font-size: 24px;
             }
+
+            .logo {
+                width: 100px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .login-container {
+                padding: 15px;
+            }
+
+            .login-card {
+                padding: 30px 20px;
+                border-radius: 16px;
+            }
+
+            .login-title {
+                font-size: 20px;
+            }
+
+            .login-subtitle {
+                font-size: 13px;
+            }
+
+            .logo {
+                width: 80px;
+                margin-bottom: 15px;
+            }
+
+            .form-input {
+                padding: 12px 14px 12px 44px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .btn-login {
+                padding: 14px;
+                font-size: 15px;
+            }
+
+            .form-label {
+                font-size: 13px;
+            }
+
+            .remember-me label {
+                font-size: 13px;
+            }
+
+            .footer-text {
+                font-size: 11px;
+            }
+        }
+
+        /* Landscape mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                align-items: flex-start;
+                padding: 20px 0;
+            }
+
+            .login-card {
+                padding: 25px 30px;
+            }
+
+            .logo {
+                width: 60px;
+                margin-bottom: 10px;
+            }
+
+            .logo-container {
+                margin-bottom: 20px;
+            }
+
+            .login-title {
+                font-size: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+        }
+
+        /* Touch devices */
+        @media (hover: none) and (pointer: coarse) {
+            .form-input,
+            .btn-login,
+            .password-toggle {
+                -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+            }
+
+            .btn-login {
+                min-height: 48px;
+            }
+
+            .form-input {
+                min-height: 48px;
+            }
+        }
+
+        /* Prefers reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .logo {
+                animation: none;
+            }
+
+            body::before {
+                animation: none;
+            }
+
+            .login-card {
+                animation: none;
+            }
         }
     </style>
 </head>
