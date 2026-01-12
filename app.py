@@ -14,6 +14,7 @@ from db import init_app as init_db
 from models import db, Relatorio, Referencia, Prova, Foto
 from config import Config
 from utils import save_file
+from excel_export import export_relatorios_to_excel, export_detalhes_to_excel
 from error_handlers import register_error_handlers
 from security import init_security, SecurityHeaders
 from sqlalchemy import desc
@@ -755,6 +756,86 @@ def adicionar_nova_prova(referencia_id):
     novo_numero_prova = ultima_prova.numero_prova + 1 if ultima_prova else 1
 
     return render_template('nova_prova.html', referencia=referencia, novo_numero_prova=novo_numero_prova)
+
+
+@app.route('/exportar/excel')
+@login_required
+def exportar_relatorios_excel():
+    """Exporta todos os relatórios para Excel"""
+    try:
+        relatorios = Relatorio.query.order_by(desc(Relatorio.created_at)).all()
+        relatorios_data = []
+
+        for relatorio in relatorios:
+            # Contar referências
+            num_referencias = Referencia.query.filter_by(relatorio_id=relatorio.id).count()
+
+            # Obter status atual
+            ultima_prova = Prova.query.join(Referencia).filter(
+                Referencia.relatorio_id == relatorio.id
+            ).order_by(desc(Prova.numero_prova)).first()
+
+            relatorios_data.append({
+                'id': relatorio.id,
+                'colecao': relatorio.colecao or '',
+                'descricao_geral': relatorio.descricao_geral or '',
+                'num_referencias': num_referencias,
+                'status_geral': ultima_prova.status if ultima_prova else 'Novo',
+                'data_criacao': relatorio.created_at.strftime('%d/%m/%Y %H:%M') if relatorio.created_at else ''
+            })
+
+        filename = export_relatorios_to_excel(relatorios_data)
+
+        flash(f'Relatórios exportados com sucesso!', 'success')
+        return send_from_directory(app.config['PDF_FOLDER'], filename, as_attachment=True)
+
+    except Exception as e:
+        flash(f'Erro ao exportar relatórios: {e}', 'error')
+        return redirect(url_for('dashboard'))
+
+
+@app.route('/relatorio/<int:id>/excel')
+@login_required
+def exportar_relatorio_excel(id):
+    """Exporta detalhes de um relatório específico para Excel"""
+    try:
+        relatorio = Relatorio.query.get_or_404(id)
+
+        # Preparar dados do relatório
+        relatorio_data = {
+            'id': relatorio.id,
+            'colecao': relatorio.colecao,
+            'descricao_geral': relatorio.descricao_geral
+        }
+
+        # Preparar referências com provas
+        referencias = []
+        for ref in relatorio.referencias:
+            ref_data = {
+                'numero_ref': ref.numero_ref,
+                'tipo': ref.tipo_categoria,
+                'provas': []
+            }
+
+            for prova in ref.provas:
+                ref_data['provas'].append({
+                    'numero_prova': prova.numero_prova,
+                    'status': prova.status,
+                    'data_recebimento': prova.data_recebimento,
+                    'data_prova': prova.data_prova,
+                    'tamanhos_recebidos': prova.tamanhos_recebidos
+                })
+
+            referencias.append(ref_data)
+
+        filename = export_detalhes_to_excel(relatorio_data, referencias)
+
+        flash(f'Relatório exportado para Excel!', 'success')
+        return send_from_directory(app.config['PDF_FOLDER'], filename, as_attachment=True)
+
+    except Exception as e:
+        flash(f'Erro ao exportar relatório: {e}', 'error')
+        return redirect(url_for('detalhes_relatorio', id=id))
 
 
 if __name__ == '__main__':

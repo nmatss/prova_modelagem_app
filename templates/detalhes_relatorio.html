@@ -253,6 +253,9 @@
             <a href="{{ url_for('relatorio_pdf', id=relatorio.id) }}" class="btn btn-outline-info" target="_blank">
                 <i class="bi bi-file-pdf"></i> PDF
             </a>
+            <a href="{{ url_for('exportar_relatorio_excel', id=relatorio.id) }}" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </a>
             <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                 <i class="bi bi-trash"></i> Excluir
             </button>

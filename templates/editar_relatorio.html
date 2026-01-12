@@ -668,6 +668,8 @@
                 }
             };
             inputField.addEventListener('keyup', checkVisibility);
+            inputField.addEventListener('input', checkVisibility);
+            inputField.addEventListener('change', checkVisibility);
             // checkVisibility(); // Comentado para não esconder se já tiver dados carregados pelo backend (que já define style block/none)
         }
 

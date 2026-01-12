@@ -14,11 +14,12 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
+        remember = request.form.get('remember') == 'on'
+
         user = User.query.filter_by(username=username).first()
 
         if user and check_password_hash(user.password_hash, password):
-            login_user(user)
+            login_user(user, remember=remember)
             # Log de login bem-sucedido
             log_login(user, sucesso=True)
             return redirect(url_for('dashboard'))

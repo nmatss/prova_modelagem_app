@@ -617,6 +617,9 @@
             </h2>
             <div style="display: flex; align-items: center; gap: 12px;">
                 {% if relatorios %}
+                <a href="{{ url_for('exportar_relatorios_excel') }}" class="btn btn-sm btn-outline-success" title="Exportar todos para Excel">
+                    <i class="bi bi-file-earmark-excel"></i> Excel
+                </a>
                 <span class="reports-count">{{ relatorios|length }} item{% if relatorios|length != 1 %}s{% endif %}</span>
                 {% endif %}
                 <div class="view-toggle">
@@ -797,11 +800,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Delete Modal - Simples e direto
+    // Delete Modal - Busca o botão corretamente mesmo se clique foi no ícone
     const deleteModalEl = document.getElementById('deleteModalDashboard');
     if (deleteModalEl) {
         deleteModalEl.addEventListener('show.bs.modal', function(event) {
-            const btn = event.relatedTarget;
+            let btn = event.relatedTarget;
+            // Se o clique foi no ícone, busca o botão pai
+            if (btn && btn.tagName === 'I') {
+                btn = btn.closest('button');
+            }
             if (btn) {
                 const id = btn.getAttribute('data-relatorio-id');
                 const nome = btn.getAttribute('data-relatorio-nome');
