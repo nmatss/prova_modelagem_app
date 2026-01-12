@@ -519,10 +519,10 @@
                 </ul>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x"></i> Cancelar
-                </button>
-                <form action="{{ url_for('excluir_relatorio', id=relatorio.id) }}" method="POST" style="display: inline;">
+                <form action="{{ url_for('excluir_relatorio', id=relatorio.id) }}" method="POST" style="display: flex; gap: 0.5rem; width: 100%; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> Cancelar
+                    </button>
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash"></i> Sim, Excluir Relatório
                     </button>
@@ -583,5 +583,104 @@
         document.getElementById('modalProvaId').value = provaId;
         document.getElementById('modalNovoStatus').value = novoStatus;
     });
+
+    // =====================================================
+    // DELETE MODAL - Solução com AJAX e timeout
+    // =====================================================
+    (function() {
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteForm = deleteModal?.querySelector('form');
+        let isDeleting = false;
+
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (isDeleting) return;
+                isDeleting = true;
+
+                const submitBtn = deleteForm.querySelector('button[type="submit"]');
+                const originalBtnHtml = submitBtn.innerHTML;
+                const actionUrl = deleteForm.getAttribute('action');
+
+                // Mostra spinner
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Excluindo...';
+                submitBtn.disabled = true;
+
+                // Timeout de 30 segundos
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                }, 30000);
+
+                fetch(actionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error('Erro ' + response.status + ': ' + response.statusText);
+                    }
+
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    isDeleting = false;
+
+                    submitBtn.innerHTML = originalBtnHtml;
+                    submitBtn.disabled = false;
+
+                    let errorMsg = 'Erro ao excluir o relatório.';
+
+                    if (error.name === 'AbortError') {
+                        errorMsg = 'A operação excedeu o tempo limite (30s). Verifique sua conexão e tente novamente.';
+                    } else if (error.message) {
+                        errorMsg = error.message;
+                    }
+
+                    // Remove erro anterior
+                    const existingError = deleteModal.querySelector('.delete-error-msg');
+                    if (existingError) existingError.remove();
+
+                    // Mostra erro
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'delete-error-msg alert alert-danger mt-3 mb-0';
+                    errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>' + errorMsg;
+
+                    const modalBody = deleteModal.querySelector('.modal-body');
+                    if (modalBody) modalBody.appendChild(errorDiv);
+                });
+            });
+        }
+
+        // Reset ao fechar modal
+        if (deleteModal) {
+            deleteModal.addEventListener('hidden.bs.modal', function() {
+                isDeleting = false;
+
+                const submitBtn = deleteForm?.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<i class="bi bi-trash"></i> Sim, Excluir Relatório';
+                    submitBtn.disabled = false;
+                }
+
+                const existingError = deleteModal.querySelector('.delete-error-msg');
+                if (existingError) existingError.remove();
+            });
+        }
+    })();
 </script>
 {% endblock %}

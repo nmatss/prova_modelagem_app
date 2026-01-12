@@ -729,10 +729,10 @@
                 <p class="text-muted small">Isso irá excluir permanentemente todas as referências, provas e arquivos associados.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x"></i> Cancelar
-                </button>
-                <form id="deleteFormDashboard" method="POST" action="">
+                <form id="deleteFormDashboard" method="POST" action="" style="display: flex; gap: 0.5rem; width: 100%; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> Cancelar
+                    </button>
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash"></i> Sim, Excluir
                     </button>
@@ -800,23 +800,143 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Delete Modal - Busca o botão corretamente mesmo se clique foi no ícone
+    // =====================================================
+    // DELETE MODAL - Solução definitiva com AJAX e timeout
+    // =====================================================
     const deleteModalEl = document.getElementById('deleteModalDashboard');
+    const deleteForm = document.getElementById('deleteFormDashboard');
+    let currentDeleteId = null;
+    let isDeleting = false;
+
     if (deleteModalEl) {
+        // Quando o modal abre, captura os dados do relatório
         deleteModalEl.addEventListener('show.bs.modal', function(event) {
             let btn = event.relatedTarget;
+
             // Se o clique foi no ícone, busca o botão pai
             if (btn && btn.tagName === 'I') {
                 btn = btn.closest('button');
             }
+
             if (btn) {
-                const id = btn.getAttribute('data-relatorio-id');
+                currentDeleteId = btn.getAttribute('data-relatorio-id');
                 const nome = btn.getAttribute('data-relatorio-nome');
 
-                document.getElementById('deleteRelatorioNome').textContent = nome || '';
-                document.getElementById('deleteFormDashboard').action = '/relatorio/' + id + '/excluir';
+                document.getElementById('deleteRelatorioNome').textContent = nome || 'este relatório';
+
+                // Define o action do form como fallback
+                if (deleteForm && currentDeleteId) {
+                    deleteForm.action = '/relatorio/' + currentDeleteId + '/excluir';
+                }
             }
+
+            // Reset estado
+            isDeleting = false;
+            resetDeleteButton();
         });
+
+        // Intercepta o submit do form para usar AJAX
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (isDeleting) return; // Previne duplo clique
+                if (!currentDeleteId) {
+                    showDeleteError('Erro: ID do relatório não encontrado. Feche o modal e tente novamente.');
+                    return;
+                }
+
+                isDeleting = true;
+                const submitBtn = deleteForm.querySelector('button[type="submit"]');
+                const originalBtnHtml = submitBtn.innerHTML;
+
+                // Mostra spinner no botão
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Excluindo...';
+                submitBtn.disabled = true;
+
+                // Timeout de 30 segundos
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                }, 30000);
+
+                // Faz a requisição AJAX
+                fetch('/relatorio/' + currentDeleteId + '/excluir', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+
+                    if (response.redirected) {
+                        // Sucesso - redireciona para a URL de destino
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error('Erro ' + response.status + ': ' + response.statusText);
+                    }
+
+                    // Se não redirecionou mas deu OK, vai para o dashboard
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    isDeleting = false;
+
+                    // Restaura o botão
+                    submitBtn.innerHTML = originalBtnHtml;
+                    submitBtn.disabled = false;
+
+                    let errorMsg = 'Erro ao excluir o relatório.';
+
+                    if (error.name === 'AbortError') {
+                        errorMsg = 'A operação excedeu o tempo limite (30s). Verifique sua conexão e tente novamente.';
+                    } else if (error.message) {
+                        errorMsg = error.message;
+                    }
+
+                    showDeleteError(errorMsg);
+                });
+            });
+        }
+    }
+
+    function showDeleteError(message) {
+        // Remove erro anterior se existir
+        const existingError = deleteModalEl.querySelector('.delete-error-msg');
+        if (existingError) existingError.remove();
+
+        // Cria mensagem de erro
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'delete-error-msg alert alert-danger mt-3 mb-0';
+        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>' + message;
+
+        // Insere no modal body
+        const modalBody = deleteModalEl.querySelector('.modal-body');
+        if (modalBody) {
+            modalBody.appendChild(errorDiv);
+        }
+    }
+
+    function resetDeleteButton() {
+        if (deleteForm) {
+            const submitBtn = deleteForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-trash"></i> Sim, Excluir';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Remove erro anterior se existir
+        const existingError = deleteModalEl?.querySelector('.delete-error-msg');
+        if (existingError) existingError.remove();
     }
 });
 </script>
