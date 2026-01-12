@@ -312,6 +312,7 @@
                                 </div>
 
                                 <div class="row mb-3">
+                                    <!-- QUALIDADE -->
                                     <div class="col-md-4">
                                         <div class="card">
                                             <div class="card-header bg-success text-white">Qualidade</div>
@@ -320,6 +321,25 @@
                                                     <label class="form-label">Responsável</label>
                                                     <input type="text" class="form-control"
                                                         name="time_qualidade_{{ tipo }}" placeholder="Nome do responsável">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label d-block">Itens de Avaliação</label>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="SOLIDEZ" id="qual_solidez_{{ tipo }}"><label class="form-check-label" for="qual_solidez_{{ tipo }}">Solidez</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="PILLING" id="qual_pilling_{{ tipo }}"><label class="form-check-label" for="qual_pilling_{{ tipo }}">Pilling</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="AGUA_DO_MAR" id="qual_agua_mar_{{ tipo }}"><label class="form-check-label" for="qual_agua_mar_{{ tipo }}">Água do Mar</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="AGUA_CLORADA" id="qual_agua_clorada_{{ tipo }}"><label class="form-check-label" for="qual_agua_clorada_{{ tipo }}">Água Clorada</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="LAVAGEM_DOMESTICA" id="qual_lavagem_{{ tipo }}"><label class="form-check-label" for="qual_lavagem_{{ tipo }}">Lavagem Doméstica</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="DIMENSIONAL" id="qual_dimensional_{{ tipo }}"><label class="form-check-label" for="qual_dimensional_{{ tipo }}">Dimensional</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="ERGONOMIA" id="qual_ergonomia_{{ tipo }}"><label class="form-check-label" for="qual_ergonomia_{{ tipo }}">Ergonomia</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="GRAMATURA" id="qual_gramatura_{{ tipo }}"><label class="form-check-label" for="qual_gramatura_{{ tipo }}">Gramatura</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="SOLIDEZ_FRICCAO" id="qual_friccao_{{ tipo }}"><label class="form-check-label" for="qual_friccao_{{ tipo }}">Solidez a Fricção Seco e Úmido</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="RESISTENCIA_COSTURA" id="qual_resistencia_{{ tipo }}"><label class="form-check-label" for="qual_resistencia_{{ tipo }}">Resistência da Costura</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="CICLO_VIDA" id="qual_ciclo_{{ tipo }}"><label class="form-check-label" for="qual_ciclo_{{ tipo }}">Ciclo de Vida do Produto</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="TESTE_AVIAMENTOS" id="qual_aviamentos_{{ tipo }}"><label class="form-check-label" for="qual_aviamentos_{{ tipo }}">Teste de Aviamentos</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="COSTURA_DEFEITO" id="qual_costura_def_{{ tipo }}"><label class="form-check-label" for="qual_costura_def_{{ tipo }}">Costura com Defeito</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="TECIDO_DEFEITO" id="qual_tecido_def_{{ tipo }}"><label class="form-check-label" for="qual_tecido_def_{{ tipo }}">Tecido com Defeito</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="ORIENTACAO_FORNECEDOR" id="qual_orientacao_{{ tipo }}"><label class="form-check-label" for="qual_orientacao_{{ tipo }}">Orientação para o Fornecedor</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="OUTROS" id="qual_outros_{{ tipo }}"><label class="form-check-label" for="qual_outros_{{ tipo }}">Outros</label></div>
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Comentários</label>
@@ -332,13 +352,14 @@
                                                         name="obs_qualidade_{{ tipo }}" rows="2" placeholder="Detalhes técnicos, medidas, etc."></textarea>
                                                 </div>
                                                 <div class="mb-2">
-                                                    <label class="form-label">Fotos</label>
+                                                    <label class="form-label">Anexar Arquivos</label>
                                                     <input type="file" class="form-control"
-                                                        name="fotos_qualidade_{{ tipo }}" multiple accept="image/*">
+                                                        name="fotos_qualidade_{{ tipo }}" multiple>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- ESTILO -->
                                     <div class="col-md-4">
                                         <div class="card">
                                             <div class="card-header bg-info text-white">Estilo</div>
@@ -347,6 +368,15 @@
                                                     <label class="form-label">Responsável</label>
                                                     <input type="text" class="form-control"
                                                         name="time_estilo_{{ tipo }}" placeholder="Nome do responsável">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label d-block">Itens de Avaliação</label>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTAR_FICHA_TECNICA" id="est_ficha_{{ tipo }}"><label class="form-check-label" for="est_ficha_{{ tipo }}">Ajustar a Ficha Técnica</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_DESENHO" id="est_desenho_{{ tipo }}"><label class="form-check-label" for="est_desenho_{{ tipo }}">Ajuste de Desenho</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_CORES" id="est_cores_{{ tipo }}"><label class="form-check-label" for="est_cores_{{ tipo }}">Ajuste de Cores</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="ORIENTACAO_FORNECEDOR" id="est_orientacao_{{ tipo }}"><label class="form-check-label" for="est_orientacao_{{ tipo }}">Orientação para Fornecedor</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_TECIDO" id="est_tecido_{{ tipo }}"><label class="form-check-label" for="est_tecido_{{ tipo }}">Ajuste de Tecido</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="OUTROS" id="est_outros_{{ tipo }}"><label class="form-check-label" for="est_outros_{{ tipo }}">Outros</label></div>
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Comentários</label>
@@ -359,13 +389,14 @@
                                                         name="obs_estilo_{{ tipo }}" rows="2" placeholder="Ajustes, modificações, etc."></textarea>
                                                 </div>
                                                 <div class="mb-2">
-                                                    <label class="form-label">Fotos</label>
+                                                    <label class="form-label">Anexar Arquivos</label>
                                                     <input type="file" class="form-control"
-                                                        name="fotos_estilo_{{ tipo }}" multiple accept="image/*">
+                                                        name="fotos_estilo_{{ tipo }}" multiple>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- MODELAGEM -->
                                     <div class="col-md-4">
                                         <div class="card">
                                             <div class="card-header bg-warning">Modelagem</div>
@@ -374,6 +405,14 @@
                                                     <label class="form-label">Responsável</label>
                                                     <input type="text" class="form-control"
                                                         name="time_modelagem_{{ tipo }}" placeholder="Nome do responsável">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label d-block">Itens de Avaliação</label>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_TABELA_MEDIDAS" id="mod_tabela_{{ tipo }}"><label class="form-check-label" for="mod_tabela_{{ tipo }}">Ajustar Tabela de Medidas</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_MODELAGEM" id="mod_modelagem_{{ tipo }}"><label class="form-check-label" for="mod_modelagem_{{ tipo }}">Ajustar Modelagem</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="REPILOTAR" id="mod_repilotar_{{ tipo }}"><label class="form-check-label" for="mod_repilotar_{{ tipo }}">Repilotar</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="MODELO_FORA_MEDIDAS" id="mod_fora_{{ tipo }}"><label class="form-check-label" for="mod_fora_{{ tipo }}">Modelo de Prova Fora das Medidas</label></div>
+                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="OUTROS" id="mod_outros_{{ tipo }}"><label class="form-check-label" for="mod_outros_{{ tipo }}">Outros</label></div>
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Comentários</label>
@@ -386,9 +425,9 @@
                                                         name="obs_modelagem_{{ tipo }}" rows="2" placeholder="Ajustes técnicos, correções, etc."></textarea>
                                                 </div>
                                                 <div class="mb-2">
-                                                    <label class="form-label">Fotos</label>
+                                                    <label class="form-label">Anexar Arquivos</label>
                                                     <input type="file" class="form-control"
-                                                        name="fotos_modelagem_{{ tipo }}" multiple accept="image/*">
+                                                        name="fotos_modelagem_{{ tipo }}" multiple>
                                                 </div>
                                             </div>
                                         </div>
