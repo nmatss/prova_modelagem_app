@@ -838,6 +838,541 @@ def exportar_relatorio_excel(id):
         return redirect(url_for('detalhes_relatorio', id=id))
 
 
+# ========================================
+# PÁGINA DE RELATÓRIOS E ANALYTICS
+# ========================================
+
+@app.route('/analytics')
+@login_required
+def analytics():
+    """Página de relatórios e analytics com filtros"""
+    from datetime import datetime, timedelta
+
+    # Obter parâmetros de filtro
+    filtro_status = request.args.get('status', '')
+    filtro_categoria = request.args.get('categoria', '')
+    filtro_colecao = request.args.get('colecao', '')
+    filtro_fornecedor = request.args.get('fornecedor', '')
+    filtro_data_inicio = request.args.get('data_inicio', '')
+    filtro_data_fim = request.args.get('data_fim', '')
+
+    # Query base de provas
+    query_provas = Prova.query.join(Referencia).join(Relatorio)
+
+    # Aplicar filtros
+    if filtro_status:
+        query_provas = query_provas.filter(Prova.status == filtro_status)
+    if filtro_categoria:
+        query_provas = query_provas.filter(Referencia.tipo_categoria == filtro_categoria)
+    if filtro_colecao:
+        query_provas = query_provas.filter(Relatorio.colecao == filtro_colecao)
+    if filtro_fornecedor:
+        query_provas = query_provas.filter(Referencia.fornecedor == filtro_fornecedor)
+
+    # Filtro de data
+    if filtro_data_inicio:
+        try:
+            data_inicio = datetime.strptime(filtro_data_inicio, '%Y-%m-%d')
+            query_provas = query_provas.filter(Prova.created_at >= data_inicio)
+        except:
+            pass
+    if filtro_data_fim:
+        try:
+            data_fim = datetime.strptime(filtro_data_fim, '%Y-%m-%d')
+            data_fim = data_fim + timedelta(days=1)  # Incluir o dia inteiro
+            query_provas = query_provas.filter(Prova.created_at < data_fim)
+        except:
+            pass
+
+    # ========================================
+    # ESTATÍSTICAS GERAIS (sem filtros)
+    # ========================================
+    total_relatorios = Relatorio.query.count()
+    total_referencias = Referencia.query.count()
+    total_provas = Prova.query.count()
+
+    # Por status (sem filtros)
+    provas_aprovadas = Prova.query.filter_by(status='Aprovada').count()
+    provas_reprovadas = Prova.query.filter_by(status='Reprovada').count()
+    provas_em_andamento = Prova.query.filter_by(status='Em Andamento').count()
+    provas_comite = Prova.query.filter_by(status='Comitê').count()
+
+    # Taxa de aprovação
+    taxa_aprovacao = round((provas_aprovadas / total_provas * 100) if total_provas > 0 else 0, 1)
+    taxa_reprovacao = round((provas_reprovadas / total_provas * 100) if total_provas > 0 else 0, 1)
+
+    # Provas com retrabalho
+    provas_retrabalho = Prova.query.filter(Prova.numero_prova > 1).count()
+    taxa_retrabalho = round((provas_retrabalho / total_provas * 100) if total_provas > 0 else 0, 1)
+
+    # ========================================
+    # ESTATÍSTICAS FILTRADAS
+    # ========================================
+    provas_filtradas = query_provas.all()
+    total_filtrado = len(provas_filtradas)
+
+    filtrado_aprovadas = sum(1 for p in provas_filtradas if p.status == 'Aprovada')
+    filtrado_reprovadas = sum(1 for p in provas_filtradas if p.status == 'Reprovada')
+    filtrado_em_andamento = sum(1 for p in provas_filtradas if p.status == 'Em Andamento')
+    filtrado_comite = sum(1 for p in provas_filtradas if p.status == 'Comitê')
+
+    taxa_aprovacao_filtrada = round((filtrado_aprovadas / total_filtrado * 100) if total_filtrado > 0 else 0, 1)
+
+    # ========================================
+    # DADOS PARA GRÁFICOS
+    # ========================================
+
+    # Por categoria
+    categorias_stats = db.session.query(
+        Referencia.tipo_categoria,
+        db.func.count(Referencia.id)
+    ).group_by(Referencia.tipo_categoria).all()
+
+    # Por status
+    status_stats = db.session.query(
+        Prova.status,
+        db.func.count(Prova.id)
+    ).group_by(Prova.status).all()
+
+    # Por fornecedor (top 10)
+    fornecedores_stats = db.session.query(
+        Referencia.fornecedor,
+        db.func.count(Referencia.id)
+    ).filter(Referencia.fornecedor.isnot(None), Referencia.fornecedor != '').group_by(
+        Referencia.fornecedor
+    ).order_by(db.func.count(Referencia.id).desc()).limit(10).all()
+
+    # Por coleção
+    colecoes_stats = db.session.query(
+        Relatorio.colecao,
+        db.func.count(Relatorio.id)
+    ).filter(Relatorio.colecao.isnot(None), Relatorio.colecao != '').group_by(
+        Relatorio.colecao
+    ).order_by(db.func.count(Relatorio.id).desc()).all()
+
+    # Relatórios por mês (últimos 12 meses)
+    doze_meses_atras = datetime.utcnow() - timedelta(days=365)
+    relatorios_por_mes = db.session.query(
+        db.func.strftime('%Y-%m', Relatorio.created_at).label('mes'),
+        db.func.count(Relatorio.id)
+    ).filter(Relatorio.created_at >= doze_meses_atras).group_by('mes').order_by('mes').all()
+
+    # ========================================
+    # INSIGHTS INTELIGENTES
+    # ========================================
+    insights = []
+
+    # Insight de aprovação
+    if taxa_aprovacao >= 80:
+        insights.append({
+            'tipo': 'success',
+            'icone': 'bi-trophy-fill',
+            'titulo': 'Excelente Taxa de Aprovação',
+            'mensagem': f'{taxa_aprovacao}% das provas foram aprovadas. Parabéns pela qualidade!'
+        })
+    elif taxa_aprovacao >= 60:
+        insights.append({
+            'tipo': 'warning',
+            'icone': 'bi-exclamation-triangle-fill',
+            'titulo': 'Taxa de Aprovação Moderada',
+            'mensagem': f'{taxa_aprovacao}% de aprovação. Há espaço para melhorias no processo.'
+        })
+    else:
+        insights.append({
+            'tipo': 'danger',
+            'icone': 'bi-x-circle-fill',
+            'titulo': 'Atenção: Baixa Aprovação',
+            'mensagem': f'Apenas {taxa_aprovacao}% aprovadas. Recomenda-se revisar fornecedores e processos.'
+        })
+
+    # Insight de retrabalho
+    if taxa_retrabalho > 30:
+        insights.append({
+            'tipo': 'warning',
+            'icone': 'bi-arrow-repeat',
+            'titulo': 'Alto Índice de Retrabalho',
+            'mensagem': f'{taxa_retrabalho}% das provas precisaram de mais de uma tentativa.'
+        })
+    elif taxa_retrabalho > 0:
+        insights.append({
+            'tipo': 'info',
+            'icone': 'bi-arrow-repeat',
+            'titulo': 'Retrabalho Controlado',
+            'mensagem': f'{taxa_retrabalho}% das provas necessitaram retrabalho.'
+        })
+
+    # Insight de provas pendentes
+    if provas_em_andamento > 10:
+        insights.append({
+            'tipo': 'info',
+            'icone': 'bi-hourglass-split',
+            'titulo': 'Provas Aguardando Análise',
+            'mensagem': f'{provas_em_andamento} provas em andamento aguardando conclusão.'
+        })
+
+    # Insight de comitê
+    if provas_comite > 0:
+        insights.append({
+            'tipo': 'primary',
+            'icone': 'bi-people-fill',
+            'titulo': 'Provas para Comitê',
+            'mensagem': f'{provas_comite} provas aguardando decisão do comitê.'
+        })
+
+    # Top fornecedor
+    if fornecedores_stats:
+        top_fornecedor = fornecedores_stats[0]
+        insights.append({
+            'tipo': 'secondary',
+            'icone': 'bi-building',
+            'titulo': 'Fornecedor mais Ativo',
+            'mensagem': f'"{top_fornecedor[0]}" com {top_fornecedor[1]} referências.'
+        })
+
+    # ========================================
+    # OPÇÕES PARA FILTROS (dropdowns)
+    # ========================================
+    opcoes_status = ['Em Andamento', 'Aprovada', 'Reprovada', 'Comitê']
+    opcoes_categorias = ['baby', 'kids', 'teen', 'adulto']
+
+    # Coleções únicas
+    opcoes_colecoes = [c[0] for c in db.session.query(Relatorio.colecao).filter(
+        Relatorio.colecao.isnot(None), Relatorio.colecao != ''
+    ).distinct().order_by(Relatorio.colecao).all()]
+
+    # Fornecedores únicos
+    opcoes_fornecedores = [f[0] for f in db.session.query(Referencia.fornecedor).filter(
+        Referencia.fornecedor.isnot(None), Referencia.fornecedor != ''
+    ).distinct().order_by(Referencia.fornecedor).all()]
+
+    # ========================================
+    # TABELA DE DADOS FILTRADOS
+    # ========================================
+    dados_tabela = []
+    for prova in provas_filtradas:
+        ref = prova.referencia
+        rel = ref.relatorio
+        dados_tabela.append({
+            'relatorio_id': rel.id,
+            'colecao': rel.colecao or '-',
+            'descricao': rel.descricao_geral or '-',
+            'referencia': ref.numero_ref or '-',
+            'categoria': ref.tipo_categoria,
+            'fornecedor': ref.fornecedor or '-',
+            'numero_prova': prova.numero_prova,
+            'status': prova.status,
+            'data_prova': prova.data_prova or '-'
+        })
+
+    return render_template('analytics.html',
+        # Estatísticas gerais
+        total_relatorios=total_relatorios,
+        total_referencias=total_referencias,
+        total_provas=total_provas,
+        provas_aprovadas=provas_aprovadas,
+        provas_reprovadas=provas_reprovadas,
+        provas_em_andamento=provas_em_andamento,
+        provas_comite=provas_comite,
+        taxa_aprovacao=taxa_aprovacao,
+        taxa_reprovacao=taxa_reprovacao,
+        taxa_retrabalho=taxa_retrabalho,
+
+        # Estatísticas filtradas
+        total_filtrado=total_filtrado,
+        filtrado_aprovadas=filtrado_aprovadas,
+        filtrado_reprovadas=filtrado_reprovadas,
+        filtrado_em_andamento=filtrado_em_andamento,
+        filtrado_comite=filtrado_comite,
+        taxa_aprovacao_filtrada=taxa_aprovacao_filtrada,
+
+        # Dados para gráficos
+        categorias_stats=dict(categorias_stats),
+        status_stats=dict(status_stats),
+        fornecedores_stats=fornecedores_stats,
+        colecoes_stats=colecoes_stats,
+        relatorios_por_mes=relatorios_por_mes,
+
+        # Insights
+        insights=insights,
+
+        # Opções para filtros
+        opcoes_status=opcoes_status,
+        opcoes_categorias=opcoes_categorias,
+        opcoes_colecoes=opcoes_colecoes,
+        opcoes_fornecedores=opcoes_fornecedores,
+
+        # Filtros ativos
+        filtro_status=filtro_status,
+        filtro_categoria=filtro_categoria,
+        filtro_colecao=filtro_colecao,
+        filtro_fornecedor=filtro_fornecedor,
+        filtro_data_inicio=filtro_data_inicio,
+        filtro_data_fim=filtro_data_fim,
+
+        # Dados da tabela
+        dados_tabela=dados_tabela
+    )
+
+
+@app.route('/analytics/exportar')
+@login_required
+def analytics_exportar():
+    """Exporta dados filtrados para Excel"""
+    from datetime import datetime, timedelta
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    # Obter parâmetros de filtro
+    filtro_status = request.args.get('status', '')
+    filtro_categoria = request.args.get('categoria', '')
+    filtro_colecao = request.args.get('colecao', '')
+    filtro_fornecedor = request.args.get('fornecedor', '')
+    filtro_data_inicio = request.args.get('data_inicio', '')
+    filtro_data_fim = request.args.get('data_fim', '')
+
+    # Query base
+    query_provas = Prova.query.join(Referencia).join(Relatorio)
+
+    # Aplicar filtros
+    if filtro_status:
+        query_provas = query_provas.filter(Prova.status == filtro_status)
+    if filtro_categoria:
+        query_provas = query_provas.filter(Referencia.tipo_categoria == filtro_categoria)
+    if filtro_colecao:
+        query_provas = query_provas.filter(Relatorio.colecao == filtro_colecao)
+    if filtro_fornecedor:
+        query_provas = query_provas.filter(Referencia.fornecedor == filtro_fornecedor)
+    if filtro_data_inicio:
+        try:
+            data_inicio = datetime.strptime(filtro_data_inicio, '%Y-%m-%d')
+            query_provas = query_provas.filter(Prova.created_at >= data_inicio)
+        except:
+            pass
+    if filtro_data_fim:
+        try:
+            data_fim = datetime.strptime(filtro_data_fim, '%Y-%m-%d')
+            data_fim = data_fim + timedelta(days=1)
+            query_provas = query_provas.filter(Prova.created_at < data_fim)
+        except:
+            pass
+
+    provas = query_provas.order_by(Relatorio.colecao, Referencia.tipo_categoria, Prova.numero_prova).all()
+
+    # Criar workbook
+    wb = Workbook()
+
+    # ========================================
+    # ABA 1: RESUMO
+    # ========================================
+    ws_resumo = wb.active
+    ws_resumo.title = "Resumo"
+
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="e6007e", end_color="e6007e", fill_type="solid")
+    subheader_fill = PatternFill(start_color="f8bbd9", end_color="f8bbd9", fill_type="solid")
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    # Título
+    ws_resumo['A1'] = "RELATÓRIO DE ANALYTICS - PROVAS DE MODELAGEM"
+    ws_resumo['A1'].font = Font(bold=True, size=14, color="e6007e")
+    ws_resumo.merge_cells('A1:D1')
+
+    ws_resumo['A2'] = f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    ws_resumo['A2'].font = Font(italic=True, size=10)
+
+    # Filtros aplicados
+    ws_resumo['A4'] = "Filtros Aplicados:"
+    ws_resumo['A4'].font = Font(bold=True)
+
+    row = 5
+    if filtro_status:
+        ws_resumo[f'A{row}'] = f"Status: {filtro_status}"
+        row += 1
+    if filtro_categoria:
+        ws_resumo[f'A{row}'] = f"Categoria: {filtro_categoria}"
+        row += 1
+    if filtro_colecao:
+        ws_resumo[f'A{row}'] = f"Coleção: {filtro_colecao}"
+        row += 1
+    if filtro_fornecedor:
+        ws_resumo[f'A{row}'] = f"Fornecedor: {filtro_fornecedor}"
+        row += 1
+    if filtro_data_inicio or filtro_data_fim:
+        periodo = f"Período: {filtro_data_inicio or 'início'} até {filtro_data_fim or 'hoje'}"
+        ws_resumo[f'A{row}'] = periodo
+        row += 1
+
+    if row == 5:
+        ws_resumo[f'A{row}'] = "Nenhum filtro aplicado (dados completos)"
+        row += 1
+
+    # Estatísticas
+    row += 1
+    ws_resumo[f'A{row}'] = "Estatísticas"
+    ws_resumo[f'A{row}'].font = Font(bold=True, size=12)
+
+    row += 1
+    total = len(provas)
+    aprovadas = sum(1 for p in provas if p.status == 'Aprovada')
+    reprovadas = sum(1 for p in provas if p.status == 'Reprovada')
+    em_andamento = sum(1 for p in provas if p.status == 'Em Andamento')
+    comite = sum(1 for p in provas if p.status == 'Comitê')
+
+    stats = [
+        ("Total de Provas", total),
+        ("Aprovadas", aprovadas),
+        ("Reprovadas", reprovadas),
+        ("Em Andamento", em_andamento),
+        ("Comitê", comite),
+        ("Taxa de Aprovação", f"{round(aprovadas/total*100, 1) if total > 0 else 0}%")
+    ]
+
+    for stat_name, stat_value in stats:
+        ws_resumo[f'A{row}'] = stat_name
+        ws_resumo[f'B{row}'] = stat_value
+        row += 1
+
+    # ========================================
+    # ABA 2: DADOS DETALHADOS
+    # ========================================
+    ws_dados = wb.create_sheet("Dados Detalhados")
+
+    headers = ["ID Relatório", "Coleção", "Descrição", "Referência", "Categoria",
+               "Fornecedor", "Nº Prova", "Status", "Data Prova", "Data Recebimento",
+               "Tamanhos", "Time Qualidade", "Time Estilo", "Time Modelagem"]
+
+    for col_num, header in enumerate(headers, 1):
+        cell = ws_dados.cell(row=1, column=col_num)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
+    for row_num, prova in enumerate(provas, 2):
+        ref = prova.referencia
+        rel = ref.relatorio
+
+        data = [
+            rel.id,
+            rel.colecao or '',
+            rel.descricao_geral or '',
+            ref.numero_ref or '',
+            ref.tipo_categoria,
+            ref.fornecedor or '',
+            prova.numero_prova,
+            prova.status,
+            prova.data_prova or '',
+            prova.data_recebimento or '',
+            prova.tamanhos_recebidos or '',
+            prova.time_qualidade or '',
+            prova.time_estilo or '',
+            prova.time_modelagem or ''
+        ]
+
+        for col_num, value in enumerate(data, 1):
+            cell = ws_dados.cell(row=row_num, column=col_num)
+            cell.value = value
+            cell.border = border
+
+            # Colorir por status
+            if col_num == 8:  # Status
+                if value == 'Aprovada':
+                    cell.fill = PatternFill(start_color="c6efce", end_color="c6efce", fill_type="solid")
+                elif value == 'Reprovada':
+                    cell.fill = PatternFill(start_color="ffc7ce", end_color="ffc7ce", fill_type="solid")
+                elif value == 'Comitê':
+                    cell.fill = PatternFill(start_color="ffeb9c", end_color="ffeb9c", fill_type="solid")
+
+    # Ajustar larguras
+    for ws in [ws_resumo, ws_dados]:
+        for column in ws.columns:
+            max_length = 0
+            column_letter = get_column_letter(column[0].column)
+            for cell in column:
+                try:
+                    if cell.value and len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            ws.column_dimensions[column_letter].width = min(max_length + 2, 50)
+
+    # Salvar
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"analytics_export_{timestamp}.xlsx"
+    filepath = os.path.join(app.config['PDF_FOLDER'], filename)
+    wb.save(filepath)
+
+    return send_from_directory(app.config['PDF_FOLDER'], filename, as_attachment=True)
+
+
+# ========================================
+# Comandos CLI para manutenção
+# ========================================
+
+@app.cli.command('reset-all-passwords')
+def reset_all_passwords():
+    """Reseta as senhas de todos os usuários para uma senha padrão temporária."""
+    from models import User
+    from werkzeug.security import generate_password_hash
+
+    HASH_METHOD = 'pbkdf2:sha256'
+    senha_padrao = 'mudar123'
+
+    users = User.query.all()
+    print(f"Resetando senhas de {len(users)} usuários...")
+
+    for user in users:
+        user.password_hash = generate_password_hash(senha_padrao, method=HASH_METHOD)
+        user.senha_temporaria = True
+        print(f"  - {user.username}: senha resetada")
+
+    db.session.commit()
+    print(f"\nTodas as senhas foram resetadas para: {senha_padrao}")
+    print("Os usuários deverão trocar a senha no primeiro acesso.")
+
+
+@app.cli.command('create-admin')
+def create_admin():
+    """Cria um usuário administrador padrão."""
+    from models import User
+    from werkzeug.security import generate_password_hash
+
+    HASH_METHOD = 'pbkdf2:sha256'
+    username = 'admin'
+    senha = 'admin123'
+
+    # Verificar se já existe
+    if User.query.filter_by(username=username).first():
+        print(f"Usuário '{username}' já existe.")
+        return
+
+    admin = User(
+        username=username,
+        email='admin@sistema.local',
+        nome_completo='Administrador',
+        password_hash=generate_password_hash(senha, method=HASH_METHOD),
+        role='admin',
+        is_admin=True,
+        is_active=True,
+        senha_temporaria=True
+    )
+
+    db.session.add(admin)
+    db.session.commit()
+
+    print(f"Usuário administrador criado!")
+    print(f"  Username: {username}")
+    print(f"  Senha: {senha}")
+    print("  ** Troque a senha após o primeiro login! **")
+
+
 if __name__ == '__main__':
     # Este bloco é usado apenas para desenvolvimento local
     # Em produção, use Gunicorn: gunicorn -c gunicorn_config.py wsgi:app

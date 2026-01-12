@@ -331,6 +331,54 @@
             border-radius: 16px;
             border: none;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            pointer-events: auto !important;
+        }
+
+        /* CRÍTICO: Garantir que modais SEMPRE recebam cliques */
+        .modal {
+            pointer-events: auto !important;
+        }
+
+        .modal-dialog {
+            pointer-events: auto !important;
+        }
+
+        .modal-body,
+        .modal-header,
+        .modal-footer {
+            pointer-events: auto !important;
+        }
+
+        .modal-footer form {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+            justify-content: flex-end;
+            pointer-events: auto !important;
+        }
+
+        .modal button,
+        .modal .btn,
+        .modal input,
+        .modal select,
+        .modal textarea {
+            pointer-events: auto !important;
+            cursor: pointer;
+        }
+
+        .modal input[type="text"],
+        .modal input[type="password"],
+        .modal input[type="email"],
+        .modal textarea {
+            cursor: text;
+        }
+
+        /* Ícones dentro de botões não devem capturar cliques */
+        .modal button i,
+        .modal .btn i,
+        button i,
+        .btn i {
+            pointer-events: none !important;
         }
 
         @media (max-width: 768px) {
@@ -356,12 +404,19 @@
                 flex-direction: column;
             }
 
-            .modal-footer .btn {
+            .modal-footer form {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .modal-footer .btn,
+            .modal-footer form .btn {
                 width: 100%;
                 margin-bottom: 0.5rem;
             }
 
-            .modal-footer .btn:last-child {
+            .modal-footer .btn:last-child,
+            .modal-footer form .btn:last-child {
                 margin-bottom: 0;
             }
         }
@@ -552,6 +607,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('dashboard') }}">
                             <i class="bi bi-house-fill"></i> Início
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('analytics') }}">
+                            <i class="bi bi-graph-up-arrow"></i> Relatórios
                         </a>
                     </li>
                     <li class="nav-item dropdown">
