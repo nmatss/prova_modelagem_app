@@ -15,8 +15,8 @@ timeout = 120
 keepalive = 5
 
 # Logging
-accesslog = '/var/log/provas_app/access.log'
-errorlog = '/var/log/provas_app/error.log'
+accesslog = '/app/logs/access.log'
+errorlog = '/app/logs/error.log'
 loglevel = os.getenv('LOG_LEVEL', 'info').lower()
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 
@@ -25,7 +25,7 @@ proc_name = 'provas_app'
 
 # Server mechanics
 daemon = False
-pidfile = '/var/run/provas_app/gunicorn.pid'
+pidfile = None
 umask = 0o007
 user = None
 group = None
