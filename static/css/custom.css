@@ -466,6 +466,13 @@ input[type="file"].form-control::-webkit-file-upload-button:hover {
     pointer-events: auto !important;
 }
 
+/* Garantir que ícones dentro de botões não bloqueiem cliques */
+.modal-content button i,
+.modal-footer button i,
+.btn i {
+    pointer-events: none;
+}
+
 /* Esconder loading quando modal está aberto */
 body.modal-open #loadingOverlay {
     display: none !important;
@@ -829,6 +836,10 @@ body.modal-open #loadingOverlay {
     .modal-footer .btn {
         width: 100%;
         margin: 0;
+    }
+
+    .modal-footer form {
+        width: 100%;
     }
 
     .page-header {
