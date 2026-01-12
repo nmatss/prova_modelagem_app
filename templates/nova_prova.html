@@ -185,6 +185,7 @@
             </div>
 
             <div class="row mb-3">
+                <!-- QUALIDADE -->
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header bg-success text-white">Qualidade</div>
@@ -192,6 +193,25 @@
                             <div class="mb-2">
                                 <label class="form-label">Responsável</label>
                                 <input type="text" class="form-control" name="time_qualidade_{{ referencia.tipo_categoria }}" placeholder="Nome do responsável">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label d-block">Itens de Avaliação</label>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="SOLIDEZ" id="qual_solidez"><label class="form-check-label" for="qual_solidez">Solidez</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="PILLING" id="qual_pilling"><label class="form-check-label" for="qual_pilling">Pilling</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="AGUA_DO_MAR" id="qual_agua_mar"><label class="form-check-label" for="qual_agua_mar">Água do Mar</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="AGUA_CLORADA" id="qual_agua_clorada"><label class="form-check-label" for="qual_agua_clorada">Água Clorada</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="LAVAGEM_DOMESTICA" id="qual_lavagem"><label class="form-check-label" for="qual_lavagem">Lavagem Doméstica</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="DIMENSIONAL" id="qual_dimensional"><label class="form-check-label" for="qual_dimensional">Dimensional</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="ERGONOMIA" id="qual_ergonomia"><label class="form-check-label" for="qual_ergonomia">Ergonomia</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="GRAMATURA" id="qual_gramatura"><label class="form-check-label" for="qual_gramatura">Gramatura</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="SOLIDEZ_FRICCAO" id="qual_friccao"><label class="form-check-label" for="qual_friccao">Solidez a Fricção Seco e Úmido</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="RESISTENCIA_COSTURA" id="qual_resistencia"><label class="form-check-label" for="qual_resistencia">Resistência da Costura</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="CICLO_VIDA" id="qual_ciclo"><label class="form-check-label" for="qual_ciclo">Ciclo de Vida do Produto</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="TESTE_AVIAMENTOS" id="qual_aviamentos"><label class="form-check-label" for="qual_aviamentos">Teste de Aviamentos</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="COSTURA_DEFEITO" id="qual_costura_def"><label class="form-check-label" for="qual_costura_def">Costura com Defeito</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="TECIDO_DEFEITO" id="qual_tecido_def"><label class="form-check-label" for="qual_tecido_def">Tecido com Defeito</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="ORIENTACAO_FORNECEDOR" id="qual_orientacao"><label class="form-check-label" for="qual_orientacao">Orientação para o Fornecedor</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ referencia.tipo_categoria }}" value="OUTROS" id="qual_outros"><label class="form-check-label" for="qual_outros">Outros</label></div>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Comentários</label>
@@ -204,13 +224,14 @@
                                     rows="2" placeholder="Detalhes técnicos, medidas, etc."></textarea>
                             </div>
                             <div class="mb-2">
-                                <label class="form-label">Fotos</label>
+                                <label class="form-label">Anexar Arquivos</label>
                                 <input type="file" class="form-control" name="fotos_qualidade_{{ referencia.tipo_categoria }}"
-                                    multiple accept="image/*">
+                                    multiple>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- ESTILO -->
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header bg-info text-white">Estilo</div>
@@ -218,6 +239,15 @@
                             <div class="mb-2">
                                 <label class="form-label">Responsável</label>
                                 <input type="text" class="form-control" name="time_estilo_{{ referencia.tipo_categoria }}" placeholder="Nome do responsável">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label d-block">Itens de Avaliação</label>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ referencia.tipo_categoria }}" value="AJUSTAR_FICHA_TECNICA" id="est_ficha"><label class="form-check-label" for="est_ficha">Ajustar a Ficha Técnica</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ referencia.tipo_categoria }}" value="AJUSTE_DESENHO" id="est_desenho"><label class="form-check-label" for="est_desenho">Ajuste de Desenho</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ referencia.tipo_categoria }}" value="AJUSTE_CORES" id="est_cores"><label class="form-check-label" for="est_cores">Ajuste de Cores</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ referencia.tipo_categoria }}" value="ORIENTACAO_FORNECEDOR" id="est_orientacao"><label class="form-check-label" for="est_orientacao">Orientação para Fornecedor</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ referencia.tipo_categoria }}" value="AJUSTE_TECIDO" id="est_tecido"><label class="form-check-label" for="est_tecido">Ajuste de Tecido</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ referencia.tipo_categoria }}" value="OUTROS" id="est_outros"><label class="form-check-label" for="est_outros">Outros</label></div>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Comentários</label>
@@ -230,13 +260,14 @@
                                     rows="2" placeholder="Ajustes, modificações, etc."></textarea>
                             </div>
                             <div class="mb-2">
-                                <label class="form-label">Fotos</label>
+                                <label class="form-label">Anexar Arquivos</label>
                                 <input type="file" class="form-control" name="fotos_estilo_{{ referencia.tipo_categoria }}"
-                                    multiple accept="image/*">
+                                    multiple>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- MODELAGEM -->
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header bg-warning">Modelagem</div>
@@ -244,6 +275,14 @@
                             <div class="mb-2">
                                 <label class="form-label">Responsável</label>
                                 <input type="text" class="form-control" name="time_modelagem_{{ referencia.tipo_categoria }}" placeholder="Nome do responsável">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label d-block">Itens de Avaliação</label>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ referencia.tipo_categoria }}" value="AJUSTAR_TABELA_MEDIDAS" id="mod_tabela"><label class="form-check-label" for="mod_tabela">Ajustar Tabela de Medidas</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ referencia.tipo_categoria }}" value="AJUSTAR_MODELAGEM" id="mod_modelagem"><label class="form-check-label" for="mod_modelagem">Ajustar Modelagem</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ referencia.tipo_categoria }}" value="REPILOTAR" id="mod_repilotar"><label class="form-check-label" for="mod_repilotar">Repilotar</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ referencia.tipo_categoria }}" value="MODELO_FORA_MEDIDAS" id="mod_fora"><label class="form-check-label" for="mod_fora">Modelo de Prova Fora das Medidas</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ referencia.tipo_categoria }}" value="OUTROS" id="mod_outros"><label class="form-check-label" for="mod_outros">Outros</label></div>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Comentários</label>
@@ -254,6 +293,11 @@
                                 <label class="form-label">Observações Adicionais</label>
                                 <textarea class="form-control" name="obs_modelagem_{{ referencia.tipo_categoria }}"
                                     rows="2" placeholder="Ajustes técnicos, correções, etc."></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Anexar Arquivos</label>
+                                <input type="file" class="form-control" name="fotos_modelagem_{{ referencia.tipo_categoria }}"
+                                    multiple>
                             </div>
                         </div>
                     </div>

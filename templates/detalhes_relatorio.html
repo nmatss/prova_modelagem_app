@@ -387,6 +387,14 @@
                     <div class="col-md-4">
                         <strong><i class="bi bi-clipboard-check"></i> Qualidade</strong>
                         <p class="text-muted small mb-1">{{ prova.time_qualidade or '-' }}</p>
+                        {% if prova.checklist_qualidade %}
+                        <p class="small mb-1"><strong>Itens:</strong></p>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% for item in prova.checklist_qualidade.split(', ') %}
+                            <span class="badge bg-success">{{ item.replace('_', ' ').title() }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         <p class="small mb-1"><strong>Comentários:</strong> {{ prova.comentarios_qualidade or 'Sem comentários.' }}</p>
                         {% if prova.obs_qualidade %}
                         <p class="small mb-1"><strong>Observações:</strong> {{ prova.obs_qualidade }}</p>
@@ -403,6 +411,14 @@
                     <div class="col-md-4">
                         <strong><i class="bi bi-palette"></i> Estilo</strong>
                         <p class="text-muted small mb-1">{{ prova.time_estilo or '-' }}</p>
+                        {% if prova.checklist_estilo %}
+                        <p class="small mb-1"><strong>Itens:</strong></p>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% for item in prova.checklist_estilo.split(', ') %}
+                            <span class="badge bg-info">{{ item.replace('_', ' ').title() }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         <p class="small mb-1"><strong>Comentários:</strong> {{ prova.comentarios_estilo or 'Sem comentários.' }}</p>
                         {% if prova.obs_estilo %}
                         <p class="small mb-1"><strong>Observações:</strong> {{ prova.obs_estilo }}</p>
@@ -419,6 +435,14 @@
                     <div class="col-md-4">
                         <strong><i class="bi bi-rulers"></i> Modelagem</strong>
                         <p class="text-muted small mb-1">{{ prova.time_modelagem or '-' }}</p>
+                        {% if prova.checklist_modelagem %}
+                        <p class="small mb-1"><strong>Itens:</strong></p>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% for item in prova.checklist_modelagem.split(', ') %}
+                            <span class="badge bg-warning text-dark">{{ item.replace('_', ' ').title() }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         <p class="small mb-1"><strong>Comentários:</strong> {{ prova.comentarios_modelagem or 'Sem comentários.' }}</p>
                         {% if prova.obs_modelagem %}
                         <p class="small mb-1"><strong>Observações:</strong> {{ prova.obs_modelagem }}</p>

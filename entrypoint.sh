@@ -73,6 +73,27 @@ try:
         print("   Criando/atualizando tabelas...")
         db.create_all()
 
+        # Migração: adicionar colunas de checklist se não existirem
+        print("   Verificando colunas de checklist...")
+        from sqlalchemy import text, inspect
+        inspector = inspect(db.engine)
+        colunas_existentes = [col['name'] for col in inspector.get_columns('provas')]
+
+        with db.engine.connect() as conn:
+            if 'checklist_qualidade' not in colunas_existentes:
+                conn.execute(text("ALTER TABLE provas ADD COLUMN checklist_qualidade TEXT"))
+                print("   + Adicionada coluna checklist_qualidade")
+
+            if 'checklist_estilo' not in colunas_existentes:
+                conn.execute(text("ALTER TABLE provas ADD COLUMN checklist_estilo TEXT"))
+                print("   + Adicionada coluna checklist_estilo")
+
+            if 'checklist_modelagem' not in colunas_existentes:
+                conn.execute(text("ALTER TABLE provas ADD COLUMN checklist_modelagem TEXT"))
+                print("   + Adicionada coluna checklist_modelagem")
+
+            conn.commit()
+
         # Verificar se admin existe
         admin_username = os.getenv('ADMIN_USERNAME', 'admin')
         admin = User.query.filter_by(username=admin_username).first()

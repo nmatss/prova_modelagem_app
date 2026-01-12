@@ -105,16 +105,19 @@ class ProvaModelagem(db.Model):
 
     # Qualidade
     time_qualidade = db.Column(db.String(200))
+    checklist_qualidade = db.Column(db.Text)  # Itens selecionados separados por vírgula
     comentarios_qualidade = db.Column(db.Text)
     obs_qualidade = db.Column(db.Text)
 
     # Estilo
     time_estilo = db.Column(db.String(200))
+    checklist_estilo = db.Column(db.Text)  # Itens selecionados separados por vírgula
     comentarios_estilo = db.Column(db.Text)
     obs_estilo = db.Column(db.Text)
 
     # Modelagem
     time_modelagem = db.Column(db.String(200))
+    checklist_modelagem = db.Column(db.Text)  # Itens selecionados separados por vírgula
     comentarios_modelagem = db.Column(db.Text)
     obs_modelagem = db.Column(db.Text)
 
