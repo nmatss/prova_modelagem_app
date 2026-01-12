@@ -14,49 +14,51 @@ echo "=========================================="
 echo "📁 Criando diretórios..."
 mkdir -p /app/uploads /app/logs /app/backups
 
-# Aguardar banco PostgreSQL estar pronto
-echo "⏳ Aguardando PostgreSQL..."
-MAX_TRIES=30
-COUNTER=0
+# Verificar tipo de banco de dados
+DB_URL="${DATABASE_URL:-}"
 
-while ! python3 -c "
+if [[ "$DB_URL" == *"postgresql"* ]]; then
+    echo "⏳ Aguardando PostgreSQL..."
+    MAX_TRIES=30
+    COUNTER=0
+
+    while ! python3 -c "
 import psycopg2
 import os
 import sys
 try:
     db_url = os.getenv('DATABASE_URL', '')
-    if 'postgresql' in db_url:
-        # Extrair componentes da URL
-        parts = db_url.replace('postgresql://', '').split('@')
-        user_pass = parts[0].split(':')
-        host_db = parts[1].split('/')
-        host_port = host_db[0].split(':')
+    parts = db_url.replace('postgresql://', '').split('@')
+    user_pass = parts[0].split(':')
+    host_db = parts[1].split('/')
+    host_port = host_db[0].split(':')
 
-        conn = psycopg2.connect(
-            host=host_port[0],
-            port=host_port[1] if len(host_port) > 1 else '5432',
-            user=user_pass[0],
-            password=user_pass[1],
-            database=host_db[1]
-        )
-        conn.close()
-        print('✅ PostgreSQL conectado!')
-        sys.exit(0)
-    else:
-        print('⚠️  Não é PostgreSQL')
-        sys.exit(1)
+    conn = psycopg2.connect(
+        host=host_port[0],
+        port=host_port[1] if len(host_port) > 1 else '5432',
+        user=user_pass[0],
+        password=user_pass[1],
+        database=host_db[1]
+    )
+    conn.close()
+    print('✅ PostgreSQL conectado!')
+    sys.exit(0)
 except Exception as e:
     print(f'❌ Erro: {e}')
     sys.exit(1)
 " 2>/dev/null; do
-    COUNTER=$((COUNTER+1))
-    if [ $COUNTER -gt $MAX_TRIES ]; then
-        echo "❌ Timeout aguardando PostgreSQL"
-        exit 1
-    fi
-    echo "   Tentativa $COUNTER/$MAX_TRIES..."
-    sleep 2
-done
+        COUNTER=$((COUNTER+1))
+        if [ $COUNTER -gt $MAX_TRIES ]; then
+            echo "❌ Timeout aguardando PostgreSQL"
+            exit 1
+        fi
+        echo "   Tentativa $COUNTER/$MAX_TRIES..."
+        sleep 2
+    done
+else
+    echo "📦 Usando SQLite - criando diretório de dados..."
+    mkdir -p /app/data
+fi
 
 # Inicializar banco de dados
 echo "🗄️  Verificando banco de dados..."
