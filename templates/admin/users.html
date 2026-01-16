@@ -3,40 +3,7 @@
 {% block title %}Gerenciar Usuários - Admin{% endblock %}
 
 {% block styles %}
-<style>
-    /* Garantir que o modal de senha SEMPRE funcione */
-    #modalDefinirSenha {
-        z-index: 9999 !important;
-        pointer-events: auto !important;
-    }
-    #modalDefinirSenha .modal-dialog {
-        pointer-events: auto !important;
-    }
-    #modalDefinirSenha .modal-content {
-        pointer-events: auto !important;
-    }
-    #modalDefinirSenha input,
-    #modalDefinirSenha button,
-    #modalDefinirSenha .form-check-input {
-        pointer-events: auto !important;
-        cursor: pointer !important;
-    }
-    #modalDefinirSenha input[type="text"],
-    #modalDefinirSenha input[type="password"] {
-        cursor: text !important;
-    }
-    /* Backdrop do modal */
-    .modal-backdrop.show {
-        z-index: 9998 !important;
-    }
-    /* Esconder qualquer loading overlay quando o modal estiver aberto */
-    body.modal-open #loadingOverlay {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-</style>
+{# Estilos de modal agora estão centralizados em custom.css #}
 {% endblock %}
 
 {% block content %}

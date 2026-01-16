@@ -1,186 +1,259 @@
 // ========================================
 // PROVA MODELAGEM - UX ENHANCEMENTS
+// Versão 2.0 - Correção definitiva de modais
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
+    'use strict';
 
     // ========================================
-    // LOADING OVERLAY
+    // LOADING OVERLAY - COMPLETAMENTE ISOLADO DOS MODAIS
     // ========================================
+
+    var loadingOverlay = null;
+    var isModalOpen = false;
 
     function createLoadingOverlay() {
-        if (!document.getElementById('loadingOverlay')) {
-            const overlay = document.createElement('div');
-            overlay.id = 'loadingOverlay';
-            overlay.innerHTML = `
-                <div class="spinner-container">
-                    <div class="spinner-border text-light" role="status">
-                        <span class="visually-hidden">Carregando...</span>
-                    </div>
-                    <p class="mt-3 fw-bold">Processando...</p>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-        }
+        if (loadingOverlay) return loadingOverlay;
+
+        var overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'loading-overlay-hidden';
+        overlay.innerHTML = '<div class="spinner-container">' +
+            '<div class="spinner-border text-light" role="status">' +
+            '<span class="visually-hidden">Carregando...</span>' +
+            '</div>' +
+            '<p class="mt-3 fw-bold">Processando...</p>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        loadingOverlay = overlay;
+        return overlay;
     }
 
     function showLoading() {
-        // NUNCA mostrar loading se houver modal aberto
-        if (document.querySelector('.modal.show')) {
-            return;
-        }
-        createLoadingOverlay();
-        document.getElementById('loadingOverlay').classList.add('show');
+        // NUNCA mostrar loading se modal estiver aberto
+        if (isModalOpen) return;
+        if (document.querySelector('.modal.show')) return;
+        if (document.body.classList.contains('modal-open')) return;
+
+        var overlay = createLoadingOverlay();
+        overlay.className = 'loading-overlay-visible';
     }
 
     function hideLoading() {
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) {
-            overlay.classList.remove('show');
-            overlay.style.display = 'none';
+        if (loadingOverlay) {
+            loadingOverlay.className = 'loading-overlay-hidden';
+        }
+        // Também remover qualquer overlay existente por ID
+        var existingOverlay = document.getElementById('loadingOverlay');
+        if (existingOverlay) {
+            existingOverlay.className = 'loading-overlay-hidden';
+            existingOverlay.style.cssText = 'display:none!important;pointer-events:none!important;visibility:hidden!important;opacity:0!important;z-index:-9999!important;';
         }
     }
 
-    // Show loading on form submit (except forms inside modals and admin pages)
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            // Skip loading for forms inside modals
-            if (form.closest('.modal')) {
-                return;
-            }
-            // Skip loading for admin user management forms
-            if (window.location.pathname.includes('/admin/users')) {
-                return;
-            }
-            // Check if form is valid
-            if (form.checkValidity()) {
-                showLoading();
+    function forceHideAllOverlays() {
+        // Força esconder TUDO que possa estar bloqueando
+        var overlays = document.querySelectorAll('#loadingOverlay, .loading-overlay-visible, [class*="loading"], [class*="overlay"]:not(.modal-backdrop)');
+        overlays.forEach(function(el) {
+            if (!el.classList.contains('modal') && !el.classList.contains('modal-backdrop') && !el.closest('.modal')) {
+                el.style.cssText = 'display:none!important;pointer-events:none!important;visibility:hidden!important;opacity:0!important;z-index:-9999!important;';
             }
         });
-    });
+    }
 
-    // Hide loading when page loads
-    window.addEventListener('load', hideLoading);
+    // ========================================
+    // EVENTOS DE MODAL - PRIORIDADE MÁXIMA
+    // ========================================
 
-    // IMPORTANT: Hide loading overlay when any modal opens or is about to open
+    // Quando QUALQUER modal começar a abrir
     document.addEventListener('show.bs.modal', function(e) {
+        isModalOpen = true;
         hideLoading();
-        // Garantir que o overlay está completamente escondido
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) {
-            overlay.style.display = 'none';
-            overlay.style.pointerEvents = 'none';
-        }
-    });
+        forceHideAllOverlays();
+    }, true); // Capture phase para pegar primeiro
 
-    // Também esconder quando modal estiver visível
+    // Quando modal estiver completamente aberto
     document.addEventListener('shown.bs.modal', function(e) {
+        isModalOpen = true;
         hideLoading();
-    });
+        forceHideAllOverlays();
 
-
-    // ========================================
-    // FORM VALIDATION ENHANCEMENTS
-    // ========================================
-
-    // Add visual feedback for required fields
-    document.querySelectorAll('[required]').forEach(field => {
-        const label = field.previousElementSibling;
-        if (label && label.tagName === 'LABEL') {
-            label.innerHTML += ' <span class="text-danger">*</span>';
+        // Garantir que o modal está interativo
+        var modal = e.target;
+        if (modal) {
+            modal.style.pointerEvents = 'auto';
+            var content = modal.querySelector('.modal-content');
+            if (content) {
+                content.style.pointerEvents = 'auto';
+            }
+            // Focar no primeiro elemento interativo
+            var firstInput = modal.querySelector('input:not([type="hidden"]), button:not([data-bs-dismiss]), textarea, select');
+            if (firstInput) {
+                setTimeout(function() { firstInput.focus(); }, 100);
+            }
         }
-    });
+    }, true);
 
-    // Real-time validation feedback
-    document.querySelectorAll('.form-control, .form-select').forEach(field => {
-        field.addEventListener('blur', function() {
-            if (this.hasAttribute('required') && !this.value.trim()) {
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
+    // Quando modal fechar
+    document.addEventListener('hidden.bs.modal', function(e) {
+        // Verificar se ainda há algum modal aberto
+        setTimeout(function() {
+            isModalOpen = document.querySelector('.modal.show') !== null;
+        }, 100);
+    }, true);
+
+    // ========================================
+    // INICIALIZAÇÃO
+    // ========================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Esconder loading quando página carrega
+        hideLoading();
+        forceHideAllOverlays();
+
+        // ========================================
+        // FORM SUBMIT - Mostrar loading APENAS para forms fora de modais
+        // ========================================
+
+        document.querySelectorAll('form').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                // NUNCA mostrar loading para forms dentro de modais
+                if (form.closest('.modal')) {
+                    return; // Deixa o form submeter normalmente
+                }
+                // NUNCA mostrar loading em páginas de admin
+                if (window.location.pathname.indexOf('/admin') !== -1) {
+                    return;
+                }
+                // Só mostrar loading se form for válido
+                if (form.checkValidity()) {
+                    showLoading();
+                }
+            });
+        });
+
+        // ========================================
+        // VALIDAÇÃO DE FORMULÁRIOS
+        // ========================================
+
+        document.querySelectorAll('[required]').forEach(function(field) {
+            var label = field.previousElementSibling;
+            if (label && label.tagName === 'LABEL' && label.innerHTML.indexOf('*') === -1) {
+                label.innerHTML += ' <span class="text-danger">*</span>';
             }
         });
 
-        field.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid')) {
-                if (this.value.trim()) {
+        document.querySelectorAll('.form-control, .form-select').forEach(function(field) {
+            field.addEventListener('blur', function() {
+                if (this.hasAttribute('required') && !this.value.trim()) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                    if (this.value.trim()) {
+                        this.classList.add('is-valid');
+                    }
+                }
+            });
+
+            field.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid') && this.value.trim()) {
                     this.classList.remove('is-invalid');
                     this.classList.add('is-valid');
                 }
-            }
+            });
         });
-    });
 
+        // ========================================
+        // AUTO-DISMISS ALERTS
+        // ========================================
 
-    // ========================================
-    // ALERTS AUTO-DISMISS
-    // ========================================
-
-    document.querySelectorAll('.alert:not(.alert-permanent)').forEach(alert => {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
-    });
-
-
-    // ========================================
-    // CONFIRM DANGEROUS ACTIONS
-    // ========================================
-
-    document.querySelectorAll('[data-confirm]').forEach(element => {
-        element.addEventListener('click', function(e) {
-            const message = this.getAttribute('data-confirm') || 'Tem certeza?';
-            if (!confirm(message)) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        });
-    });
-
-
-    // ========================================
-    // TOOLTIPS
-    // ========================================
-
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-
-    // ========================================
-    // IMAGE PREVIEW
-    // ========================================
-
-    document.querySelectorAll('input[type="file"][accept*="image"]').forEach(input => {
-        input.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-
-            if (files.length > 0) {
-                const previewContainer = document.createElement('div');
-                previewContainer.className = 'mt-2 d-flex flex-wrap gap-2';
-
-                // Remove old preview if exists
-                const oldPreview = this.parentElement.querySelector('.file-preview');
-                if (oldPreview) {
-                    oldPreview.remove();
+        document.querySelectorAll('.alert:not(.alert-permanent)').forEach(function(alert) {
+            setTimeout(function() {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                    var bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
                 }
+            }, 5000);
+        });
 
-                previewContainer.className += ' file-preview';
+        // ========================================
+        // TOOLTIPS
+        // ========================================
 
-                files.slice(0, 5).forEach(file => {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+
+        // ========================================
+        // SCROLL TO TOP BUTTON
+        // ========================================
+
+        var scrollTopBtn = document.createElement('button');
+        scrollTopBtn.innerHTML = '<i class="bi bi-arrow-up"></i>';
+        scrollTopBtn.className = 'btn btn-primary position-fixed rounded-circle scroll-top-btn';
+        scrollTopBtn.style.cssText = 'bottom:20px;right:20px;width:50px;height:50px;display:none;z-index:1000;';
+        scrollTopBtn.setAttribute('title', 'Voltar ao topo');
+        scrollTopBtn.setAttribute('type', 'button');
+
+        scrollTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.body.appendChild(scrollTopBtn);
+
+        window.addEventListener('scroll', function() {
+            scrollTopBtn.style.display = window.pageYOffset > 300 ? 'block' : 'none';
+        });
+
+        // ========================================
+        // KEYBOARD SHORTCUTS
+        // ========================================
+
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + S para salvar
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                // Só se não houver modal aberto
+                if (!document.querySelector('.modal.show')) {
+                    e.preventDefault();
+                    var form = document.querySelector('form:not(.modal form)');
+                    if (form) {
+                        var submitBtn = form.querySelector('[type="submit"]');
+                        if (submitBtn && !submitBtn.disabled) {
+                            submitBtn.click();
+                        }
+                    }
+                }
+            }
+        });
+
+        // ========================================
+        // IMAGE PREVIEW
+        // ========================================
+
+        document.querySelectorAll('input[type="file"][accept*="image"]').forEach(function(input) {
+            input.addEventListener('change', function(e) {
+                var files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                var oldPreview = this.parentElement.querySelector('.file-preview');
+                if (oldPreview) oldPreview.remove();
+
+                var previewContainer = document.createElement('div');
+                previewContainer.className = 'mt-2 d-flex flex-wrap gap-2 file-preview';
+
+                files.slice(0, 5).forEach(function(file) {
                     if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
+                        var reader = new FileReader();
                         reader.onload = function(e) {
-                            const img = document.createElement('img');
+                            var img = document.createElement('img');
                             img.src = e.target.result;
                             img.className = 'img-thumbnail';
-                            img.style.width = '80px';
-                            img.style.height = '80px';
-                            img.style.objectFit = 'cover';
+                            img.style.cssText = 'width:80px;height:80px;object-fit:cover;';
                             previewContainer.appendChild(img);
                         };
                         reader.readAsDataURL(file);
@@ -188,227 +261,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 if (files.length > 5) {
-                    const moreLabel = document.createElement('div');
+                    var moreLabel = document.createElement('div');
                     moreLabel.className = 'd-flex align-items-center justify-content-center bg-light border rounded';
-                    moreLabel.style.width = '80px';
-                    moreLabel.style.height = '80px';
-                    moreLabel.innerHTML = `<small class="text-muted">+${files.length - 5}</small>`;
+                    moreLabel.style.cssText = 'width:80px;height:80px;';
+                    moreLabel.innerHTML = '<small class="text-muted">+' + (files.length - 5) + '</small>';
                     previewContainer.appendChild(moreLabel);
                 }
 
                 this.parentElement.appendChild(previewContainer);
-            }
-        });
-    });
-
-
-    // ========================================
-    // SMOOTH SCROLL TO TOP
-    // ========================================
-
-    const scrollTopBtn = document.createElement('button');
-    scrollTopBtn.innerHTML = '<i class="bi bi-arrow-up"></i>';
-    scrollTopBtn.className = 'btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle';
-    scrollTopBtn.style.width = '50px';
-    scrollTopBtn.style.height = '50px';
-    scrollTopBtn.style.display = 'none';
-    scrollTopBtn.style.zIndex = '1000';
-    scrollTopBtn.setAttribute('title', 'Voltar ao topo');
-
-    scrollTopBtn.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    document.body.appendChild(scrollTopBtn);
-
-    window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 300) {
-            scrollTopBtn.style.display = 'block';
-        } else {
-            scrollTopBtn.style.display = 'none';
-        }
-    });
-
-
-    // ========================================
-    // ANIMATE ON SCROLL
-    // ========================================
-
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-fade-in');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    document.querySelectorAll('.card, .alert, .page-header').forEach(el => {
-        observer.observe(el);
-    });
-
-
-    // ========================================
-    // CHARACTER COUNTER FOR TEXTAREAS
-    // ========================================
-
-    document.querySelectorAll('textarea[maxlength]').forEach(textarea => {
-        const maxLength = textarea.getAttribute('maxlength');
-        const counter = document.createElement('small');
-        counter.className = 'text-muted d-block text-end mt-1';
-
-        const updateCounter = () => {
-            const remaining = maxLength - textarea.value.length;
-            counter.textContent = `${remaining} caracteres restantes`;
-
-            if (remaining < 20) {
-                counter.classList.add('text-warning');
-            } else {
-                counter.classList.remove('text-warning');
-            }
-        };
-
-        textarea.parentElement.appendChild(counter);
-        updateCounter();
-
-        textarea.addEventListener('input', updateCounter);
-    });
-
-
-    // ========================================
-    // KEYBOARD SHORTCUTS
-    // ========================================
-
-    document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + S to save forms
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            const form = document.querySelector('form');
-            if (form) {
-                const submitBtn = form.querySelector('[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.click();
-                }
-            }
-        }
-
-        // Escape to close modals
-        if (e.key === 'Escape') {
-            const modal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
-            if (modal) {
-                modal.hide();
-            }
-        }
-    });
-
-
-    // ========================================
-    // COPY TO CLIPBOARD
-    // ========================================
-
-    document.querySelectorAll('[data-clipboard]').forEach(element => {
-        element.style.cursor = 'pointer';
-        element.addEventListener('click', function() {
-            const text = this.getAttribute('data-clipboard') || this.textContent;
-
-            navigator.clipboard.writeText(text).then(() => {
-                // Show feedback
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="bi bi-check"></i> Copiado!';
-                this.classList.add('text-success');
-
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.classList.remove('text-success');
-                }, 2000);
             });
         });
-    });
 
+        // ========================================
+        // FILE INPUT LABELS
+        // ========================================
 
-    // ========================================
-    // ENHANCED SEARCH
-    // ========================================
+        document.querySelectorAll('input[type="file"]').forEach(function(input) {
+            input.addEventListener('change', function(e) {
+                var fileName = e.target.files.length > 0
+                    ? (e.target.files.length === 1
+                        ? e.target.files[0].name
+                        : e.target.files.length + ' arquivos selecionados')
+                    : 'Nenhum arquivo selecionado';
 
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        let searchTimeout;
-
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-
-            // Add loading indicator
-            this.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg class='animate-spin' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Ccircle class='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4'%3E%3C/circle%3E%3Cpath class='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'%3E%3C/path%3E%3C/svg%3E")`;
-
-            searchTimeout = setTimeout(() => {
-                // Reset icon
-                this.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E")`;
-            }, 300);
-        });
-    }
-
-
-    // ========================================
-    // PREVENT DOUBLE SUBMIT
-    // ========================================
-
-    document.querySelectorAll('form').forEach(form => {
-        let isSubmitting = false;
-
-        form.addEventListener('submit', function(e) {
-            // Skip for forms inside modals
-            if (form.closest('.modal')) {
-                return;
-            }
-
-            if (isSubmitting) {
-                e.preventDefault();
-                return false;
-            }
-
-            if (this.checkValidity()) {
-                isSubmitting = true;
-
-                // Disable submit button
-                const submitBtn = this.querySelector('[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processando...';
+                var helper = this.parentElement.querySelector('.file-helper');
+                if (!helper) {
+                    helper = document.createElement('small');
+                    helper.className = 'file-helper text-muted d-block mt-1';
+                    this.parentElement.appendChild(helper);
                 }
-            }
+                helper.textContent = fileName;
+            });
         });
+
+        console.log('✅ UX Enhancements v2.0 loaded successfully!');
     });
 
-
-    // ========================================
-    // ENHANCED FILE INPUT LABELS
-    // ========================================
-
-    document.querySelectorAll('input[type="file"]').forEach(input => {
-        input.addEventListener('change', function(e) {
-            const fileName = e.target.files.length > 0
-                ? e.target.files.length === 1
-                    ? e.target.files[0].name
-                    : `${e.target.files.length} arquivos selecionados`
-                : 'Nenhum arquivo selecionado';
-
-            // Update label or add helper text
-            let helper = this.parentElement.querySelector('.file-helper');
-            if (!helper) {
-                helper = document.createElement('small');
-                helper.className = 'file-helper text-muted d-block mt-1';
-                this.parentElement.appendChild(helper);
-            }
-            helper.textContent = fileName;
-        });
+    // Esconder loading quando página carregar completamente
+    window.addEventListener('load', function() {
+        hideLoading();
+        forceHideAllOverlays();
     });
 
-
-    console.log('✅ UX Enhancements loaded successfully!');
-});
+})();

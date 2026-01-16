@@ -418,30 +418,52 @@ input[type="file"].form-control::-webkit-file-upload-button:hover {
 }
 
 /* ========================================
-   LOADING OVERLAY
+   LOADING OVERLAY - VERSÃO 2.0
    ======================================== */
 
-#loadingOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-    z-index: 1030; /* Well below Bootstrap modals (1050+) */
-    display: none;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
+/* Classes para o loading overlay */
+.loading-overlay-hidden,
+#loadingOverlay:not(.loading-overlay-visible) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
 }
 
-#loadingOverlay.show {
-    display: flex;
-    pointer-events: auto;
+.loading-overlay-visible {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(4px) !important;
+    z-index: 1030 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
-/* Garantir que modais sempre funcionem */
+/* QUANDO MODAL ESTÁ ABERTO - ESCONDER TUDO */
+body.modal-open .loading-overlay-visible,
+body.modal-open #loadingOverlay,
+body.modal-open [class*="loading"]:not(.spinner-border) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+}
+
+/* ========================================
+   MODAIS - CONFIGURAÇÃO DEFINITIVA
+   ======================================== */
+
+/* Z-index hierarchy para modais */
 .modal {
     z-index: 1055 !important;
 }
@@ -451,32 +473,113 @@ input[type="file"].form-control::-webkit-file-upload-button:hover {
 }
 
 .modal-dialog {
-    z-index: 1056 !important;
+    z-index: 1060 !important;
     pointer-events: auto !important;
 }
 
 .modal-content {
     pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1061 !important;
 }
 
-.modal-content input,
-.modal-content button,
-.modal-content select,
-.modal-content textarea {
+/* Garantir que TODOS os elementos dentro do modal são clicáveis */
+.modal-content * {
+    pointer-events: auto;
+}
+
+/* Exceto ícones dentro de botões - eles não devem capturar cliques */
+.modal-content button i,
+.modal-content .btn i,
+.modal-footer button i,
+.modal-footer .btn i,
+button i,
+.btn i {
+    pointer-events: none !important;
+}
+
+/* Modal body e elementos interativos */
+.modal-body {
     pointer-events: auto !important;
 }
 
-/* Garantir que ícones dentro de botões não bloqueiem cliques */
-.modal-content button i,
-.modal-footer button i,
-.btn i {
-    pointer-events: none;
+.modal-body input,
+.modal-body button,
+.modal-body select,
+.modal-body textarea,
+.modal-body .btn,
+.modal-body a {
+    pointer-events: auto !important;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
 }
 
-/* Esconder loading quando modal está aberto */
-body.modal-open #loadingOverlay {
-    display: none !important;
-    pointer-events: none !important;
+.modal-body input[type="text"],
+.modal-body input[type="password"],
+.modal-body input[type="email"],
+.modal-body textarea {
+    cursor: text;
+}
+
+/* Modal footer - layout flexível */
+.modal-footer {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1062 !important;
+}
+
+.modal-footer form {
+    display: flex !important;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-end;
+    align-items: center;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+}
+
+.modal-footer button,
+.modal-footer .btn,
+.modal-footer form button,
+.modal-footer form .btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 2;
+}
+
+/* Modal header */
+.modal-header {
+    pointer-events: auto !important;
+}
+
+.modal-header .btn-close {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10;
+}
+
+/* Responsivo - mobile */
+@media (max-width: 576px) {
+    .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-footer form {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .modal-footer button,
+    .modal-footer .btn,
+    .modal-footer form button,
+    .modal-footer form .btn {
+        width: 100%;
+        margin: 0;
+    }
 }
 
 .spinner-container {

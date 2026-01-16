@@ -2,7 +2,11 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import db, User, Relatorio, Referencia, Prova, Foto
 from functools import wraps
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# Método de hash explícito para compatibilidade com Werkzeug 3.0+
+# O scrypt (padrão do Werkzeug 3.0) pode ter problemas em alguns ambientes
+HASH_METHOD = 'pbkdf2:sha256'
 import secrets
 import string
 from audit_helpers import (log_criacao, log_atualizacao, log_exclusao,
@@ -87,12 +91,12 @@ def create_user():
             # Gerar senha aleatória
             senha_gerada = gerar_senha_aleatoria(12)
 
-            # Criar usuário
+            # Criar usuário - usando método de hash explícito para compatibilidade
             novo_usuario = User(
                 username=username,
                 email=email,
                 nome_completo=nome_completo,
-                password_hash=generate_password_hash(senha_gerada),
+                password_hash=generate_password_hash(senha_gerada, method=HASH_METHOD),
                 role=role,
                 is_admin=(role == 'admin'),
                 is_active=True,
@@ -209,8 +213,8 @@ def set_password(user_id):
             flash("A senha deve ter pelo menos 6 caracteres.", "error")
             return redirect(url_for('admin.users'))
 
-        # Atualizar senha
-        user.password_hash = generate_password_hash(nova_senha)
+        # Atualizar senha - usando método de hash explícito para compatibilidade
+        user.password_hash = generate_password_hash(nova_senha, method=HASH_METHOD)
         user.senha_temporaria = senha_temporaria
 
         db.session.commit()
@@ -235,9 +239,9 @@ def reset_password(user_id):
     user = User.query.get_or_404(user_id)
 
     try:
-        # Gerar nova senha aleatória
+        # Gerar nova senha aleatória - usando método de hash explícito para compatibilidade
         nova_senha = gerar_senha_aleatoria(12)
-        user.password_hash = generate_password_hash(nova_senha)
+        user.password_hash = generate_password_hash(nova_senha, method=HASH_METHOD)
         user.senha_temporaria = True
 
         db.session.commit()
@@ -325,7 +329,6 @@ def change_my_password():
                 return redirect(url_for('admin.change_my_password'))
 
             # Verificar senha atual
-            from werkzeug.security import check_password_hash
             if not check_password_hash(current_user.password_hash, senha_atual):
                 flash("Senha atual incorreta.", "error")
                 return redirect(url_for('admin.change_my_password'))
@@ -340,8 +343,8 @@ def change_my_password():
                 flash("A nova senha deve ter pelo menos 6 caracteres.", "error")
                 return redirect(url_for('admin.change_my_password'))
 
-            # Atualizar senha
-            current_user.password_hash = generate_password_hash(nova_senha)
+            # Atualizar senha - usando método de hash explícito para compatibilidade
+            current_user.password_hash = generate_password_hash(nova_senha, method=HASH_METHOD)
             current_user.senha_temporaria = False
             db.session.commit()
 
