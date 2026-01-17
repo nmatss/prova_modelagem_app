@@ -23,23 +23,30 @@ def export_relatorios_to_excel(relatorios_data):
     header_fill = PatternFill(start_color="e6007e", end_color="e6007e", fill_type="solid")
     header_alignment = Alignment(horizontal="center", vertical="center")
     
-    # Cabeçalhos
-    headers = ["ID", "Coleção", "Descrição", "Referências", "Status Geral", "Data Criação"]
+    # Cabeçalhos expandidos
+    headers = [
+        "ID", "Código", "Coleção", "Descrição", "Temporada", "Ano",
+        "Status Geral", "Referências", "Data Criação", "Última Atualização"
+    ]
     for col_num, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num)
         cell.value = header
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = header_alignment
-    
+
     # Dados
     for row_num, relatorio in enumerate(relatorios_data, 2):
         ws.cell(row=row_num, column=1, value=relatorio.get('id', ''))
-        ws.cell(row=row_num, column=2, value=relatorio.get('colecao', ''))
-        ws.cell(row=row_num, column=3, value=relatorio.get('descricao_geral', ''))
-        ws.cell(row=row_num, column=4, value=relatorio.get('num_referencias', 0))
-        ws.cell(row=row_num, column=5, value=relatorio.get('status_geral', ''))
-        ws.cell(row=row_num, column=6, value=relatorio.get('data_criacao', ''))
+        ws.cell(row=row_num, column=2, value=relatorio.get('codigo', ''))
+        ws.cell(row=row_num, column=3, value=relatorio.get('colecao', ''))
+        ws.cell(row=row_num, column=4, value=relatorio.get('descricao_geral', ''))
+        ws.cell(row=row_num, column=5, value=relatorio.get('temporada', ''))
+        ws.cell(row=row_num, column=6, value=relatorio.get('ano', ''))
+        ws.cell(row=row_num, column=7, value=relatorio.get('status_geral', ''))
+        ws.cell(row=row_num, column=8, value=relatorio.get('num_referencias', 0))
+        ws.cell(row=row_num, column=9, value=relatorio.get('data_criacao', ''))
+        ws.cell(row=row_num, column=10, value=relatorio.get('data_atualizacao', ''))
     
     # Ajustar largura das colunas
     for column in ws.columns:
@@ -91,15 +98,44 @@ def export_detalhes_to_excel(relatorio, referencias):
     ws_geral['A4'] = "Descrição"
     ws_geral['B4'] = relatorio.get('descricao_geral', '')
     
-    # Aba 2: Provas
+    # Aba 2: Referências
+    ws_refs = wb.create_sheet("Referências")
+    headers_refs = [
+        "Referência", "Tipo", "Origem", "Fornecedor", "Contato Fornecedor",
+        "Matéria Prima", "Composição", "Gramatura", "Aviamentos", "Observações"
+    ]
+    for col_num, header in enumerate(headers_refs, 1):
+        cell = ws_refs.cell(row=1, column=col_num)
+        cell.value = header
+        cell.font = Font(bold=True)
+
+    row_num = 2
+    for ref in referencias:
+        ws_refs.cell(row=row_num, column=1, value=ref.get('numero_ref', ''))
+        ws_refs.cell(row=row_num, column=2, value=ref.get('tipo', ''))
+        ws_refs.cell(row=row_num, column=3, value=ref.get('origem', ''))
+        ws_refs.cell(row=row_num, column=4, value=ref.get('fornecedor', ''))
+        ws_refs.cell(row=row_num, column=5, value=ref.get('fornecedor_contato', ''))
+        ws_refs.cell(row=row_num, column=6, value=ref.get('materia_prima', ''))
+        ws_refs.cell(row=row_num, column=7, value=ref.get('composicao', ''))
+        ws_refs.cell(row=row_num, column=8, value=ref.get('gramatura', ''))
+        ws_refs.cell(row=row_num, column=9, value=ref.get('aviamentos', ''))
+        ws_refs.cell(row=row_num, column=10, value=ref.get('observacoes', ''))
+        row_num += 1
+
+    # Aba 3: Provas
     ws_provas = wb.create_sheet("Provas")
-    
-    headers_provas = ["Referência", "Tipo", "Nº Prova", "Status", "Data Recebimento", "Data Prova", "Tamanhos"]
+
+    headers_provas = [
+        "Referência", "Tipo", "Nº Prova", "Status", "Data Recebimento", "Data Prova",
+        "Tamanhos", "Info Medidas", "Time Qualidade", "Time Estilo", "Time Modelagem",
+        "Data Lacre", "Nº Lacre", "Informações Adicionais"
+    ]
     for col_num, header in enumerate(headers_provas, 1):
         cell = ws_provas.cell(row=1, column=col_num)
         cell.value = header
         cell.font = Font(bold=True)
-    
+
     row_num = 2
     for ref in referencias:
         for prova in ref.get('provas', []):
@@ -110,10 +146,17 @@ def export_detalhes_to_excel(relatorio, referencias):
             ws_provas.cell(row=row_num, column=5, value=prova.get('data_recebimento', ''))
             ws_provas.cell(row=row_num, column=6, value=prova.get('data_prova', ''))
             ws_provas.cell(row=row_num, column=7, value=prova.get('tamanhos_recebidos', ''))
+            ws_provas.cell(row=row_num, column=8, value=prova.get('info_medidas', ''))
+            ws_provas.cell(row=row_num, column=9, value=prova.get('time_qualidade', ''))
+            ws_provas.cell(row=row_num, column=10, value=prova.get('time_estilo', ''))
+            ws_provas.cell(row=row_num, column=11, value=prova.get('time_modelagem', ''))
+            ws_provas.cell(row=row_num, column=12, value=prova.get('data_lacre', ''))
+            ws_provas.cell(row=row_num, column=13, value=prova.get('numero_lacre', ''))
+            ws_provas.cell(row=row_num, column=14, value=prova.get('info_adicionais', ''))
             row_num += 1
     
     # Ajustar larguras
-    for ws in [ws_geral, ws_provas]:
+    for ws in [ws_geral, ws_refs, ws_provas]:
         for column in ws.columns:
             max_length = 0
             column_letter = column[0].column_letter

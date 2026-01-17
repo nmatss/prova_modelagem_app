@@ -3,551 +3,571 @@
 {% block title %}Novo Relatório - Prova de Modelagem{% endblock %}
 
 {% block styles %}
-<style>
-    /* Responsive styles for novo_relatorio */
-    @media (max-width: 768px) {
-        .d-flex.justify-content-between {
-            flex-direction: column !important;
-            gap: 1rem;
-        }
-
-        .d-flex.justify-content-between .btn {
-            width: 100%;
-        }
-
-        h1 {
-            font-size: 1.75rem;
-        }
-
-        .nav-tabs {
-            overflow-x: auto;
-            overflow-y: hidden;
-            flex-wrap: nowrap;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .nav-tabs .nav-link {
-            white-space: nowrap;
-            font-size: 0.9rem;
-        }
-
-        .card {
-            margin-bottom: 1.5rem;
-        }
-
-        .card-body {
-            padding: 1.25rem;
-        }
-
-        .row > [class*='col-'] {
-            margin-bottom: 1rem;
-        }
-
-        .row .col-md-4 {
-            margin-bottom: 1.5rem;
-        }
-
-        .btn-group {
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .btn-check + .btn-outline-success {
-            flex: 0 1 auto;
-            min-width: 60px;
-        }
-
-        .d-grid .btn-lg {
-            font-size: 1.1rem;
-            padding: 1rem;
-        }
-    }
-
-    @media (max-width: 576px) {
-        h1 {
-            font-size: 1.5rem;
-        }
-
-        .card-body {
-            padding: 1rem;
-        }
-
-        .card-header {
-            padding: 0.75rem 1rem;
-            font-size: 0.875rem;
-        }
-
-        .nav-tabs .nav-link {
-            padding: 0.65rem 0.875rem;
-            font-size: 0.85rem;
-        }
-
-        .form-label {
-            font-size: 0.9rem;
-        }
-
-        .form-control,
-        .form-select {
-            font-size: 0.9rem;
-        }
-
-        .btn-group .btn {
-            font-size: 0.85rem;
-            padding: 0.5rem 0.75rem;
-        }
-
-        .d-grid .btn-lg {
-            font-size: 1rem;
-            padding: 0.875rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 1.3rem;
-        }
-
-        .card-title {
-            font-size: 1rem;
-        }
-
-        .nav-tabs .nav-link {
-            padding: 0.6rem 0.75rem;
-            font-size: 0.8rem;
-        }
-
-        .form-label {
-            font-size: 0.85rem;
-        }
-
-        .btn-group {
-            width: 100%;
-        }
-
-        .btn-group .btn {
-            flex: 1 1 45%;
-        }
-
-        .card .card-header.bg-success {
-            font-size: 0.85rem;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wizard.css') }}">
 {% endblock %}
 
-{% block content %}
+{% block main_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Novo Relatório de Prova</h1>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancelar</a>
+    <h1><i class="bi bi-magic"></i> Novo Relatório de Prova</h1>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-circle"></i> Cancelar
+    </a>
 </div>
 
-<form action="{{ url_for('novo_relatorio') }}" method="post" enctype="multipart/form-data">
+<!-- WIZARD CONTAINER -->
+<div class="wizard-container">
+    <!-- WIZARD PROGRESS BAR -->
+    <div class="wizard-progress">
+        <div class="wizard-progress-line"></div>
 
-    <ul class="nav nav-tabs mb-4" id="newReportTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general"
-                type="button" role="tab">Geral</button>
-        </li>
-        {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="{{ tipo }}-tab" data-bs-toggle="tab" data-bs-target="#{{ tipo }}" type="button"
-                role="tab">{{ tipo | capitalize }}</button>
-        </li>
-        {% endfor %}
-    </ul>
+        <div class="wizard-step active" data-step="1">
+            <div class="wizard-step-circle">
+                <span class="step-number">1</span>
+            </div>
+            <span class="wizard-step-label">Informações</span>
+        </div>
 
-    <div class="tab-content" id="newReportTabsContent">
-        <!-- ABA GERAL -->
-        <div class="tab-pane fade show active" id="general" role="tabpanel">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Informações Gerais</h5>
-                    <div class="mb-3">
-                        <label for="ppt" class="form-label">PPT (apresentação das peças)</label>
+        <div class="wizard-step" data-step="2">
+            <div class="wizard-step-circle">
+                <span class="step-number">2</span>
+            </div>
+            <span class="wizard-step-label">Categoria</span>
+        </div>
+
+        <div class="wizard-step" data-step="3">
+            <div class="wizard-step-circle">
+                <span class="step-number">3</span>
+            </div>
+            <span class="wizard-step-label">Referência</span>
+        </div>
+
+        <div class="wizard-step" data-step="4">
+            <div class="wizard-step-circle">
+                <span class="step-number">4</span>
+            </div>
+            <span class="wizard-step-label">Prova</span>
+        </div>
+
+        <div class="wizard-step" data-step="5">
+            <div class="wizard-step-circle">
+                <span class="step-number">5</span>
+            </div>
+            <span class="wizard-step-label">Revisão</span>
+        </div>
+    </div>
+
+    <!-- WIZARD FORM -->
+    <form id="wizardForm" action="{{ url_for('novo_relatorio') }}" method="post" enctype="multipart/form-data">
+
+        <div class="wizard-content">
+            <!-- ============================================
+                 STEP 1: INFORMAÇÕES GERAIS
+                 ============================================ -->
+            <div class="wizard-step-content active" data-step="1">
+                <div class="wizard-step-header">
+                    <h2 class="wizard-step-title">
+                        <i class="bi bi-info-circle-fill"></i>
+                        Informações Gerais
+                    </h2>
+                    <p class="wizard-step-description">Preencha as informações básicas do produto e faça upload dos arquivos</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="colecao" class="form-label">Coleção *</label>
+                        <input type="text" class="form-control" id="colecao" name="colecao"
+                               placeholder="Ex: Verão 26" value="{{ form_data.get('colecao', '') }}" required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="descricao_geral" class="form-label">Descrição Geral *</label>
+                        <input type="text" class="form-control text-uppercase-input" id="descricao_geral"
+                               name="descricao_geral" placeholder="Ex: PIJAMA ML VISCO UNI DIAMANTE"
+                               value="{{ form_data.get('descricao_geral', '') }}" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="imagem_produto" class="form-label">
+                            <i class="bi bi-image"></i> Imagem do Produto
+                        </label>
+                        <input type="file" class="form-control" id="imagem_produto" name="imagem_produto"
+                               accept="image/*">
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            JPG, PNG, GIF (máx. 16MB)
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="ppt" class="form-label">
+                            <i class="bi bi-file-earmark-slides"></i> PPT (Apresentação das Peças)
+                        </label>
                         <input type="file" class="form-control" id="ppt" name="ppt" accept=".ppt,.pptx,.pdf">
                         <div class="form-text">
                             <i class="bi bi-info-circle me-1"></i>
-                            Formatos aceitos: PPT, PPTX ou PDF (máx. 16MB)
+                            PPT, PPTX, PDF (máx. 16MB)
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="colecao" class="form-label">Coleção</label>
-                        <input type="text" class="form-control" id="colecao" name="colecao" placeholder="Ex: Verão 26"
-                            value="{{ form_data.get('colecao', '') }}">
-                    </div>
-                    <div class="mb-3">
-                        <label for="descricao_geral" class="form-label">Descrição geral do modelo</label>
-                        <input type="text" class="form-control" id="descricao_geral" name="descricao_geral"
-                            placeholder="Ex: PIJAMA ML VISCO UNI DIAMANTE"
-                            value="{{ form_data.get('descricao_geral', '') }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="ficha_tecnica" class="form-label">
+                        <i class="bi bi-file-earmark-text"></i> Ficha Técnica do Produto
+                    </label>
+                    <input type="file" class="form-control" id="ficha_tecnica" name="ficha_tecnica"
+                           accept=".pdf,.doc,.docx,.xlsx,.xls">
+                    <div class="form-text">
+                        <i class="bi bi-info-circle me-1"></i>
+                        PDF, DOC, DOCX, XLS, XLSX (máx. 16MB)
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ABAS POR TIPO -->
-        {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
-        <div class="tab-pane fade" id="{{ tipo }}" role="tabpanel">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Referência {{ tipo | capitalize }}</h5>
+            <!-- ============================================
+                 STEP 2: CATEGORIA & TIPO
+                 ============================================ -->
+            <div class="wizard-step-content" data-step="2">
+                <div class="wizard-step-header">
+                    <h2 class="wizard-step-title">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                        Categoria do Produto
+                    </h2>
+                    <p class="wizard-step-description">Selecione a categoria do produto que será avaliado</p>
+                </div>
 
-                    <div class="mb-3">
-                        <label for="ref_{{ tipo }}" class="form-label">Número da Referência</label>
-                        <input type="text" class="form-control" id="ref_{{ tipo }}" name="ref_{{ tipo }}"
-                            placeholder="Digite a referência para habilitar o preenchimento"
-                            value="{{ form_data.get('ref_' + tipo, '') }}">
+                <div class="category-selection">
+                    <div class="category-option">
+                        <input type="radio" name="tipo_produto" id="cat_baby" value="baby">
+                        <label for="cat_baby" class="category-card">
+                            <div class="category-icon">👶</div>
+                            <h3 class="category-name">Baby</h3>
+                            <p class="category-description">0 a 12 meses</p>
+                        </label>
                     </div>
 
-                    <div id="detalhes_{{ tipo }}" style="display: none;">
-                        <hr>
+                    <div class="category-option">
+                        <input type="radio" name="tipo_produto" id="cat_kids" value="kids">
+                        <label for="cat_kids" class="category-card">
+                            <div class="category-icon">👧</div>
+                            <h3 class="category-name">Kids</h3>
+                            <p class="category-description">1 a 8 anos</p>
+                        </label>
+                    </div>
 
-                        <!-- INFORMAÇÕES DA REFERÊNCIA -->
-                        <div class="card mb-4 border-primary">
-                            <div class="card-header bg-primary text-white">
-                                <h6 class="mb-0"><i class="bi bi-tag-fill me-2"></i>Informações da Referência</h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="text-muted small mb-3">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Preencha as informações sobre origem, fornecedor e materiais da referência
-                                </p>
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label"><strong>Origem</strong></label>
-                                        <select class="form-select" name="origem_{{ tipo }}">
-                                            <option value="">Selecione...</option>
-                                            <option value="Asia">Ásia</option>
-                                            <option value="China">China</option>
-                                            <option value="Faccao">Facção</option>
-                                            <option value="Produto Acabado (Brasil)">Produto Acabado (Brasil)</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label"><strong>Fornecedor</strong></label>
-                                        <input type="text" class="form-control" name="fornecedor_{{ tipo }}" placeholder="Nome do fornecedor">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label"><strong>Matéria Prima</strong></label>
-                                        <input type="text" class="form-control" name="materia_prima_{{ tipo }}" placeholder="Ex: Algodão">
-                                    </div>
+                    <div class="category-option">
+                        <input type="radio" name="tipo_produto" id="cat_teen" value="teen">
+                        <label for="cat_teen" class="category-card">
+                            <div class="category-icon">🧒</div>
+                            <h3 class="category-name">Teen</h3>
+                            <p class="category-description">10 a 14 anos</p>
+                        </label>
+                    </div>
+
+                    <div class="category-option">
+                        <input type="radio" name="tipo_produto" id="cat_adulto" value="adulto">
+                        <label for="cat_adulto" class="category-card">
+                            <div class="category-icon">👩</div>
+                            <h3 class="category-name">Adulto</h3>
+                            <p class="category-description">Tamanhos adultos</p>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 STEP 3: INFORMAÇÕES DA REFERÊNCIA
+                 ============================================ -->
+            <div class="wizard-step-content" data-step="3">
+                <div class="wizard-step-header">
+                    <h2 class="wizard-step-title">
+                        <i class="bi bi-tag-fill"></i>
+                        Informações da Referência
+                    </h2>
+                    <p class="wizard-step-description">Dados sobre origem, fornecedor e materiais</p>
+                </div>
+
+                {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
+                <div id="ref_section_{{ tipo }}" style="display: none;">
+                    <div class="mb-3">
+                        <label for="ref_{{ tipo }}" class="form-label">Número da Referência *</label>
+                        <input type="text" class="form-control" id="ref_{{ tipo }}" name="ref_{{ tipo }}"
+                            placeholder="Digite a referência">
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="bi bi-tag-fill me-2"></i>Informações da Referência</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Origem</label>
+                                    <select class="form-select" name="origem_{{ tipo }}">
+                                        <option value="">Selecione...</option>
+                                        <option value="Asia">Ásia</option>
+                                        <option value="China">China</option>
+                                        <option value="Faccao">Facção</option>
+                                        <option value="Produto Acabado (Brasil)">Produto Acabado (Brasil)</option>
+                                    </select>
                                 </div>
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label"><strong>Composição</strong></label>
-                                        <input type="text" class="form-control" name="composicao_{{ tipo }}" placeholder="Ex: 100% Algodão">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label"><strong>Gramatura</strong></label>
-                                        <input type="text" class="form-control" name="gramatura_{{ tipo }}" placeholder="Ex: 180g/m²">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label"><strong>Aviamentos</strong></label>
-                                        <input type="text" class="form-control" name="aviamentos_{{ tipo }}" placeholder="Ex: Botões, zíper">
-                                    </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Fornecedor</label>
+                                    <input type="text" class="form-control" name="fornecedor_{{ tipo }}" placeholder="Nome do fornecedor">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Matéria Prima</label>
+                                    <input type="text" class="form-control" name="materia_prima_{{ tipo }}" placeholder="Ex: Algodão">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Composição</label>
+                                    <input type="text" class="form-control" name="composicao_{{ tipo }}" placeholder="Ex: 100% Algodão">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Gramatura</label>
+                                    <input type="text" class="form-control" name="gramatura_{{ tipo }}" placeholder="Ex: 180g/m²">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Aviamentos</label>
+                                    <input type="text" class="form-control" name="aviamentos_{{ tipo }}" placeholder="Ex: Botões, zíper">
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
 
-                        <!-- PRIMEIRA PROVA -->
-                        <div class="card mb-3 border-success">
-                            <div class="card-header bg-success text-white">
-                                <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>1ª Prova de Modelagem</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
+            <!-- ============================================
+                 STEP 4: PROVA DE MODELAGEM
+                 ============================================ -->
+            <div class="wizard-step-content" data-step="4">
+                <div class="wizard-step-header">
+                    <h2 class="wizard-step-title">
+                        <i class="bi bi-clipboard-check"></i>
+                        Prova de Modelagem
+                    </h2>
+                    <p class="wizard-step-description">Informações sobre tamanhos, medidas e avaliações</p>
+                </div>
+
+                {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
+                <div id="prova_section_{{ tipo }}" style="display: none;">
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>1ª Prova de Modelagem</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">Desenho do produto</label>
                                     <input type="file" class="form-control" name="fotos_desenho_{{ tipo }}" multiple>
                                 </div>
-
-                                <div class="mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">Tabela de Medidas</label>
                                     <input type="file" class="form-control" name="tabela_medidas_{{ tipo }}">
                                 </div>
+                            </div>
 
-                                <hr>
-
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Data de recebimento da amostra</label>
-                                        <input type="date" class="form-control" name="data_recebimento_{{ tipo }}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Data da prova</label>
-                                        <input type="date" class="form-control" name="data_prova_{{ tipo }}">
-                                    </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Data de recebimento da amostra</label>
+                                    <input type="date" class="form-control" name="data_recebimento_{{ tipo }}">
                                 </div>
-
-                                <div class="mb-3 checkbox-group" data-type="{{ tipo }}">
-                                    <label class="form-label d-block">Tamanhos recebidos das amostras</label>
-                                    {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses'],
-                                    'kids': ['1', '2', '4', '6', '8'], 'teen': ['10', '12', '14'], 'adulto': ['PP', 'P',
-                                    'M', 'G', 'GG']} %}
-                                    <div class="btn-group" role="group">
-                                        {% for tamanho in tamanhos_disponiveis[tipo] %}
-                                        <input type="checkbox" class="btn-check size-checkbox"
-                                            id="btn_new_{{ tipo }}_{{ loop.index }}"
-                                            name="tamanhos_recebidos_{{ tipo }}" value="{{ tamanho }}"
-                                            autocomplete="off">
-                                        <label class="btn btn-outline-success"
-                                            for="btn_new_{{ tipo }}_{{ loop.index }}">{{ tamanho }}</label>
-                                        {% endfor %}
-                                    </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Data da prova</label>
+                                    <input type="date" class="form-control" name="data_prova_{{ tipo }}">
                                 </div>
+                            </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Informações de medidas das amostras</label>
-                                    <textarea class="form-control" name="info_medidas_{{ tipo }}" rows="3"></textarea>
+                            <div class="mb-3 checkbox-group" data-type="{{ tipo }}">
+                                <label class="form-label d-block">Tamanhos recebidos das amostras</label>
+                                {% set tamanhos_disponiveis = {
+                                    'baby': ['3a6meses', '6a9meses', '9a12meses', 'UN'],
+                                    'kids': ['1', '2', '4', '6', '8', 'UN'],
+                                    'teen': ['10', '12', '14', 'UN'],
+                                    'adulto': ['PP', 'P', 'M', 'G', 'GG', 'UN']
+                                } %}
+                                <div class="btn-group" role="group">
+                                    {% for tamanho in tamanhos_disponiveis[tipo] %}
+                                    <input type="checkbox" class="btn-check size-checkbox"
+                                        id="btn_new_{{ tipo }}_{{ loop.index }}"
+                                        name="tamanhos_recebidos_{{ tipo }}" value="{{ tamanho }}"
+                                        autocomplete="off">
+                                    <label class="btn btn-outline-success"
+                                        for="btn_new_{{ tipo }}_{{ loop.index }}">{{ tamanho }}</label>
+                                    {% endfor %}
                                 </div>
+                            </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Fotos da amostra</label>
-                                    <div id="placeholder_fotos_amostra_{{ tipo }}"
-                                        class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Fotos da prova (na modelo)</label>
-                                    <div id="placeholder_fotos_prova_modelo_{{ tipo }}"
-                                        class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Informações de medidas das amostras</label>
+                                <textarea class="form-control" name="info_medidas_{{ tipo }}" rows="3"></textarea>
+                            </div>
 
-                                <div class="row mb-3">
-                                    <!-- QUALIDADE -->
-                                    <div class="col-md-4">
-                                        <div class="card">
-                                            <div class="card-header bg-success text-white">Qualidade</div>
-                                            <div class="card-body">
-                                                <div class="mb-2">
-                                                    <label class="form-label">Responsável</label>
-                                                    <input type="text" class="form-control"
-                                                        name="time_qualidade_{{ tipo }}" placeholder="Nome do responsável">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label d-block">Itens de Avaliação</label>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="SOLIDEZ" id="qual_solidez_{{ tipo }}"><label class="form-check-label" for="qual_solidez_{{ tipo }}">Solidez</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="PILLING" id="qual_pilling_{{ tipo }}"><label class="form-check-label" for="qual_pilling_{{ tipo }}">Pilling</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="AGUA_DO_MAR" id="qual_agua_mar_{{ tipo }}"><label class="form-check-label" for="qual_agua_mar_{{ tipo }}">Água do Mar</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="AGUA_CLORADA" id="qual_agua_clorada_{{ tipo }}"><label class="form-check-label" for="qual_agua_clorada_{{ tipo }}">Água Clorada</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="LAVAGEM_DOMESTICA" id="qual_lavagem_{{ tipo }}"><label class="form-check-label" for="qual_lavagem_{{ tipo }}">Lavagem Doméstica</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="DIMENSIONAL" id="qual_dimensional_{{ tipo }}"><label class="form-check-label" for="qual_dimensional_{{ tipo }}">Dimensional</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="ERGONOMIA" id="qual_ergonomia_{{ tipo }}"><label class="form-check-label" for="qual_ergonomia_{{ tipo }}">Ergonomia</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="GRAMATURA" id="qual_gramatura_{{ tipo }}"><label class="form-check-label" for="qual_gramatura_{{ tipo }}">Gramatura</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="SOLIDEZ_FRICCAO" id="qual_friccao_{{ tipo }}"><label class="form-check-label" for="qual_friccao_{{ tipo }}">Solidez a Fricção Seco e Úmido</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="RESISTENCIA_COSTURA" id="qual_resistencia_{{ tipo }}"><label class="form-check-label" for="qual_resistencia_{{ tipo }}">Resistência da Costura</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="CICLO_VIDA" id="qual_ciclo_{{ tipo }}"><label class="form-check-label" for="qual_ciclo_{{ tipo }}">Ciclo de Vida do Produto</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="TESTE_AVIAMENTOS" id="qual_aviamentos_{{ tipo }}"><label class="form-check-label" for="qual_aviamentos_{{ tipo }}">Teste de Aviamentos</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="COSTURA_DEFEITO" id="qual_costura_def_{{ tipo }}"><label class="form-check-label" for="qual_costura_def_{{ tipo }}">Costura com Defeito</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="TECIDO_DEFEITO" id="qual_tecido_def_{{ tipo }}"><label class="form-check-label" for="qual_tecido_def_{{ tipo }}">Tecido com Defeito</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="ORIENTACAO_FORNECEDOR" id="qual_orientacao_{{ tipo }}"><label class="form-check-label" for="qual_orientacao_{{ tipo }}">Orientação para o Fornecedor</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="OUTROS" id="qual_outros_{{ tipo }}"><label class="form-check-label" for="qual_outros_{{ tipo }}">Outros</label></div>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Comentários</label>
-                                                    <textarea class="form-control"
-                                                        name="comentarios_qualidade_{{ tipo }}" rows="2" placeholder="Comentários gerais"></textarea>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Observações Adicionais</label>
-                                                    <textarea class="form-control"
-                                                        name="obs_qualidade_{{ tipo }}" rows="2" placeholder="Detalhes técnicos, medidas, etc."></textarea>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Anexar Arquivos</label>
-                                                    <input type="file" class="form-control"
-                                                        name="fotos_qualidade_{{ tipo }}" multiple>
-                                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Fotos da amostra</label>
+                                <div id="placeholder_fotos_amostra_{{ tipo }}"
+                                    class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Fotos da prova (na modelo)</label>
+                                <div id="placeholder_fotos_prova_modelo_{{ tipo }}"
+                                    class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                            </div>
+
+                            <!-- AVALIAÇÕES: QUALIDADE, ESTILO, MODELAGEM -->
+                            <div class="row mb-3">
+                                <!-- QUALIDADE -->
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-header bg-success text-white">Qualidade</div>
+                                        <div class="card-body">
+                                            <div class="mb-2">
+                                                <label class="form-label">Responsável</label>
+                                                <input type="text" class="form-control"
+                                                    name="time_qualidade_{{ tipo }}" placeholder="Nome do responsável">
                                             </div>
-                                        </div>
-                                    </div>
-                                    <!-- ESTILO -->
-                                    <div class="col-md-4">
-                                        <div class="card">
-                                            <div class="card-header bg-info text-white">Estilo</div>
-                                            <div class="card-body">
-                                                <div class="mb-2">
-                                                    <label class="form-label">Responsável</label>
-                                                    <input type="text" class="form-control"
-                                                        name="time_estilo_{{ tipo }}" placeholder="Nome do responsável">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label d-block">Itens de Avaliação</label>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTAR_FICHA_TECNICA" id="est_ficha_{{ tipo }}"><label class="form-check-label" for="est_ficha_{{ tipo }}">Ajustar a Ficha Técnica</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_DESENHO" id="est_desenho_{{ tipo }}"><label class="form-check-label" for="est_desenho_{{ tipo }}">Ajuste de Desenho</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_CORES" id="est_cores_{{ tipo }}"><label class="form-check-label" for="est_cores_{{ tipo }}">Ajuste de Cores</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="ORIENTACAO_FORNECEDOR" id="est_orientacao_{{ tipo }}"><label class="form-check-label" for="est_orientacao_{{ tipo }}">Orientação para Fornecedor</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_TECIDO" id="est_tecido_{{ tipo }}"><label class="form-check-label" for="est_tecido_{{ tipo }}">Ajuste de Tecido</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="OUTROS" id="est_outros_{{ tipo }}"><label class="form-check-label" for="est_outros_{{ tipo }}">Outros</label></div>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Comentários</label>
-                                                    <textarea class="form-control" name="comentarios_estilo_{{ tipo }}"
-                                                        rows="2" placeholder="Comentários gerais"></textarea>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Observações Adicionais</label>
-                                                    <textarea class="form-control"
-                                                        name="obs_estilo_{{ tipo }}" rows="2" placeholder="Ajustes, modificações, etc."></textarea>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Anexar Arquivos</label>
-                                                    <input type="file" class="form-control"
-                                                        name="fotos_estilo_{{ tipo }}" multiple>
-                                                </div>
+                                            <div class="mb-3">
+                                                <label class="form-label d-block">Itens de Avaliação</label>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="SOLIDEZ" id="qual_solidez_{{ tipo }}"><label class="form-check-label" for="qual_solidez_{{ tipo }}">Solidez</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="PILLING" id="qual_pilling_{{ tipo }}"><label class="form-check-label" for="qual_pilling_{{ tipo }}">Pilling</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="AGUA_DO_MAR" id="qual_agua_mar_{{ tipo }}"><label class="form-check-label" for="qual_agua_mar_{{ tipo }}">Água do Mar</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="LAVAGEM_DOMESTICA" id="qual_lavagem_{{ tipo }}"><label class="form-check-label" for="qual_lavagem_{{ tipo }}">Lavagem Doméstica</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="DIMENSIONAL" id="qual_dimensional_{{ tipo }}"><label class="form-check-label" for="qual_dimensional_{{ tipo }}">Dimensional</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="GRAMATURA" id="qual_gramatura_{{ tipo }}"><label class="form-check-label" for="qual_gramatura_{{ tipo }}">Gramatura</label></div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <!-- MODELAGEM -->
-                                    <div class="col-md-4">
-                                        <div class="card">
-                                            <div class="card-header bg-warning">Modelagem</div>
-                                            <div class="card-body">
-                                                <div class="mb-2">
-                                                    <label class="form-label">Responsável</label>
-                                                    <input type="text" class="form-control"
-                                                        name="time_modelagem_{{ tipo }}" placeholder="Nome do responsável">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label d-block">Itens de Avaliação</label>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_TABELA_MEDIDAS" id="mod_tabela_{{ tipo }}"><label class="form-check-label" for="mod_tabela_{{ tipo }}">Ajustar Tabela de Medidas</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_MODELAGEM" id="mod_modelagem_{{ tipo }}"><label class="form-check-label" for="mod_modelagem_{{ tipo }}">Ajustar Modelagem</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="REPILOTAR" id="mod_repilotar_{{ tipo }}"><label class="form-check-label" for="mod_repilotar_{{ tipo }}">Repilotar</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="MODELO_FORA_MEDIDAS" id="mod_fora_{{ tipo }}"><label class="form-check-label" for="mod_fora_{{ tipo }}">Modelo de Prova Fora das Medidas</label></div>
-                                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="OUTROS" id="mod_outros_{{ tipo }}"><label class="form-check-label" for="mod_outros_{{ tipo }}">Outros</label></div>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Comentários</label>
-                                                    <textarea class="form-control" name="comentarios_modelagem_{{ tipo }}"
-                                                        rows="2" placeholder="Comentários gerais"></textarea>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Observações Adicionais</label>
-                                                    <textarea class="form-control"
-                                                        name="obs_modelagem_{{ tipo }}" rows="2" placeholder="Ajustes técnicos, correções, etc."></textarea>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Anexar Arquivos</label>
-                                                    <input type="file" class="form-control"
-                                                        name="fotos_modelagem_{{ tipo }}" multiple>
-                                                </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Comentários</label>
+                                                <textarea class="form-control"
+                                                    name="comentarios_qualidade_{{ tipo }}" rows="2"></textarea>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Anexar Arquivos</label>
+                                                <input type="file" class="form-control"
+                                                    name="fotos_qualidade_{{ tipo }}" multiple>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Data de liberação - peça lacre</label>
-                                        <input type="date" class="form-control" name="data_lacre_{{ tipo }}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Número do lacre</label>
-                                        <input type="text" class="form-control" name="numero_lacre_{{ tipo }}">
+                                <!-- ESTILO -->
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">Estilo</div>
+                                        <div class="card-body">
+                                            <div class="mb-2">
+                                                <label class="form-label">Responsável</label>
+                                                <input type="text" class="form-control"
+                                                    name="time_estilo_{{ tipo }}" placeholder="Nome do responsável">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label d-block">Itens de Avaliação</label>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTAR_FICHA_TECNICA" id="est_ficha_{{ tipo }}"><label class="form-check-label" for="est_ficha_{{ tipo }}">Ajustar Ficha Técnica</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_DESENHO" id="est_desenho_{{ tipo }}"><label class="form-check-label" for="est_desenho_{{ tipo }}">Ajuste de Desenho</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_CORES" id="est_cores_{{ tipo }}"><label class="form-check-label" for="est_cores_{{ tipo }}">Ajuste de Cores</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="ORIENTACAO_FORNECEDOR" id="est_orientacao_{{ tipo }}"><label class="form-check-label" for="est_orientacao_{{ tipo }}">Orientação para Fornecedor</label></div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Comentários</label>
+                                                <textarea class="form-control" name="comentarios_estilo_{{ tipo }}"
+                                                    rows="2"></textarea>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Anexar Arquivos</label>
+                                                <input type="file" class="form-control"
+                                                    name="fotos_estilo_{{ tipo }}" multiple>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Informações adicionais</label>
-                                    <textarea class="form-control" name="info_adicionais_{{ tipo }}"
-                                        rows="2"></textarea>
+
+                                <!-- MODELAGEM -->
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-header bg-warning">Modelagem</div>
+                                        <div class="card-body">
+                                            <div class="mb-2">
+                                                <label class="form-label">Responsável</label>
+                                                <input type="text" class="form-control"
+                                                    name="time_modelagem_{{ tipo }}" placeholder="Nome do responsável">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label d-block">Itens de Avaliação</label>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_TABELA_MEDIDAS" id="mod_tabela_{{ tipo }}"><label class="form-check-label" for="mod_tabela_{{ tipo }}">Ajustar Tabela de Medidas</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_MODELAGEM" id="mod_modelagem_{{ tipo }}"><label class="form-check-label" for="mod_modelagem_{{ tipo }}">Ajustar Modelagem</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="REPILOTAR" id="mod_repilotar_{{ tipo }}"><label class="form-check-label" for="mod_repilotar_{{ tipo }}">Repilotar</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="MODELO_FORA_MEDIDAS" id="mod_fora_{{ tipo }}"><label class="form-check-label" for="mod_fora_{{ tipo }}">Modelo Fora das Medidas</label></div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Comentários</label>
+                                                <textarea class="form-control" name="comentarios_modelagem_{{ tipo }}"
+                                                    rows="2"></textarea>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Anexar Arquivos</label>
+                                                <input type="file" class="form-control"
+                                                    name="fotos_modelagem_{{ tipo }}" multiple>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Data de liberação - peça lacre</label>
+                                    <input type="date" class="form-control" name="data_lacre_{{ tipo }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Número do lacre</label>
+                                    <input type="text" class="form-control" name="numero_lacre_{{ tipo }}">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Informações adicionais</label>
+                                <textarea class="form-control" name="info_adicionais_{{ tipo }}" rows="2"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% endfor %}
+            </div>
+
+            <!-- ============================================
+                 STEP 5: REVISÃO E SUBMISSÃO
+                 ============================================ -->
+            <div class="wizard-step-content" data-step="5">
+                <div class="wizard-step-header">
+                    <h2 class="wizard-step-title">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Revisão Final
+                    </h2>
+                    <p class="wizard-step-description">Revise todas as informações antes de enviar</p>
+                </div>
+
+                <div class="review-section">
+                    <h3 class="review-section-title">
+                        <i class="bi bi-info-circle"></i>
+                        Informações Gerais
+                    </h3>
+                    <div class="review-item">
+                        <span class="review-label">Coleção:</span>
+                        <span class="review-value" id="review_colecao">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Descrição:</span>
+                        <span class="review-value" id="review_descricao">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">PPT:</span>
+                        <span class="review-value" id="review_ppt">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Imagem:</span>
+                        <span class="review-value" id="review_imagem">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Ficha Técnica:</span>
+                        <span class="review-value" id="review_ficha">-</span>
+                    </div>
+                </div>
+
+                <div class="review-section">
+                    <h3 class="review-section-title">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        Categoria
+                    </h3>
+                    <div class="review-item">
+                        <span class="review-label">Categoria Selecionada:</span>
+                        <span class="review-value" id="review_categoria">-</span>
+                    </div>
+                </div>
+
+                <div class="review-section">
+                    <h3 class="review-section-title">
+                        <i class="bi bi-tag"></i>
+                        Referência
+                    </h3>
+                    <div class="review-item">
+                        <span class="review-label">Número da Referência:</span>
+                        <span class="review-value" id="review_referencia">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Origem:</span>
+                        <span class="review-value" id="review_origem">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Fornecedor:</span>
+                        <span class="review-value" id="review_fornecedor">-</span>
+                    </div>
+                </div>
+
+                <div class="review-section">
+                    <h3 class="review-section-title">
+                        <i class="bi bi-image"></i>
+                        Preview da Imagem
+                    </h3>
+                    <div id="review_image_preview"></div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <strong>Atenção:</strong> Certifique-se de que todas as informações estão corretas antes de finalizar.
+                    Após o envio, você poderá editar o relatório a qualquer momento.
+                </div>
             </div>
         </div>
-        {% endfor %}
-    </div>
 
-    <div class="d-grid gap-2 mt-4 mb-5">
-        <button type="submit" class="btn btn-primary btn-lg">Salvar Relatório</button>
-    </div>
-</form>
+        <!-- WIZARD ACTIONS -->
+        <div class="wizard-actions">
+            <button type="button" class="btn btn-secondary" id="prevBtn">
+                <i class="bi bi-arrow-left"></i> Anterior
+            </button>
+            <button type="button" class="btn btn-primary" id="nextBtn">
+                Próximo <i class="bi bi-arrow-right"></i>
+            </button>
+            <button type="submit" class="btn btn-success" id="submitBtn" style="display:none">
+                <i class="bi bi-check-circle"></i> Finalizar Relatório
+            </button>
+        </div>
+
+    </form>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/wizard.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Função para mostrar/esconder seções de referência
-        function setupReferenceListener(type) {
-            const inputField = document.getElementById(`ref_${type}`);
-            const detailsSection = document.getElementById(`detalhes_${type}`);
+    // Mostrar/ocultar seções baseadas na categoria selecionada
+    document.querySelectorAll('input[name="tipo_produto"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const tipo = this.value;
 
-            if (!inputField || !detailsSection) return;
+            // Esconder todas as seções de referência e prova
+            ['baby', 'kids', 'teen', 'adulto'].forEach(t => {
+                const refSection = document.getElementById(`ref_section_${t}`);
+                const provaSection = document.getElementById(`prova_section_${t}`);
+                if (refSection) refSection.style.display = 'none';
+                if (provaSection) provaSection.style.display = 'none';
+            });
 
-            const checkVisibility = () => {
-                const refValue = inputField.value;
-                if (refValue.trim() !== '') {
-                    detailsSection.style.display = 'block';
-                } else {
-                    detailsSection.style.display = 'none';
-                }
-            };
-            inputField.addEventListener('keyup', checkVisibility);
-            inputField.addEventListener('input', checkVisibility);
-            inputField.addEventListener('change', checkVisibility);
-            checkVisibility(); // Verifica no carregamento da página
-        }
+            // Mostrar apenas a seção selecionada
+            const selectedRefSection = document.getElementById(`ref_section_${tipo}`);
+            const selectedProvaSection = document.getElementById(`prova_section_${tipo}`);
+            if (selectedRefSection) selectedRefSection.style.display = 'block';
+            if (selectedProvaSection) selectedProvaSection.style.display = 'block';
+        });
+    });
 
-        // Função para criar campos de upload dinâmicos
-        function createUploadField(contexto, type, size, labelText) {
-            const safeSize = size.replace(/\s+/g, '');
-            const fieldId = `dynamic_${contexto}_${type}_${safeSize}`;
-
-            const wrapper = document.createElement('div');
-            wrapper.className = 'mb-2';
-            wrapper.id = fieldId;
-
-            const label = document.createElement('label');
-            label.className = 'form-label small';
-            label.textContent = `${labelText} (Tamanho: ${size})`;
-
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.className = 'form-control form-control-sm';
-            input.name = `fotos_${contexto}_${type}_${safeSize}`;
-            input.multiple = true;
-
-            wrapper.appendChild(label);
-            wrapper.appendChild(input);
-            return wrapper;
-        }
-
-        function handleSizeChange(event) {
-            const checkbox = event.target;
-            const size = checkbox.value;
-            const checkboxGroup = checkbox.closest('.checkbox-group');
-            if (!checkboxGroup) return;
-
-            const type = checkboxGroup.getAttribute('data-type');
-            const amostraPlaceholder = document.getElementById(`placeholder_fotos_amostra_${type}`);
-            const provaPlaceholder = document.getElementById(`placeholder_fotos_prova_modelo_${type}`);
-
-            if (!amostraPlaceholder || !provaPlaceholder) return;
-
-            const safeSize = size.replace(/\s+/g, '');
-            const fieldIdAmostra = `dynamic_amostra_${type}_${safeSize}`;
-            const fieldIdProva = `dynamic_prova_modelo_${type}_${safeSize}`;
-
-            if (checkbox.checked) {
-                if (!document.getElementById(fieldIdAmostra)) {
-                    const amostraField = createUploadField('amostra', type, size, 'Fotos da amostra');
-                    amostraPlaceholder.appendChild(amostraField);
-                }
-                if (!document.getElementById(fieldIdProva)) {
-                    const provaField = createUploadField('prova_modelo', type, size, 'Fotos da prova, peça na modelo');
-                    provaPlaceholder.appendChild(provaField);
-                }
-            } else {
-                const amostraField = document.getElementById(fieldIdAmostra);
-                if (amostraField) amostraField.remove();
-                const provaField = document.getElementById(fieldIdProva);
-                if (provaField) provaField.remove();
-            }
-        }
-
-        // Inicia os listeners
-        ['baby', 'kids', 'teen', 'adulto'].forEach(setupReferenceListener);
-        document.querySelectorAll('.size-checkbox').forEach(checkbox => {
+    // Setup dos listeners de tamanho
+    ['baby', 'kids', 'teen', 'adulto'].forEach(tipo => {
+        setupReferenceListener(tipo);
+        document.querySelectorAll(`.size-checkbox`).forEach(checkbox => {
             checkbox.addEventListener('change', handleSizeChange);
         });
     });

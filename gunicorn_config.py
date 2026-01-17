@@ -7,12 +7,12 @@ import multiprocessing
 # Bind
 bind = f"{os.getenv('HOST', '0.0.0.0')}:{os.getenv('PORT', '8000')}"
 
-# Workers
-workers = int(os.getenv('WORKERS', multiprocessing.cpu_count() * 2 + 1))
+# Workers - Otimizado para SQLite e recursos limitados
+workers = int(os.getenv('WORKERS', 2))  # 2 workers para SQLite (evitar lock contention)
 worker_class = 'sync'
-worker_connections = 1000
-timeout = 120
-keepalive = 5
+worker_connections = 100  # Reduzido para melhor performance com SQLite
+timeout = 60  # Reduzido de 120 para 60 segundos
+keepalive = 2  # Reduzido para liberar conexões mais rápido
 
 # Logging
 accesslog = '/app/logs/access.log'

@@ -2,6 +2,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify, make_response
+from flask_compress import Compress
 from weasyprint import HTML, CSS
 from werkzeug.datastructures import MultiDict
 from werkzeug.utils import secure_filename
@@ -9,9 +10,9 @@ from werkzeug.utils import secure_filename
 from flask_login import LoginManager, login_required, current_user
 from auth import auth_bp, get_user_by_id
 from admin import admin_bp
-# from audit_bp import audit_bp  # Desabilitado - AuditLog não existe no banco
+from audit_bp import audit_bp  # ✅ Habilitado - AuditLog existe no banco (models.py)
 from db import init_app as init_db
-from models import db, Relatorio, Referencia, Prova, Foto
+from models import db, Relatorio, Referencia, Prova, Foto, AuditLog
 from config import Config
 from utils import save_file
 from excel_export import export_relatorios_to_excel, export_detalhes_to_excel
@@ -64,6 +65,34 @@ init_db(app)
 # Inicializar segurança
 init_security(app)
 
+# ========================================
+# COMPRESSÃO GZIP/BROTLI
+# ========================================
+# Configurar compressão de respostas HTTP
+compress = Compress()
+compress.init_app(app)
+
+# Configurações de compressão
+app.config['COMPRESS_MIMETYPES'] = [
+    'text/html',
+    'text/css',
+    'text/xml',
+    'text/plain',
+    'text/javascript',
+    'application/json',
+    'application/javascript',
+    'application/xml',
+    'application/xhtml+xml',
+    'application/rss+xml',
+    'application/atom+xml',
+    'image/svg+xml'
+]
+app.config['COMPRESS_LEVEL'] = 6  # 1-9, padrão 6
+app.config['COMPRESS_MIN_SIZE'] = 500  # Comprimir apenas arquivos > 500 bytes
+app.config['COMPRESS_ALGORITHM'] = 'gzip'  # 'gzip' ou 'br' (brotli)
+
+app.logger.info(f'Compressão HTTP habilitada: {app.config["COMPRESS_ALGORITHM"].upper()}')
+
 # Configuração do Flask-Login
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -75,13 +104,107 @@ login_manager.init_app(app)
 def load_user(user_id):
     return get_user_by_id(user_id)
 
+# ========================================
+# SISTEMA DE AUDITORIA
+# ========================================
+
+def registrar_log(acao, entidade_tipo=None, entidade_id=None, entidade_descricao=None, detalhes=None):
+    """
+    Registra uma ação no sistema de auditoria
+
+    Args:
+        acao: Tipo de ação (criar, editar, excluir, login, logout, etc)
+        entidade_tipo: Tipo da entidade afetada (relatorio, prova, referencia, usuario, etc)
+        entidade_id: ID da entidade afetada
+        entidade_descricao: Descrição da entidade para histórico
+        detalhes: Informações adicionais em formato texto ou JSON
+    """
+    try:
+        import json
+        from flask_login import current_user
+
+        # Obter informações do usuário atual
+        usuario_id = current_user.id if current_user.is_authenticated else None
+        usuario_nome = current_user.username if current_user.is_authenticated else 'Sistema'
+
+        # Obter IP e User Agent
+        ip_address = request.remote_addr
+        user_agent = request.headers.get('User-Agent', '')[:500]
+
+        # Converter detalhes para JSON se for dict
+        if isinstance(detalhes, dict):
+            detalhes = json.dumps(detalhes, ensure_ascii=False)
+
+        # Criar registro de log
+        log = AuditLog(
+            usuario_id=usuario_id,
+            usuario_nome=usuario_nome,
+            acao=acao,
+            entidade_tipo=entidade_tipo,
+            entidade_id=entidade_id,
+            entidade_descricao=entidade_descricao,
+            detalhes=detalhes,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+
+        db.session.add(log)
+        db.session.commit()
+
+        app.logger.info(f'Audit Log: {usuario_nome} {acao} {entidade_tipo}#{entidade_id}')
+
+    except Exception as e:
+        app.logger.error(f'Erro ao registrar log de auditoria: {str(e)}')
+        db.session.rollback()
+
 # Registrar Blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
-# app.register_blueprint(audit_bp)  # Desabilitado - AuditLog não existe no banco
+app.register_blueprint(audit_bp, url_prefix='/auditoria')  # ✅ Habilitado - AuditLog existe
 
 # Registrar error handlers
 register_error_handlers(app)
+
+
+# ========================================
+# OTIMIZAÇÕES DE PERFORMANCE
+# ========================================
+
+@app.after_request
+def optimize_response(response):
+    """Otimizações de performance e segurança nas respostas"""
+    from datetime import datetime, timedelta
+
+    # 1. CACHE HEADERS - Otimização de Performance
+    if request.path.startswith('/static/'):
+        # Cache agressivo para assets estáticos (1 ano)
+        response.cache_control.public = True
+        response.cache_control.max_age = 31536000  # 1 ano
+        response.cache_control.immutable = True
+        response.expires = datetime.now() + timedelta(days=365)
+    elif request.path.startswith('/uploads/'):
+        # Cache moderado para uploads (30 dias)
+        response.cache_control.public = True
+        response.cache_control.max_age = 2592000  # 30 dias
+    elif response.content_type and 'text/html' in response.content_type:
+        # Sem cache para HTML dinâmico
+        response.cache_control.no_cache = True
+        response.cache_control.no_store = True
+        response.cache_control.must_revalidate = True
+    elif response.content_type and 'application/json' in response.content_type:
+        # Cache curto para API JSON (5 minutos)
+        response.cache_control.public = True
+        response.cache_control.max_age = 300
+
+    # 2. COMPRESSION HINTS
+    if 'Content-Type' in response.headers:
+        content_type = response.headers['Content-Type']
+        compressible = ['text/', 'application/json', 'application/javascript',
+                       'application/xml', 'image/svg+xml']
+        if any(ct in content_type for ct in compressible):
+            response.vary = 'Accept-Encoding'
+
+    return response
 
 
 def gerar_e_salvar_pdf(relatorio_id, evento="CRIADO"):
@@ -158,8 +281,15 @@ def gerar_e_salvar_pdf(relatorio_id, evento="CRIADO"):
 @app.route('/')
 @login_required
 def dashboard():
-    # Obter relatórios
-    relatorios = Relatorio.query.order_by(desc(Relatorio.created_at)).all()
+    # Paginação
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+
+    # Obter relatórios paginados
+    pagination = Relatorio.query.order_by(desc(Relatorio.created_at)).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    relatorios = pagination.items
     relatorios_com_status = []
 
     for relatorio in relatorios:
@@ -169,6 +299,46 @@ def dashboard():
         ultima_prova = Prova.query.join(Referencia).filter(Referencia.relatorio_id == relatorio.id).order_by(desc(Prova.numero_prova)).first()
 
         relatorio_dict['status_atual'] = ultima_prova.status if ultima_prova else 'Novo'
+
+        # Buscar primeira foto do relatório
+        # Ordem de prioridade: imagem_produto do relatório > primeira foto de qualquer prova
+        primeira_foto = None
+
+        if relatorio.imagem_produto:
+            primeira_foto = relatorio.imagem_produto
+        else:
+            # Buscar primeira foto de qualquer prova deste relatório
+            foto = Foto.query.join(Prova).join(Referencia).filter(
+                Referencia.relatorio_id == relatorio.id
+            ).order_by(Foto.id).first()
+
+            if foto:
+                primeira_foto = foto.file_path
+
+        relatorio_dict['primeira_foto'] = primeira_foto
+
+        # Buscar informações das referências
+        referencias = Referencia.query.filter_by(relatorio_id=relatorio.id).all()
+        relatorio_dict['total_referencias'] = len(referencias)
+
+        # Categoria (primeira categoria encontrada)
+        categorias = [r.tipo_categoria for r in referencias if r.tipo_categoria]
+        relatorio_dict['categoria'] = categorias[0] if categorias else None
+
+        # Fornecedores únicos
+        fornecedores = list(set([r.fornecedor for r in referencias if r.fornecedor]))
+        relatorio_dict['fornecedores'] = ', '.join(fornecedores) if fornecedores else None
+
+        # Data de criação formatada
+        if relatorio.created_at:
+            relatorio_dict['data_criacao'] = relatorio.created_at.strftime('%d/%m/%Y')
+        else:
+            relatorio_dict['data_criacao'] = 'N/A'
+
+        # Total de provas
+        total_provas = Prova.query.join(Referencia).filter(Referencia.relatorio_id == relatorio.id).count()
+        relatorio_dict['total_provas'] = total_provas
+
         relatorios_com_status.append(relatorio_dict)
 
     # ESTATÍSTICAS E INSIGHTS
@@ -176,11 +346,11 @@ def dashboard():
     total_referencias = Referencia.query.count()
     total_provas = Prova.query.count()
 
-    # Provas por status
-    provas_aprovadas = Prova.query.filter_by(status='Aprovada').count()
-    provas_reprovadas = Prova.query.filter_by(status='Reprovada').count()
-    provas_em_andamento = Prova.query.filter_by(status='Em Andamento').count()
-    provas_comite = Prova.query.filter_by(status='Comitê').count()
+    # Provas por status - Valores em MAIÚSCULAS após padronização
+    provas_aprovadas = Prova.query.filter_by(status='APROVADA').count()
+    provas_reprovadas = Prova.query.filter_by(status='REPROVADA').count()
+    provas_em_andamento = Prova.query.filter_by(status='EM ANDAMENTO').count()
+    provas_comite = Prova.query.filter_by(status='COMITÊ').count()
 
     # Taxa de aprovação
     taxa_aprovacao = round((provas_aprovadas / total_provas * 100) if total_provas > 0 else 0, 1)
@@ -251,6 +421,9 @@ def dashboard():
             'mensagem': f'{provas_em_andamento} provas aguardando finalização'
         })
 
+    # Média de provas por referência
+    media_provas_por_referencia = round((total_provas / total_referencias) if total_referencias > 0 else 0, 1)
+
     stats = {
         'total_relatorios': total_relatorios,
         'total_referencias': total_referencias,
@@ -261,12 +434,22 @@ def dashboard():
         'provas_comite': provas_comite,
         'taxa_aprovacao': taxa_aprovacao,
         'taxa_retrabalho': taxa_retrabalho,
+        'media_provas_por_referencia': media_provas_por_referencia,
         'categorias': categorias_stats,
         'relatorios_recentes': relatorios_recentes,
         'insights': insights
     }
 
-    return render_template('dashboard.html', relatorios=relatorios_com_status, stats=stats)
+    return render_template('dashboard.html', relatorios=relatorios_com_status, stats=stats, pagination=pagination)
+
+@app.route('/favicon.ico')
+def favicon():
+    """Serve favicon from static folder"""
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'favicon.ico',
+        mimetype='image/vnd.microsoft.icon'
+    )
 
 @app.route('/uploads/<path:filename>')
 @login_required
@@ -562,11 +745,15 @@ def novo_relatorio():
     if request.method == 'POST':
         try:
             ppt_filename = save_file(request.files.get('ppt'))
-            
+            imagem_produto_filename = save_file(request.files.get('imagem_produto'))
+            ficha_tecnica_filename = save_file(request.files.get('ficha_tecnica'))
+
             novo_relatorio = Relatorio(
                 descricao_geral=request.form.get('descricao_geral'),
                 colecao=request.form.get('colecao'),
-                ppt_path=ppt_filename
+                ppt_path=ppt_filename,
+                imagem_produto=imagem_produto_filename,
+                ficha_tecnica=ficha_tecnica_filename
             )
             db.session.add(novo_relatorio)
             db.session.flush()
@@ -671,8 +858,18 @@ def excluir_relatorio(id):
 
         # Excluir do banco (cascade delete cuida das referências, provas e fotos)
         descricao = relatorio.descricao_geral
+        colecao = relatorio.colecao
         db.session.delete(relatorio)
         db.session.commit()
+
+        # Registrar log de auditoria
+        registrar_log(
+            acao='excluir',
+            entidade_tipo='relatorio',
+            entidade_id=id,
+            entidade_descricao=f'{descricao} - {colecao}',
+            detalhes=f'Excluído {len(arquivos_para_excluir)} arquivo(s) associado(s)'
+        )
 
         # Excluir arquivos físicos
         from utils import delete_file
@@ -841,6 +1038,91 @@ def exportar_relatorio_excel(id):
         return redirect(url_for('detalhes_relatorio', id=id))
 
 
+@app.route('/importar/excel', methods=['GET', 'POST'])
+@login_required
+def importar_relatorios_excel():
+    """Importa relatórios de um arquivo Excel"""
+    if request.method == 'POST':
+        try:
+            from openpyxl import load_workbook
+
+            arquivo = request.files.get('arquivo_excel')
+            if not arquivo or arquivo.filename == '':
+                flash('Nenhum arquivo selecionado!', 'error')
+                return redirect(url_for('dashboard'))
+
+            # Verificar extensão
+            if not arquivo.filename.endswith(('.xlsx', '.xls')):
+                flash('Formato inválido! Use apenas arquivos Excel (.xlsx ou .xls)', 'error')
+                return redirect(url_for('dashboard'))
+
+            # Salvar temporariamente
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
+                arquivo.save(temp_file.name)
+                temp_path = temp_file.name
+
+            # Carregar workbook
+            wb = load_workbook(temp_path, data_only=True)
+
+            relatorios_importados = 0
+            erros = []
+
+            # Ler aba "Informações Gerais" ou primeira aba
+            if "Informações Gerais" in wb.sheetnames:
+                ws = wb["Informações Gerais"]
+            else:
+                ws = wb.active
+
+            # Processar dados (assumindo formato: linha 1 = header, linha 2+ = dados)
+            headers = [cell.value for cell in ws[1]]
+
+            for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                try:
+                    # Criar dicionário de dados da linha
+                    dados = dict(zip(headers, row))
+
+                    if not dados.get('Descrição'):
+                        continue  # Pular linhas vazias
+
+                    # Criar relatório
+                    novo_rel = Relatorio(
+                        descricao_geral=str(dados.get('Descrição', '')).upper(),
+                        colecao=str(dados.get('Coleção', '')).upper() if dados.get('Coleção') else None,
+                        temporada=str(dados.get('Temporada', '')).upper() if dados.get('Temporada') else None,
+                        ano=int(dados.get('Ano')) if dados.get('Ano') and str(dados.get('Ano')).isdigit() else None,
+                        status_geral=str(dados.get('Status Geral', 'EM ANDAMENTO')).upper()
+                    )
+                    db.session.add(novo_rel)
+                    relatorios_importados += 1
+
+                except Exception as e:
+                    erros.append(f"Linha {row_idx}: {str(e)}")
+                    continue
+
+            db.session.commit()
+
+            # Remover arquivo temporário
+            import os
+            os.unlink(temp_path)
+
+            if relatorios_importados > 0:
+                flash(f'✅ {relatorios_importados} relatório(s) importado(s) com sucesso!', 'success')
+
+            if erros:
+                flash(f'⚠️ {len(erros)} erro(s) durante importação. Verifique o formato do arquivo.', 'warning')
+
+            return redirect(url_for('dashboard'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao importar arquivo: {str(e)}', 'error')
+            return redirect(url_for('dashboard'))
+
+    # GET - Mostrar página de upload
+    return redirect(url_for('dashboard'))
+
+
 # ========================================
 # PÁGINA DE RELATÓRIOS E ANALYTICS
 # ========================================
@@ -856,6 +1138,7 @@ def analytics():
     filtro_categoria = request.args.get('categoria', '')
     filtro_colecao = request.args.get('colecao', '')
     filtro_fornecedor = request.args.get('fornecedor', '')
+    filtro_referencia = request.args.get('referencia', '')
     filtro_data_inicio = request.args.get('data_inicio', '')
     filtro_data_fim = request.args.get('data_fim', '')
 
@@ -871,6 +1154,9 @@ def analytics():
         query_provas = query_provas.filter(Relatorio.colecao == filtro_colecao)
     if filtro_fornecedor:
         query_provas = query_provas.filter(Referencia.fornecedor == filtro_fornecedor)
+    if filtro_referencia:
+        # Busca parcial por número de referência (case-insensitive)
+        query_provas = query_provas.filter(Referencia.numero_ref.ilike(f'%{filtro_referencia}%'))
 
     # Filtro de data
     if filtro_data_inicio:
@@ -894,11 +1180,11 @@ def analytics():
     total_referencias = Referencia.query.count()
     total_provas = Prova.query.count()
 
-    # Por status (sem filtros)
-    provas_aprovadas = Prova.query.filter_by(status='Aprovada').count()
-    provas_reprovadas = Prova.query.filter_by(status='Reprovada').count()
-    provas_em_andamento = Prova.query.filter_by(status='Em Andamento').count()
-    provas_comite = Prova.query.filter_by(status='Comitê').count()
+    # Por status (sem filtros) - Valores em MAIÚSCULAS após padronização
+    provas_aprovadas = Prova.query.filter_by(status='APROVADA').count()
+    provas_reprovadas = Prova.query.filter_by(status='REPROVADA').count()
+    provas_em_andamento = Prova.query.filter_by(status='EM ANDAMENTO').count()
+    provas_comite = Prova.query.filter_by(status='COMITÊ').count()
 
     # Taxa de aprovação
     taxa_aprovacao = round((provas_aprovadas / total_provas * 100) if total_provas > 0 else 0, 1)
@@ -914,10 +1200,10 @@ def analytics():
     provas_filtradas = query_provas.all()
     total_filtrado = len(provas_filtradas)
 
-    filtrado_aprovadas = sum(1 for p in provas_filtradas if p.status == 'Aprovada')
-    filtrado_reprovadas = sum(1 for p in provas_filtradas if p.status == 'Reprovada')
-    filtrado_em_andamento = sum(1 for p in provas_filtradas if p.status == 'Em Andamento')
-    filtrado_comite = sum(1 for p in provas_filtradas if p.status == 'Comitê')
+    filtrado_aprovadas = sum(1 for p in provas_filtradas if p.status == 'APROVADA')
+    filtrado_reprovadas = sum(1 for p in provas_filtradas if p.status == 'REPROVADA')
+    filtrado_em_andamento = sum(1 for p in provas_filtradas if p.status == 'EM ANDAMENTO')
+    filtrado_comite = sum(1 for p in provas_filtradas if p.status == 'COMITÊ')
 
     taxa_aprovacao_filtrada = round((filtrado_aprovadas / total_filtrado * 100) if total_filtrado > 0 else 0, 1)
 
@@ -1035,8 +1321,8 @@ def analytics():
     # ========================================
     # OPÇÕES PARA FILTROS (dropdowns)
     # ========================================
-    opcoes_status = ['Em Andamento', 'Aprovada', 'Reprovada', 'Comitê']
-    opcoes_categorias = ['baby', 'kids', 'teen', 'adulto']
+    opcoes_status = ['EM ANDAMENTO', 'APROVADA', 'REPROVADA', 'COMITÊ']
+    opcoes_categorias = ['BABY', 'KIDS', 'TEEN', 'ADULTO']
 
     # Coleções únicas
     opcoes_colecoes = [c[0] for c in db.session.query(Relatorio.colecao).filter(
@@ -1109,12 +1395,226 @@ def analytics():
         filtro_categoria=filtro_categoria,
         filtro_colecao=filtro_colecao,
         filtro_fornecedor=filtro_fornecedor,
+        filtro_referencia=filtro_referencia,
         filtro_data_inicio=filtro_data_inicio,
         filtro_data_fim=filtro_data_fim,
 
         # Dados da tabela
         dados_tabela=dados_tabela
     )
+
+
+@app.route('/api/analytics/charts')
+@login_required
+def api_analytics_charts():
+    """
+    Endpoint API para fornecer dados dos gráficos
+    Retorna JSON com todos os dados necessários para visualizações
+    """
+    from datetime import datetime, timedelta
+
+    try:
+        # Obter parâmetros de filtro (opcional)
+        filtro_status = request.args.get('status', '')
+        filtro_categoria = request.args.get('categoria', '')
+        filtro_colecao = request.args.get('colecao', '')
+        filtro_fornecedor = request.args.get('fornecedor', '')
+
+        # Query base
+        query_provas = Prova.query.join(Referencia).join(Relatorio)
+
+        # Aplicar filtros se fornecidos
+        if filtro_status:
+            query_provas = query_provas.filter(Prova.status == filtro_status)
+        if filtro_categoria:
+            query_provas = query_provas.filter(Referencia.tipo_categoria == filtro_categoria)
+        if filtro_colecao:
+            query_provas = query_provas.filter(Relatorio.colecao == filtro_colecao)
+        if filtro_fornecedor:
+            query_provas = query_provas.filter(Referencia.fornecedor == filtro_fornecedor)
+
+        # ========================================
+        # 1. DISTRIBUIÇÃO POR STATUS (Pie/Doughnut)
+        # ========================================
+        status_stats = db.session.query(
+            Prova.status,
+            db.func.count(Prova.id)
+        ).group_by(Prova.status).all()
+
+        status_chart = {
+            'labels': [status for status, _ in status_stats],
+            'values': [count for _, count in status_stats]
+        }
+
+        # ========================================
+        # 2. TOP 10 FORNECEDORES (Bar Horizontal)
+        # ========================================
+        fornecedores_stats = db.session.query(
+            Referencia.fornecedor,
+            db.func.count(Referencia.id)
+        ).filter(
+            Referencia.fornecedor.isnot(None),
+            Referencia.fornecedor != ''
+        ).group_by(
+            Referencia.fornecedor
+        ).order_by(
+            db.func.count(Referencia.id).desc()
+        ).limit(10).all()
+
+        suppliers_chart = {
+            'suppliers': [forn for forn, _ in fornecedores_stats],
+            'counts': [count for _, count in fornecedores_stats]
+        }
+
+        # ========================================
+        # 3. TIMELINE - RELATÓRIOS POR MÊS (Area Chart)
+        # ========================================
+        doze_meses_atras = datetime.utcnow() - timedelta(days=365)
+        relatorios_por_mes = db.session.query(
+            db.func.strftime('%Y-%m', Relatorio.created_at).label('mes'),
+            db.func.count(Relatorio.id)
+        ).filter(
+            Relatorio.created_at >= doze_meses_atras
+        ).group_by('mes').order_by('mes').all()
+
+        # Formatar meses para display (Jan, Fev, Mar...)
+        meses_map = {
+            '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr',
+            '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Ago',
+            '09': 'Set', '10': 'Out', '11': 'Nov', '12': 'Dez'
+        }
+
+        timeline_chart = {
+            'months': [meses_map.get(mes.split('-')[1], mes) if mes else '' for mes, _ in relatorios_por_mes],
+            'counts': [count for _, count in relatorios_por_mes]
+        }
+
+        # ========================================
+        # 4. DISTRIBUIÇÃO POR CATEGORIA (Bar Vertical)
+        # ========================================
+        categorias_stats = db.session.query(
+            Referencia.tipo_categoria,
+            db.func.count(Referencia.id)
+        ).group_by(Referencia.tipo_categoria).all()
+
+        category_chart = {
+            'categories': [cat for cat, _ in categorias_stats],
+            'counts': [count for _, count in categorias_stats]
+        }
+
+        # ========================================
+        # 5. SPARKLINES - TENDÊNCIAS DOS ÚLTIMOS 12 MESES
+        # ========================================
+        sparklines = {}
+
+        # Relatórios por mês (últimos 12)
+        rel_sparkline = []
+        for i in range(11, -1, -1):
+            mes_inicio = datetime.utcnow() - timedelta(days=30*i)
+            mes_fim = datetime.utcnow() - timedelta(days=30*(i-1)) if i > 0 else datetime.utcnow()
+            count = Relatorio.query.filter(
+                Relatorio.created_at >= mes_inicio,
+                Relatorio.created_at < mes_fim
+            ).count()
+            rel_sparkline.append(count)
+        sparklines['relatorios'] = rel_sparkline
+
+        # Taxa de aprovação por mês (últimos 12)
+        taxa_sparkline = []
+        for i in range(11, -1, -1):
+            mes_inicio = datetime.utcnow() - timedelta(days=30*i)
+            mes_fim = datetime.utcnow() - timedelta(days=30*(i-1)) if i > 0 else datetime.utcnow()
+            total = Prova.query.filter(
+                Prova.created_at >= mes_inicio,
+                Prova.created_at < mes_fim
+            ).count()
+            aprovadas = Prova.query.filter(
+                Prova.created_at >= mes_inicio,
+                Prova.created_at < mes_fim,
+                Prova.status == 'APROVADA'
+            ).count()
+            taxa = round((aprovadas / total * 100) if total > 0 else 0, 1)
+            taxa_sparkline.append(taxa)
+        sparklines['aprovacao'] = taxa_sparkline
+
+        # ========================================
+        # 6. GRÁFICO MISTO - PROVAS E TAXA DE APROVAÇÃO POR MÊS
+        # ========================================
+        mixed_data = {
+            'labels': [],
+            'totalProvas': [],
+            'taxaAprovacao': []
+        }
+
+        for i in range(5, -1, -1):
+            mes_inicio = datetime.utcnow() - timedelta(days=30*i)
+            mes_fim = datetime.utcnow() - timedelta(days=30*(i-1)) if i > 0 else datetime.utcnow()
+
+            # Total de provas
+            total = Prova.query.filter(
+                Prova.created_at >= mes_inicio,
+                Prova.created_at < mes_fim
+            ).count()
+
+            # Provas aprovadas
+            aprovadas = Prova.query.filter(
+                Prova.created_at >= mes_inicio,
+                Prova.created_at < mes_fim,
+                Prova.status == 'APROVADA'
+            ).count()
+
+            # Taxa
+            taxa = round((aprovadas / total * 100) if total > 0 else 0, 1)
+
+            # Label do mês
+            mes_label = meses_map.get(mes_inicio.strftime('%m'), mes_inicio.strftime('%b'))
+
+            mixed_data['labels'].append(mes_label)
+            mixed_data['totalProvas'].append(total)
+            mixed_data['taxaAprovacao'].append(taxa)
+
+        # ========================================
+        # 7. COLEÇÕES
+        # ========================================
+        colecoes_stats = db.session.query(
+            Relatorio.colecao,
+            db.func.count(Relatorio.id)
+        ).filter(
+            Relatorio.colecao.isnot(None),
+            Relatorio.colecao != ''
+        ).group_by(
+            Relatorio.colecao
+        ).order_by(
+            db.func.count(Relatorio.id).desc()
+        ).limit(8).all()
+
+        colecoes_chart = {
+            'labels': [col for col, _ in colecoes_stats],
+            'counts': [count for _, count in colecoes_stats]
+        }
+
+        # ========================================
+        # RETORNAR JSON
+        # ========================================
+        return jsonify({
+            'success': True,
+            'data': {
+                'statusChart': status_chart,
+                'suppliersChart': suppliers_chart,
+                'timelineChart': timeline_chart,
+                'categoryChart': category_chart,
+                'sparklines': sparklines,
+                'mixedChart': mixed_data,
+                'colecoesChart': colecoes_chart
+            }
+        })
+
+    except Exception as e:
+        app.logger.error(f"Erro ao gerar dados dos gráficos: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.route('/analytics/exportar')
@@ -1131,6 +1631,7 @@ def analytics_exportar():
     filtro_categoria = request.args.get('categoria', '')
     filtro_colecao = request.args.get('colecao', '')
     filtro_fornecedor = request.args.get('fornecedor', '')
+    filtro_referencia = request.args.get('referencia', '')
     filtro_data_inicio = request.args.get('data_inicio', '')
     filtro_data_fim = request.args.get('data_fim', '')
 
@@ -1146,6 +1647,9 @@ def analytics_exportar():
         query_provas = query_provas.filter(Relatorio.colecao == filtro_colecao)
     if filtro_fornecedor:
         query_provas = query_provas.filter(Referencia.fornecedor == filtro_fornecedor)
+    if filtro_referencia:
+        # Busca parcial por número de referência (case-insensitive)
+        query_provas = query_provas.filter(Referencia.numero_ref.ilike(f'%{filtro_referencia}%'))
     if filtro_data_inicio:
         try:
             data_inicio = datetime.strptime(filtro_data_inicio, '%Y-%m-%d')
@@ -1222,10 +1726,10 @@ def analytics_exportar():
 
     row += 1
     total = len(provas)
-    aprovadas = sum(1 for p in provas if p.status == 'Aprovada')
-    reprovadas = sum(1 for p in provas if p.status == 'Reprovada')
-    em_andamento = sum(1 for p in provas if p.status == 'Em Andamento')
-    comite = sum(1 for p in provas if p.status == 'Comitê')
+    aprovadas = sum(1 for p in provas if p.status == 'APROVADA')
+    reprovadas = sum(1 for p in provas if p.status == 'REPROVADA')
+    em_andamento = sum(1 for p in provas if p.status == 'EM ANDAMENTO')
+    comite = sum(1 for p in provas if p.status == 'COMITÊ')
 
     stats = [
         ("Total de Provas", total),
@@ -1286,11 +1790,11 @@ def analytics_exportar():
 
             # Colorir por status
             if col_num == 8:  # Status
-                if value == 'Aprovada':
+                if value == 'APROVADA':
                     cell.fill = PatternFill(start_color="c6efce", end_color="c6efce", fill_type="solid")
-                elif value == 'Reprovada':
+                elif value == 'REPROVADA':
                     cell.fill = PatternFill(start_color="ffc7ce", end_color="ffc7ce", fill_type="solid")
-                elif value == 'Comitê':
+                elif value == 'COMITÊ':
                     cell.fill = PatternFill(start_color="ffeb9c", end_color="ffeb9c", fill_type="solid")
 
     # Ajustar larguras
@@ -1313,6 +1817,59 @@ def analytics_exportar():
     wb.save(filepath)
 
     return send_from_directory(app.config['PDF_FOLDER'], filename, as_attachment=True)
+
+
+# ========================================
+# LOGS DE AUDITORIA (Admin Only)
+# ========================================
+
+@app.route('/logs')
+@login_required
+def logs():
+    """Página de visualização de logs de auditoria - Apenas para administradores"""
+    # Verificar se usuário é admin
+    if not current_user.is_admin and current_user.role != 'admin':
+        flash('Acesso negado. Apenas administradores podem visualizar logs.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    # Parâmetros de paginação e filtro
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    filtro_acao = request.args.get('acao', '')
+    filtro_usuario = request.args.get('usuario', '')
+    filtro_entidade = request.args.get('entidade', '')
+
+    # Query base
+    query = AuditLog.query
+
+    # Aplicar filtros
+    if filtro_acao:
+        query = query.filter(AuditLog.acao == filtro_acao)
+    if filtro_usuario:
+        query = query.filter(AuditLog.usuario_nome.ilike(f'%{filtro_usuario}%'))
+    if filtro_entidade:
+        query = query.filter(AuditLog.entidade_tipo == filtro_entidade)
+
+    # Ordenar por data (mais recente primeiro)
+    query = query.order_by(desc(AuditLog.created_at))
+
+    # Paginar resultados
+    logs_paginados = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Estatísticas
+    total_logs = AuditLog.query.count()
+    acoes_unicos = db.session.query(AuditLog.acao, db.func.count(AuditLog.id)).group_by(AuditLog.acao).all()
+    usuarios_ativos = db.session.query(AuditLog.usuario_nome, db.func.count(AuditLog.id)).group_by(AuditLog.usuario_nome).order_by(desc(db.func.count(AuditLog.id))).limit(10).all()
+
+    return render_template('logs.html',
+                         logs=logs_paginados.items,
+                         pagination=logs_paginados,
+                         total_logs=total_logs,
+                         acoes_unicos=acoes_unicos,
+                         usuarios_ativos=usuarios_ativos,
+                         filtro_acao=filtro_acao,
+                         filtro_usuario=filtro_usuario,
+                         filtro_entidade=filtro_entidade)
 
 
 # ========================================

@@ -25,7 +25,16 @@ def register_error_handlers(app):
     @app.errorhandler(404)
     def not_found(error):
         """Página não encontrada"""
-        logger.info(f"Not Found: {request.url}")
+        # Ignorar erros conhecidos que não são problemas reais
+        ignored_paths = [
+            '/.well-known/appspecific/com.chrome.devtools.json',
+            '/apple-touch-icon',
+            '/apple-touch-icon-precomposed.png'
+        ]
+
+        if not any(request.path.startswith(path) for path in ignored_paths):
+            logger.info(f"Not Found: {request.url}")
+
         if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
             return jsonify(error="Recurso não encontrado"), 404
         return render_template('errors/404.html'), 404

@@ -12,23 +12,56 @@ import string
 from audit_helpers import (log_criacao, log_atualizacao, log_exclusao,
                            log_reset_senha, log_mudanca_role,
                            AuditEntity, AuditAction)
+from auth import validar_senha
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            flash("Acesso negado. Área restrita para administradores.", "error")
-            return redirect(url_for('dashboard'))
+        # Verificar se está autenticado
+        if not current_user.is_authenticated:
+            flash("Por favor, faça login para acessar esta página.", "warning")
+            return redirect(url_for('auth.login'))
+
+        # Verificar se é admin (verifica is_admin OU role == 'admin')
+        is_administrator = current_user.is_admin or (hasattr(current_user, 'role') and current_user.role == 'admin')
+
+        if not is_administrator:
+            flash("Acesso negado. Área restrita para administradores.", "danger")
+            return redirect(url_for('index'))
+
         return f(*args, **kwargs)
     return decorated_function
 
 def gerar_senha_aleatoria(tamanho=12):
-    """Gera uma senha aleatória forte"""
-    caracteres = string.ascii_letters + string.digits + "!@#$%&*"
-    senha = ''.join(secrets.choice(caracteres) for _ in range(tamanho))
-    return senha
+    """
+    Gera uma senha aleatória forte que atende aos requisitos de segurança
+    - Mínimo 8 caracteres (padrão 12)
+    - Pelo menos 1 letra maiúscula
+    - Pelo menos 1 letra minúscula
+    - Pelo menos 1 número
+    - Pelo menos 1 caractere especial (@$!%*?&)
+    """
+    if tamanho < 8:
+        tamanho = 8
+
+    # Garantir pelo menos um caractere de cada tipo
+    senha_chars = [
+        secrets.choice(string.ascii_uppercase),  # 1 maiúscula
+        secrets.choice(string.ascii_lowercase),  # 1 minúscula
+        secrets.choice(string.digits),           # 1 número
+        secrets.choice('@$!%*?&')                # 1 especial
+    ]
+
+    # Preencher o restante com caracteres aleatórios
+    todos_chars = string.ascii_letters + string.digits + '@$!%*?&'
+    senha_chars.extend(secrets.choice(todos_chars) for _ in range(tamanho - 4))
+
+    # Embaralhar para não ter padrão previsível
+    secrets.SystemRandom().shuffle(senha_chars)
+
+    return ''.join(senha_chars)
 
 def role_display(role):
     """Retorna o nome amigável do role"""
@@ -209,8 +242,10 @@ def set_password(user_id):
             flash("As senhas não coincidem.", "error")
             return redirect(url_for('admin.users'))
 
-        if len(nova_senha) < 6:
-            flash("A senha deve ter pelo menos 6 caracteres.", "error")
+        # Validar complexidade da senha
+        valido, mensagem = validar_senha(nova_senha)
+        if not valido:
+            flash(mensagem, "error")
             return redirect(url_for('admin.users'))
 
         # Atualizar senha - usando método de hash explícito para compatibilidade
@@ -338,9 +373,10 @@ def change_my_password():
                 flash("A nova senha e a confirmação não coincidem.", "error")
                 return redirect(url_for('admin.change_my_password'))
 
-            # Verificar força da senha (mínimo 6 caracteres)
-            if len(nova_senha) < 6:
-                flash("A nova senha deve ter pelo menos 6 caracteres.", "error")
+            # Validar complexidade da senha
+            valido, mensagem = validar_senha(nova_senha)
+            if not valido:
+                flash(mensagem, "error")
                 return redirect(url_for('admin.change_my_password'))
 
             # Atualizar senha - usando método de hash explícito para compatibilidade

@@ -1,0 +1,674 @@
+/* ========================================
+   WCAG 2.1 AA ACCESSIBILITY STYLES
+   Sistema de Acessibilidade Completo
+   ======================================== */
+
+/* ========================================
+   1. SCREEN READER UTILITIES
+   ======================================== */
+
+/* Classe para ocultar visualmente mas manter acessível para screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Torna visível quando focado (útil para "Skip to main content") */
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* ========================================
+   2. SKIP NAVIGATION LINK
+   ======================================== */
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 8px 0;
+    font-weight: 600;
+    z-index: 100;
+    transition: top 0.3s;
+}
+
+.skip-link:focus {
+    top: 0;
+    outline: 3px solid #fbbf24;
+    outline-offset: 2px;
+}
+
+/* Variante alternativa (mantida para compatibilidade) */
+.skip-to-main {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #ec4899;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 0 0 8px 0;
+    font-weight: 600;
+    z-index: 10000;
+    transition: top 0.3s;
+}
+
+.skip-to-main:focus {
+    top: 0;
+    outline: 3px solid #fbbf24;
+    outline-offset: 2px;
+}
+
+/* ========================================
+   3. FOCUS INDICATORS (WCAG 2.4.7)
+   ======================================== */
+
+/* Remove outline padrão mas SEMPRE substitui com alternativa visível */
+*:focus {
+    outline: none;
+}
+
+/* Focus visível para elementos interativos */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+[tabindex]:focus,
+.btn:focus,
+.form-control:focus,
+.form-select:focus,
+.menu-link:focus,
+.nav-link:focus {
+    outline: 3px solid #fbbf24;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.2);
+}
+
+/* Focus para botões primários */
+.btn-primary:focus,
+.btn-new-report:focus {
+    outline: 3px solid #fbbf24;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.3);
+}
+
+/* Focus para cards e elementos complexos */
+.report-card:focus-within,
+.stat-card:focus-within {
+    outline: 2px solid #ec4899;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.15);
+}
+
+/* Focus para checkboxes customizados */
+.filter-pill-premium:focus-within {
+    outline: 2px solid #fbbf24;
+    outline-offset: 2px;
+}
+
+/* ========================================
+   4. HIGH CONTRAST MODE SUPPORT
+   ======================================== */
+
+@media (prefers-contrast: high) {
+    /* Aumenta contraste de textos */
+    body {
+        color: #000000;
+        background: #ffffff;
+    }
+
+    /* Botões em modo de alto contraste */
+    .btn {
+        border: 2px solid currentColor;
+    }
+
+    /* Links em modo de alto contraste */
+    a {
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+    }
+
+    /* Cards em modo de alto contraste */
+    .card,
+    .report-card {
+        border: 2px solid #000000;
+    }
+}
+
+/* ========================================
+   5. REDUCED MOTION (WCAG 2.3.3)
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ========================================
+   6. CONTRASTE DE CORES WCAG AA (4.5:1)
+   ======================================== */
+
+/* Overlay escuro para gradientes coloridos melhorar contraste */
+.navbar::before,
+.dashboard-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.navbar > *,
+.dashboard-header > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Garantir contraste em badges */
+.badge,
+.stat-trend,
+.report-status,
+.filters-badge {
+    font-weight: 700;
+}
+
+/* Status badges com contraste adequado */
+.status-approved {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.status-progress {
+    background: #fef3c7;
+    color: #78350f;
+    border: 1px solid #fcd34d;
+}
+
+.status-other {
+    background: #f3f4f6;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+}
+
+/* ========================================
+   7. FORM ACCESSIBILITY
+   ======================================== */
+
+/* Labels sempre visíveis */
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Indicador de campo obrigatório */
+[required] + label::after,
+label[for] [required]::after {
+    content: ' *';
+    color: #dc2626;
+    font-weight: 700;
+}
+
+/* Estados de validação visíveis */
+.form-control:invalid:not(:focus):not(:placeholder-shown),
+.form-select:invalid:not(:focus):not(:placeholder-shown) {
+    border-color: #dc2626;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc2626'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc2626' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    padding-right: calc(1.5em + 0.75rem);
+}
+
+.form-control:valid:not(:focus):not(:placeholder-shown),
+.form-select:valid:not(:focus):not(:placeholder-shown) {
+    border-color: #16a34a;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2316a34a' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    padding-right: calc(1.5em + 0.75rem);
+}
+
+/* Mensagens de erro acessíveis */
+.error-message,
+.invalid-feedback,
+[role="alert"] {
+    color: #991b1b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-message::before,
+.invalid-feedback::before {
+    content: '⚠';
+    font-size: 1rem;
+}
+
+/* ========================================
+   8. KEYBOARD NAVIGATION
+   ======================================== */
+
+/* Indicadores de navegação por teclado */
+body.using-keyboard *:focus {
+    outline: 3px solid #fbbf24 !important;
+    outline-offset: 2px !important;
+}
+
+/* Remove focus de mouse mas mantém para teclado */
+body.using-mouse *:focus {
+    outline: none;
+}
+
+/* Elementos focáveis devem ter área mínima de 44x44px (WCAG 2.5.5) */
+a,
+button,
+input,
+select,
+textarea,
+[role="button"],
+[tabindex]:not([tabindex="-1"]) {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Exceções para textos inline */
+p a,
+span a,
+li a {
+    min-height: auto;
+    min-width: auto;
+    display: inline;
+}
+
+/* ========================================
+   9. LOADING & STATUS ANNOUNCEMENTS
+   ======================================== */
+
+/* Container para anúncios de screen reader */
+.sr-announcements {
+    position: fixed;
+    top: -1000px;
+    left: -1000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Loading spinner acessível */
+.spinner-border {
+    border-color: currentColor;
+    border-right-color: transparent;
+}
+
+/* Status de loading visível */
+.loading-overlay {
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+}
+
+.loading-overlay::before {
+    content: 'Carregando...';
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* ========================================
+   10. MODAL ACCESSIBILITY
+   ======================================== */
+
+/* Modal backdrop com contraste adequado */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Modal header com contraste adequado */
+.modal-header.bg-danger {
+    background: #dc2626 !important;
+    color: white !important;
+}
+
+.modal-header.bg-danger .btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* ========================================
+   11. TABLE ACCESSIBILITY
+   ======================================== */
+
+/* Cabeçalhos de tabela sempre visíveis */
+table caption {
+    padding: 0.75rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: left;
+    color: #111827;
+}
+
+th {
+    font-weight: 700;
+    text-align: left;
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+/* Hover em linhas de tabela */
+tbody tr:hover {
+    background: #f9fafb;
+    outline: 2px solid #e5e7eb;
+}
+
+/* ========================================
+   12. ALERT & TOAST ACCESSIBILITY
+   ======================================== */
+
+/* Alerts com ícones semânticos */
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+}
+
+.alert::before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.alert-success::before {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23166534'%3e%3cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3e%3c/svg%3e");
+}
+
+.alert-danger::before,
+.alert-error::before {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23991b1b'%3e%3cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/%3e%3c/svg%3e");
+}
+
+.alert-warning::before {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2378350f'%3e%3cpath d='M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'/%3e%3c/svg%3e");
+}
+
+.alert-info::before {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231e40af'%3e%3cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z'/%3e%3c/svg%3e");
+}
+
+/* ========================================
+   13. BREADCRUMB ACCESSIBILITY
+   ======================================== */
+
+.breadcrumb {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: '/';
+    padding: 0 0.5rem;
+    color: #9ca3af;
+}
+
+/* ========================================
+   14. LINK ACCESSIBILITY
+   ======================================== */
+
+/* Links devem ser distinguíveis por mais que cor */
+a:not(.btn):not(.nav-link):not(.menu-link) {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* Links de navegação sem sublinhado mas com hover claro */
+.nav-link,
+.menu-link,
+.btn {
+    text-decoration: none;
+}
+
+/* ========================================
+   15. IMAGE ACCESSIBILITY
+   ======================================== */
+
+/* Imagens decorativas devem ter alt vazio */
+img:not([alt]) {
+    outline: 3px dashed #dc2626;
+    outline-offset: 2px;
+}
+
+/* Placeholder para imagens sem src */
+img:not([src])::before {
+    content: 'Imagem sem fonte definida';
+    display: block;
+    padding: 1rem;
+    background: #fef2f2;
+    color: #991b1b;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* ========================================
+   16. RESPONSIVE FONT SIZES (WCAG 1.4.4)
+   ======================================== */
+
+/* Permitir zoom até 200% sem perda de funcionalidade */
+html {
+    font-size: 100%;
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 16px; /* Previne zoom automático em iOS */
+    }
+}
+
+/* ========================================
+   17. COLOR BLIND FRIENDLY
+   ======================================== */
+
+/* Nunca usar APENAS cor para transmitir informação */
+/* Sempre adicionar ícone, padrão ou texto */
+
+.status-approved::before {
+    content: '✓ ';
+    font-weight: bold;
+}
+
+.status-rejected::before {
+    content: '✗ ';
+    font-weight: bold;
+}
+
+.status-progress::before {
+    content: '⟳ ';
+    font-weight: bold;
+}
+
+/* ========================================
+   18. PRINT ACCESSIBILITY
+   ======================================== */
+
+@media print {
+    /* Garantir contraste em impressão */
+    * {
+        color: #000 !important;
+        background: #fff !important;
+    }
+
+    /* Mostrar URLs de links */
+    a[href]::after {
+        content: ' (' attr(href) ')';
+        font-size: 0.8em;
+        font-weight: normal;
+    }
+
+    /* Evitar quebras em elementos importantes */
+    .report-card,
+    .stat-card {
+        page-break-inside: avoid;
+    }
+}
+
+/* ========================================
+   19. DARK MODE ACCESSIBILITY
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+    /* Ajustar contrastes para modo escuro se implementado */
+    body {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+
+    .card,
+    .report-card {
+        background: #374151;
+        border-color: #4b5563;
+    }
+}
+
+/* ========================================
+   20. TOUCH TARGET SIZE (WCAG 2.5.5)
+   ======================================== */
+
+/* Garantir área de toque mínima de 44x44px */
+@media (pointer: coarse) {
+    button,
+    .btn,
+    a,
+    input[type="checkbox"],
+    input[type="radio"],
+    select {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Espaçamento entre elementos clicáveis */
+    .btn-group .btn {
+        margin: 0.25rem;
+    }
+
+    .filter-pill-premium {
+        margin: 0.25rem;
+    }
+}
+
+/* ========================================
+   21. ANIMATIONS ACESSÍVEIS
+   ======================================== */
+
+/* Animações sutis e com propósito */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Pulse suave para notificações */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+[aria-live="polite"],
+[aria-live="assertive"] {
+    animation: pulse 1s ease-in-out 3;
+}
+
+/* ========================================
+   22. UTILITY CLASSES
+   ======================================== */
+
+/* Esconder visualmente mas manter no DOM */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Esconder de todos */
+.hidden {
+    display: none !important;
+}
+
+/* Aria-hidden mas visível */
+[aria-hidden="true"] {
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ========================================
+   FIM DOS ESTILOS DE ACESSIBILIDADE
+   ======================================== */

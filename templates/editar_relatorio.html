@@ -215,7 +215,7 @@
 </style>
 {% endblock %}
 
-{% block content %}
+{% block main_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Editar Relatório</h1>
     <a href="{{ url_for('detalhes_relatorio', id=relatorio.id) }}" class="btn btn-outline-secondary">Cancelar</a>
@@ -310,26 +310,26 @@
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Fornecedor</label>
-                                        <input type="text" class="form-control" name="fornecedor_ref_{{ ref.id }}" value="{{ ref.fornecedor or '' }}">
+                                        <label for="fornecedor_ref_{{ ref.id }}" class="form-label">Fornecedor</label>
+                                        <input type="text" id="fornecedor_ref_{{ ref.id }}" class="form-control" name="fornecedor_ref_{{ ref.id }}" value="{{ ref.fornecedor or '' }}">
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Matéria Prima</label>
-                                        <input type="text" class="form-control" name="materia_prima_ref_{{ ref.id }}" value="{{ ref.materia_prima or '' }}">
+                                        <label for="materia_prima_ref_{{ ref.id }}" class="form-label">Matéria Prima</label>
+                                        <input type="text" id="materia_prima_ref_{{ ref.id }}" class="form-control" name="materia_prima_ref_{{ ref.id }}" value="{{ ref.materia_prima or '' }}">
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-md-4">
-                                        <label class="form-label">Composição</label>
-                                        <input type="text" class="form-control" name="composicao_ref_{{ ref.id }}" value="{{ ref.composicao or '' }}">
+                                        <label for="composicao_ref_{{ ref.id }}" class="form-label">Composição</label>
+                                        <input type="text" id="composicao_ref_{{ ref.id }}" class="form-control" name="composicao_ref_{{ ref.id }}" value="{{ ref.composicao or '' }}">
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Gramatura</label>
-                                        <input type="text" class="form-control" name="gramatura_ref_{{ ref.id }}" value="{{ ref.gramatura or '' }}">
+                                        <label for="gramatura_ref_{{ ref.id }}" class="form-label">Gramatura</label>
+                                        <input type="text" id="gramatura_ref_{{ ref.id }}" class="form-control" name="gramatura_ref_{{ ref.id }}" value="{{ ref.gramatura or '' }}">
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Aviamentos</label>
-                                        <input type="text" class="form-control" name="aviamentos_ref_{{ ref.id }}" value="{{ ref.aviamentos or '' }}">
+                                        <label for="aviamentos_ref_{{ ref.id }}" class="form-label">Aviamentos</label>
+                                        <input type="text" id="aviamentos_ref_{{ ref.id }}" class="form-control" name="aviamentos_ref_{{ ref.id }}" value="{{ ref.aviamentos or '' }}">
                                     </div>
                                 </div>
                             </div>
@@ -345,13 +345,13 @@
                             <div class="card-body">
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Data de recebimento</label>
-                                        <input type="date" class="form-control" name="data_recebimento_{{ prova.id }}"
+                                        <label for="data_recebimento_{{ prova.id }}" class="form-label">Data de recebimento</label>
+                                        <input type="date" id="data_recebimento_{{ prova.id }}" class="form-control" name="data_recebimento_{{ prova.id }}"
                                             value="{{ prova.data_recebimento or '' }}">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Data da prova</label>
-                                        <input type="date" class="form-control" name="data_prova_{{ prova.id }}"
+                                        <label for="data_prova_{{ prova.id }}" class="form-label">Data da prova</label>
+                                        <input type="date" id="data_prova_{{ prova.id }}" class="form-control" name="data_prova_{{ prova.id }}"
                                             value="{{ prova.data_prova or '' }}">
                                     </div>
                                 </div>
@@ -385,8 +385,8 @@
                                             <div class="card-header bg-success text-white">Qualidade</div>
                                             <div class="card-body">
                                                 <div class="mb-2">
-                                                    <label class="form-label">Responsável</label>
-                                                    <input type="text" class="form-control" name="time_qualidade_{{ prova.id }}" value="{{ prova.time_qualidade or '' }}">
+                                                    <label for="time_qualidade_{{ prova.id }}" class="form-label">Responsável</label>
+                                                    <input type="text" id="time_qualidade_{{ prova.id }}" class="form-control" name="time_qualidade_{{ prova.id }}" value="{{ prova.time_qualidade or '' }}">
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label d-block">Itens de Avaliação</label>
@@ -429,8 +429,8 @@
                                             <div class="card-header bg-info text-white">Estilo</div>
                                             <div class="card-body">
                                                 <div class="mb-2">
-                                                    <label class="form-label">Responsável</label>
-                                                    <input type="text" class="form-control" name="time_estilo_{{ prova.id }}" value="{{ prova.time_estilo or '' }}">
+                                                    <label for="time_estilo_{{ prova.id }}" class="form-label">Responsável</label>
+                                                    <input type="text" id="time_estilo_{{ prova.id }}" class="form-control" name="time_estilo_{{ prova.id }}" value="{{ prova.time_estilo or '' }}">
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label d-block">Itens de Avaliação</label>
@@ -463,8 +463,8 @@
                                             <div class="card-header bg-warning">Modelagem</div>
                                             <div class="card-body">
                                                 <div class="mb-2">
-                                                    <label class="form-label">Responsável</label>
-                                                    <input type="text" class="form-control" name="time_modelagem_{{ prova.id }}" value="{{ prova.time_modelagem or '' }}">
+                                                    <label for="time_modelagem_{{ prova.id }}" class="form-label">Responsável</label>
+                                                    <input type="text" id="time_modelagem_{{ prova.id }}" class="form-control" name="time_modelagem_{{ prova.id }}" value="{{ prova.time_modelagem or '' }}">
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label d-block">Itens de Avaliação</label>
@@ -815,6 +815,19 @@
         ['baby', 'kids', 'teen', 'adulto'].forEach(setupReferenceListener);
         document.querySelectorAll('.size-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', handleSizeChange);
+        });
+
+        // Converter inputs de texto para MAIÚSCULO automaticamente
+        document.querySelectorAll('input[type="text"], textarea').forEach(input => {
+            // Verificar se não é um campo que não deve ser maiúsculo (como emails)
+            if (!input.classList.contains('no-uppercase')) {
+                input.addEventListener('input', function(e) {
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    this.value = this.value.toUpperCase();
+                    this.setSelectionRange(start, end);
+                });
+            }
         });
     });
 </script>

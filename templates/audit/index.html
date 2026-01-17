@@ -2,7 +2,12 @@
 
 {% block title %}Auditoria - Sistema{% endblock %}
 
-{% block content %}
+{% block styles %}
+<!-- Include table styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+{% endblock %}
+
+{% block main_content %}
 <div class="row mb-4">
     <div class="col-md-12">
         <h2 class="mb-3">
@@ -129,90 +134,158 @@
     </div>
 </div>
 
-<!-- Tabela de Logs -->
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Logs de Auditoria</h5>
+<!-- Modern Table Container -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Buscar logs de auditoria..." class="table-search-input">
+        </div>
+        <div class="table-actions">
+            <a href="{{ url_for('audit.exportar_csv', **request.args) }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
+            </a>
+        </div>
     </div>
-    <div class="card-body">
-        {% if logs.items %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Data/Hora</th>
-                        <th>Usuário</th>
-                        <th>Ação</th>
-                        <th>Categoria</th>
-                        <th>Descrição</th>
-                        <th>Severidade</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in logs.items %}
-                    <tr>
-                        <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
-                        <td>
-                            <a href="{{ url_for('audit.por_usuario', usuario_id=log.usuario_id) }}">
-                                {{ log.usuario_nome }}
-                            </a>
-                        </td>
-                        <td>
-                            <span class="badge bg-secondary">{{ get_acao_display(log.acao) }}</span>
-                        </td>
-                        <td>{{ get_categoria_display(log.categoria) }}</td>
-                        <td>{{ log.descricao[:100] }}{% if log.descricao|length > 100 %}...{% endif %}</td>
-                        <td>
-                            <span class="badge {{ get_severidade_badge(log.severidade) }}">
-                                {{ log.severidade }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('audit.detalhes', log_id=log.id) }}" class="btn btn-sm btn-outline-primary">
+
+    {% if logs.items %}
+    <div class="table-responsive">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th data-sortable="true" data-type="date">
+                        Data/Hora
+                        <span class="sort-icon">
+                            <i class="bi bi-chevron-expand"></i>
+                        </span>
+                    </th>
+                    <th data-sortable="true" data-type="string">
+                        Usuário
+                        <span class="sort-icon">
+                            <i class="bi bi-chevron-expand"></i>
+                        </span>
+                    </th>
+                    <th data-sortable="true" data-type="string">Ação</th>
+                    <th data-sortable="true" data-type="string">Categoria</th>
+                    <th data-sortable="true" data-type="string">Descrição</th>
+                    <th data-sortable="true" data-type="string">Severidade</th>
+                    <th class="actions-column">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs.items %}
+                <tr>
+                    <td data-label="Data/Hora" data-sort-value="{{ log.created_at.isoformat() }}">
+                        {{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                    </td>
+                    <td data-label="Usuário">
+                        <a href="{{ url_for('audit.por_usuario', usuario_id=log.usuario_id) }}" class="text-decoration-none">
+                            {{ log.usuario_nome }}
+                        </a>
+                    </td>
+                    <td data-label="Ação" data-sort-value="{{ log.acao }}">
+                        <span class="badge badge-secondary">{{ get_acao_display(log.acao) }}</span>
+                    </td>
+                    <td data-label="Categoria" data-sort-value="{{ log.categoria }}">
+                        {{ get_categoria_display(log.categoria) }}
+                    </td>
+                    <td data-label="Descrição" class="text-truncate" style="max-width: 300px;" title="{{ log.descricao }}">
+                        {{ log.descricao[:100] }}{% if log.descricao|length > 100 %}...{% endif %}
+                    </td>
+                    <td data-label="Severidade" data-sort-value="{{ log.severidade }}">
+                        <span class="badge {{ 'badge-error' if log.severidade == 'ALTA' else 'badge-warning' if log.severidade == 'MEDIA' else 'badge-info' }}">
+                            {{ log.severidade }}
+                        </span>
+                    </td>
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            <a href="{{ url_for('audit.detalhes', log_id=log.id) }}"
+                               class="btn-action"
+                               title="Ver detalhes">
                                 <i class="bi bi-eye"></i>
                             </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Paginação -->
-        {% if logs.pages > 1 %}
-        <nav>
-            <ul class="pagination justify-content-center">
-                {% if logs.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('audit.index', page=logs.prev_num, **request.args) }}">Anterior</a>
-                </li>
-                {% endif %}
-
-                {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-                    {% if page_num %}
-                        <li class="page-item {% if page_num == logs.page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('audit.index', page=page_num, **request.args) }}">{{ page_num }}</a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
-                    {% endif %}
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
-
-                {% if logs.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('audit.index', page=logs.next_num, **request.args) }}">Próximo</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-        {% else %}
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> Nenhum log encontrado.
-        </div>
-        {% endif %}
+            </tbody>
+        </table>
     </div>
+
+    <!-- Paginação Backend (mantida para compatibilidade) -->
+    {% if logs.pages > 1 %}
+    <div class="table-footer">
+        <div class="table-info">
+            Mostrando <strong>{{ ((logs.page - 1) * logs.per_page + 1) }}-{{ min(logs.page * logs.per_page, logs.total) }}</strong>
+            de <strong>{{ logs.total }}</strong> registros
+        </div>
+        <nav class="pagination-nav">
+            {% if logs.has_prev %}
+            <a href="{{ url_for('audit.index', page=logs.prev_num, **request.args) }}" class="btn-page">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            {% else %}
+            <button class="btn-page" disabled>
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            {% endif %}
+
+            {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                <a href="{{ url_for('audit.index', page=page_num, **request.args) }}"
+                   class="btn-page {{ 'active' if page_num == logs.page else '' }}">
+                    {{ page_num }}
+                </a>
+                {% else %}
+                <span class="pagination-ellipsis">...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if logs.has_next %}
+            <a href="{{ url_for('audit.index', page=logs.next_num, **request.args) }}" class="btn-page">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+            {% else %}
+            <button class="btn-page" disabled>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+            {% endif %}
+        </nav>
+        <select class="per-page-select" onchange="window.location.href='{{ url_for('audit.index', **request.args) }}?per_page=' + this.value">
+            <option value="20" {{ 'selected' if request.args.get('per_page', '20') == '20' else '' }}>20 por página</option>
+            <option value="50" {{ 'selected' if request.args.get('per_page') == '50' else '' }}>50 por página</option>
+            <option value="100" {{ 'selected' if request.args.get('per_page') == '100' else '' }}>100 por página</option>
+        </select>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="table-responsive">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Categoria</th>
+                    <th>Descrição</th>
+                    <th>Severidade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="table-empty">
+                        <div class="table-empty-icon">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                        <h3>Nenhum log encontrado</h3>
+                        <p>Não há registros de auditoria com os filtros aplicados</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Resumos Rápidos -->
@@ -254,4 +327,18 @@
         </div>
     </div>
 </div>
+{% endblock main_content %}
+
+{% block scripts %}
+<!-- Include DataTable script for client-side filtering only -->
+<script src="{{ url_for('static', filename='js/datatable.js') }}"></script>
+<script>
+// Disable pagination on DataTable (using backend pagination instead)
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.table-modern');
+    if (table && table.datatableInstance) {
+        table.datatableInstance.options.pagination = false;
+    }
+});
+</script>
 {% endblock %}

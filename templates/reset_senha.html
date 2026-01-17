@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Redefinir Senha - Prova de Modelagem{% endblock %}
+
+{% block login_content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-shield-lock-fill me-2"></i>
+                        Redefinir Senha
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Crie uma nova senha para sua conta.
+                    </p>
+
+                    <form method="POST" action="{{ url_for('auth.reset_senha', token=token) }}">
+                        <div class="mb-3">
+                            <label for="nova_senha" class="form-label">
+                                <i class="bi bi-shield-lock me-1"></i>
+                                Nova Senha
+                            </label>
+                            <input type="password"
+                                   class="form-control no-uppercase"
+                                   id="nova_senha"
+                                   name="nova_senha"
+                                   required
+                                   minlength="8"
+                                   autocomplete="new-password">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Requisitos de senha:</strong>
+                                <ul class="small mb-0 mt-1">
+                                    <li>Mínimo 8 caracteres</li>
+                                    <li>Pelo menos 1 letra maiúscula (A-Z)</li>
+                                    <li>Pelo menos 1 letra minúscula (a-z)</li>
+                                    <li>Pelo menos 1 número (0-9)</li>
+                                    <li>Pelo menos 1 caractere especial (@$!%*?&)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="confirmar_senha" class="form-label">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Confirmar Nova Senha
+                            </label>
+                            <input type="password"
+                                   class="form-control no-uppercase"
+                                   id="confirmar_senha"
+                                   name="confirmar_senha"
+                                   required
+                                   minlength="8"
+                                   autocomplete="new-password">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Redefinir Senha
+                            </button>
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Voltar ao Login
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Validar se as senhas coincidem antes de enviar
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const novaSenha = document.getElementById('nova_senha').value;
+        const confirmarSenha = document.getElementById('confirmar_senha').value;
+
+        if (novaSenha !== confirmarSenha) {
+            e.preventDefault();
+            alert('As senhas não coincidem!');
+            document.getElementById('confirmar_senha').focus();
+        }
+    });
+</script>
+{% endblock %}

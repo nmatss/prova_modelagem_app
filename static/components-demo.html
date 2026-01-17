@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca de Componentes - Demo</title>
+    <link rel="stylesheet" href="/static/css/components.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--gray-50);
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-8);
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: var(--space-12);
+            padding: var(--space-8) 0;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .demo-header h1 {
+            margin: 0 0 var(--space-4) 0;
+            font-size: var(--text-3xl);
+        }
+
+        .demo-header p {
+            margin: 0;
+            font-size: var(--text-lg);
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            margin-bottom: var(--space-8);
+            box-shadow: var(--shadow-md);
+        }
+
+        .demo-section-title {
+            margin: 0 0 var(--space-6) 0;
+            font-size: var(--text-2xl);
+            color: var(--gray-900);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: var(--space-3);
+        }
+
+        .demo-group {
+            margin-bottom: var(--space-6);
+        }
+
+        .demo-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .demo-group-title {
+            margin: 0 0 var(--space-4) 0;
+            font-size: var(--text-lg);
+            color: var(--gray-700);
+            font-weight: 600;
+        }
+
+        .demo-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            align-items: center;
+        }
+
+        .demo-code {
+            background: var(--gray-900);
+            color: #a9b7c6;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            font-family: 'Courier New', monospace;
+            font-size: var(--text-sm);
+            overflow-x: auto;
+            margin-top: var(--space-4);
+        }
+
+        .demo-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: var(--space-6) 0;
+        }
+
+        .color-swatch {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            background: var(--gray-50);
+        }
+
+        .color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toc {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-8);
+            box-shadow: var(--shadow-md);
+        }
+
+        .toc h2 {
+            margin: 0 0 var(--space-4) 0;
+            font-size: var(--text-xl);
+            color: var(--gray-900);
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc li {
+            margin-bottom: var(--space-2);
+        }
+
+        .toc a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition-fast);
+        }
+
+        .toc a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .demo-container {
+                padding: var(--space-4);
+            }
+
+            .demo-section {
+                padding: var(--space-4);
+            }
+
+            .demo-items {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Header -->
+        <div class="demo-header">
+            <h1>Biblioteca de Componentes</h1>
+            <p>Sistema de Design Reutilizável e Padronizado</p>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h2>Índice</h2>
+            <ul>
+                <li><a href="#buttons">1. Botões</a></li>
+                <li><a href="#forms">2. Formulários</a></li>
+                <li><a href="#cards">3. Cards</a></li>
+                <li><a href="#badges">4. Badges</a></li>
+                <li><a href="#alerts">5. Alertas e Toasts</a></li>
+                <li><a href="#loading">6. Estados de Carregamento</a></li>
+                <li><a href="#modals">7. Modais</a></li>
+                <li><a href="#dropdowns">8. Dropdowns</a></li>
+                <li><a href="#colors">9. Cores do Sistema</a></li>
+            </ul>
+        </div>
+
+        <!-- 1. BUTTONS -->
+        <div id="buttons" class="demo-section">
+            <h2 class="demo-section-title">1. Botões</h2>
+
+            <!-- Primary Buttons -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Botões Primários</h3>
+                <div class="demo-items">
+                    <button class="btn btn-primary">Primary</button>
+                    <button class="btn btn-secondary">Secondary</button>
+                    <button class="btn btn-success">Success</button>
+                    <button class="btn btn-error">Error</button>
+                    <button class="btn btn-warning">Warning</button>
+                    <button class="btn btn-info">Info</button>
+                </div>
+                <div class="demo-code">&lt;button class="btn btn-primary"&gt;Primary&lt;/button&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Outline Buttons -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Botões Outline</h3>
+                <div class="demo-items">
+                    <button class="btn btn-outline-primary">Outline Primary</button>
+                    <button class="btn btn-outline-secondary">Outline Secondary</button>
+                </div>
+                <div class="demo-code">&lt;button class="btn btn-outline-primary"&gt;Outline&lt;/button&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Button Sizes -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Tamanhos</h3>
+                <div class="demo-items">
+                    <button class="btn btn-primary btn-xs">Extra Small</button>
+                    <button class="btn btn-primary btn-sm">Small</button>
+                    <button class="btn btn-primary">Default</button>
+                    <button class="btn btn-primary btn-lg">Large</button>
+                    <button class="btn btn-primary btn-xl">Extra Large</button>
+                </div>
+                <div class="demo-code">&lt;button class="btn btn-primary btn-sm"&gt;Small&lt;/button&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Icon Buttons -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Botões com Ícone</h3>
+                <div class="demo-items">
+                    <button class="btn btn-primary btn-icon">+</button>
+                    <button class="btn btn-secondary btn-icon">×</button>
+                    <button class="btn btn-success btn-icon btn-sm">✓</button>
+                    <button class="btn btn-error btn-icon btn-lg">!</button>
+                </div>
+                <div class="demo-code">&lt;button class="btn btn-primary btn-icon"&gt;+&lt;/button&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- States -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Estados</h3>
+                <div class="demo-items">
+                    <button class="btn btn-primary">Normal</button>
+                    <button class="btn btn-primary" disabled>Disabled</button>
+                    <button class="btn btn-primary btn-loading">Loading</button>
+                </div>
+                <div class="demo-code">&lt;button class="btn btn-primary btn-loading"&gt;Loading&lt;/button&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Ghost Button -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Botão Ghost</h3>
+                <div class="demo-items">
+                    <button class="btn btn-ghost">Ghost Button</button>
+                </div>
+                <div class="demo-code">&lt;button class="btn btn-ghost"&gt;Ghost&lt;/button&gt;</div>
+            </div>
+        </div>
+
+        <!-- 2. FORMS -->
+        <div id="forms" class="demo-section">
+            <h2 class="demo-section-title">2. Formulários</h2>
+
+            <!-- Basic Input -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Input Básico</h3>
+                <div class="form-group">
+                    <label class="form-label">Nome</label>
+                    <input type="text" class="form-control" placeholder="Digite seu nome">
+                </div>
+                <div class="demo-code">&lt;input type="text" class="form-control" placeholder="..."&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Input States -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Estados do Input</h3>
+                <div class="form-group">
+                    <label class="form-label">Input Normal</label>
+                    <input type="text" class="form-control" placeholder="Normal" value="Texto normal">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Input Válido</label>
+                    <input type="text" class="form-control is-valid" value="Input válido">
+                    <div class="form-feedback form-feedback-success">Campo preenchido corretamente!</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Input Inválido</label>
+                    <input type="text" class="form-control is-invalid" value="Input inválido">
+                    <div class="form-feedback form-feedback-error">Este campo é obrigatório.</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Input Desabilitado</label>
+                    <input type="text" class="form-control" disabled value="Desabilitado">
+                </div>
+                <div class="demo-code">&lt;input class="form-control is-valid"&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Input Sizes -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Tamanhos</h3>
+                <div class="form-group">
+                    <input type="text" class="form-control form-control-sm" placeholder="Small">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Default">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-control form-control-lg" placeholder="Large">
+                </div>
+                <div class="demo-code">&lt;input class="form-control form-control-sm"&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Textarea -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Textarea</h3>
+                <div class="form-group">
+                    <label class="form-label">Mensagem</label>
+                    <textarea class="form-control" placeholder="Digite sua mensagem..." rows="4"></textarea>
+                </div>
+                <div class="demo-code">&lt;textarea class="form-control"&gt;&lt;/textarea&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Select -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Select</h3>
+                <div class="form-group">
+                    <label class="form-label">Selecione uma opção</label>
+                    <select class="form-control">
+                        <option>Opção 1</option>
+                        <option>Opção 2</option>
+                        <option>Opção 3</option>
+                    </select>
+                </div>
+                <div class="demo-code">&lt;select class="form-control"&gt;...&lt;/select&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Checkbox & Radio -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Checkbox e Radio</h3>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="check1" checked>
+                    <label class="form-check-label" for="check1">Checkbox selecionado</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="check2">
+                    <label class="form-check-label" for="check2">Checkbox não selecionado</label>
+                </div>
+                <div style="height: var(--space-4);"></div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" name="radio" id="radio1" checked>
+                    <label class="form-check-label" for="radio1">Radio selecionado</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" name="radio" id="radio2">
+                    <label class="form-check-label" for="radio2">Radio não selecionado</label>
+                </div>
+                <div class="demo-code">&lt;div class="form-check"&gt;
+  &lt;input type="checkbox" class="form-check-input"&gt;
+  &lt;label class="form-check-label"&gt;Label&lt;/label&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Switch -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Switch</h3>
+                <label class="form-switch">
+                    <input type="checkbox" class="form-switch-input" checked>
+                    <span class="form-switch-label">Ativar notificações</span>
+                </label>
+                <br><br>
+                <label class="form-switch">
+                    <input type="checkbox" class="form-switch-input">
+                    <span class="form-switch-label">Modo escuro</span>
+                </label>
+                <div class="demo-code">&lt;label class="form-switch"&gt;
+  &lt;input type="checkbox" class="form-switch-input"&gt;
+  &lt;span class="form-switch-label"&gt;Label&lt;/span&gt;
+&lt;/label&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Input Group -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Input Group</h3>
+                <div class="form-group">
+                    <label class="form-label">Preço</label>
+                    <div class="input-group">
+                        <span class="input-group-addon">R$</span>
+                        <input type="text" class="form-control" placeholder="0,00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Website</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="seusite">
+                        <span class="input-group-addon">.com.br</span>
+                    </div>
+                </div>
+                <div class="demo-code">&lt;div class="input-group"&gt;
+  &lt;span class="input-group-addon"&gt;@&lt;/span&gt;
+  &lt;input type="text" class="form-control"&gt;
+&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <!-- 3. CARDS -->
+        <div id="cards" class="demo-section">
+            <h2 class="demo-section-title">3. Cards</h2>
+
+            <!-- Basic Card -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Card Básico</h3>
+                <div class="card" style="max-width: 400px;">
+                    <h3 class="card-title">Título do Card</h3>
+                    <p class="card-subtitle">Subtítulo do card</p>
+                    <p class="card-text">Este é um card básico com conteúdo de exemplo. Cards são ótimos para agrupar informações relacionadas.</p>
+                    <button class="btn btn-primary">Ação</button>
+                </div>
+                <div class="demo-code">&lt;div class="card"&gt;
+  &lt;h3 class="card-title"&gt;Título&lt;/h3&gt;
+  &lt;p class="card-text"&gt;Conteúdo&lt;/p&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Card with Header/Footer -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Card com Header e Footer</h3>
+                <div class="card" style="max-width: 400px;">
+                    <div class="card-header">Header do Card</div>
+                    <div class="card-body">
+                        <h3 class="card-title">Título</h3>
+                        <p class="card-text">Conteúdo do card com header e footer.</p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-sm">Confirmar</button>
+                        <button class="btn btn-ghost btn-sm">Cancelar</button>
+                    </div>
+                </div>
+                <div class="demo-code">&lt;div class="card"&gt;
+  &lt;div class="card-header"&gt;Header&lt;/div&gt;
+  &lt;div class="card-body"&gt;...&lt;/div&gt;
+  &lt;div class="card-footer"&gt;...&lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Card Variants -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Variações</h3>
+                <div style="display: flex; gap: var(--space-4); flex-wrap: wrap;">
+                    <div class="card" style="flex: 1; min-width: 250px;">
+                        <h4 class="card-title">Card Normal</h4>
+                        <p class="card-text">Com sombra normal</p>
+                    </div>
+                    <div class="card card-flat" style="flex: 1; min-width: 250px;">
+                        <h4 class="card-title">Card Flat</h4>
+                        <p class="card-text">Sem hover effect</p>
+                    </div>
+                    <div class="card card-elevated" style="flex: 1; min-width: 250px;">
+                        <h4 class="card-title">Card Elevated</h4>
+                        <p class="card-text">Sombra elevada</p>
+                    </div>
+                </div>
+                <div class="demo-code">&lt;div class="card card-flat"&gt;...&lt;/div&gt;
+&lt;div class="card card-elevated"&gt;...&lt;/div&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Card Grid -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Grid de Cards</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <h4 class="card-title">Card 1</h4>
+                        <p class="card-text">Grid responsivo de cards</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="card-title">Card 2</h4>
+                        <p class="card-text">Adapta-se ao tamanho da tela</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="card-title">Card 3</h4>
+                        <p class="card-text">Mobile-friendly</p>
+                    </div>
+                </div>
+                <div class="demo-code">&lt;div class="card-grid"&gt;
+  &lt;div class="card"&gt;...&lt;/div&gt;
+  &lt;div class="card"&gt;...&lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <!-- 4. BADGES -->
+        <div id="badges" class="demo-section">
+            <h2 class="demo-section-title">4. Badges</h2>
+
+            <!-- Basic Badges -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Badges Básicos</h3>
+                <div class="demo-items">
+                    <span class="badge badge-primary">Primary</span>
+                    <span class="badge badge-secondary">Secondary</span>
+                    <span class="badge badge-success">Success</span>
+                    <span class="badge badge-error">Error</span>
+                    <span class="badge badge-warning">Warning</span>
+                    <span class="badge badge-info">Info</span>
+                    <span class="badge badge-gray">Gray</span>
+                </div>
+                <div class="demo-code">&lt;span class="badge badge-primary"&gt;Primary&lt;/span&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Solid Badges -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Badges Sólidos</h3>
+                <div class="demo-items">
+                    <span class="badge badge-solid-primary">Primary</span>
+                    <span class="badge badge-solid-secondary">Secondary</span>
+                    <span class="badge badge-solid-success">Success</span>
+                    <span class="badge badge-solid-error">Error</span>
+                    <span class="badge badge-solid-warning">Warning</span>
+                    <span class="badge badge-solid-info">Info</span>
+                </div>
+                <div class="demo-code">&lt;span class="badge badge-solid-success"&gt;Success&lt;/span&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Badge Sizes -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Tamanhos</h3>
+                <div class="demo-items">
+                    <span class="badge badge-primary badge-sm">Small</span>
+                    <span class="badge badge-primary">Default</span>
+                    <span class="badge badge-primary badge-lg">Large</span>
+                </div>
+                <div class="demo-code">&lt;span class="badge badge-primary badge-lg"&gt;Large&lt;/span&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Badge with Dot -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Badge com Ponto</h3>
+                <div class="demo-items">
+                    <span class="badge badge-success badge-dot">Online</span>
+                    <span class="badge badge-error badge-dot">Offline</span>
+                    <span class="badge badge-warning badge-dot">Pendente</span>
+                </div>
+                <div class="demo-code">&lt;span class="badge badge-success badge-dot"&gt;Online&lt;/span&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Pill Badge -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Pill Badges</h3>
+                <div class="demo-items">
+                    <span class="badge badge-primary badge-pill">Nova</span>
+                    <span class="badge badge-success badge-pill">Aprovada</span>
+                    <span class="badge badge-error badge-pill">Reprovada</span>
+                </div>
+                <div class="demo-code">&lt;span class="badge badge-primary badge-pill"&gt;Nova&lt;/span&gt;</div>
+            </div>
+        </div>
+
+        <!-- 5. ALERTS & TOASTS -->
+        <div id="alerts" class="demo-section">
+            <h2 class="demo-section-title">5. Alertas e Toasts</h2>
+
+            <!-- Alerts -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Alertas</h3>
+
+                <div class="alert alert-success">
+                    <div class="alert-icon">✓</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Sucesso!</div>
+                        <div class="alert-message">Sua operação foi concluída com sucesso.</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-error">
+                    <div class="alert-icon">✕</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Erro</div>
+                        <div class="alert-message">Ocorreu um erro ao processar sua solicitação.</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <div class="alert-icon">⚠</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Atenção</div>
+                        <div class="alert-message">Esta ação não pode ser desfeita.</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <div class="alert-icon">ℹ</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Informação</div>
+                        <div class="alert-message">Esta é uma mensagem informativa.</div>
+                    </div>
+                </div>
+
+                <div class="demo-code">&lt;div class="alert alert-success"&gt;
+  &lt;div class="alert-icon"&gt;✓&lt;/div&gt;
+  &lt;div class="alert-content"&gt;
+    &lt;div class="alert-title"&gt;Sucesso!&lt;/div&gt;
+    &lt;div class="alert-message"&gt;Mensagem...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Toast Demo -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Toast Notifications</h3>
+                <button class="btn btn-primary" onclick="showToast()">Mostrar Toast</button>
+                <div class="demo-code">&lt;div class="toast toast-success"&gt;
+  &lt;div class="toast-icon"&gt;✓&lt;/div&gt;
+  &lt;div class="toast-content"&gt;
+    &lt;div class="toast-title"&gt;Sucesso&lt;/div&gt;
+    &lt;div class="toast-message"&gt;Mensagem...&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;button class="toast-close"&gt;✕&lt;/button&gt;
+&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <!-- 6. LOADING STATES -->
+        <div id="loading" class="demo-section">
+            <h2 class="demo-section-title">6. Estados de Carregamento</h2>
+
+            <!-- Spinners -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Spinners</h3>
+                <div class="demo-items">
+                    <div class="spinner spinner-sm"></div>
+                    <div class="spinner"></div>
+                    <div class="spinner spinner-lg"></div>
+                    <div class="spinner spinner-xl"></div>
+                </div>
+                <div class="demo-code">&lt;div class="spinner"&gt;&lt;/div&gt;
+&lt;div class="spinner spinner-lg"&gt;&lt;/div&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Spinner Colors -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Cores dos Spinners</h3>
+                <div class="demo-items">
+                    <div class="spinner spinner-primary"></div>
+                    <div class="spinner spinner-secondary"></div>
+                    <div class="spinner spinner-success"></div>
+                </div>
+                <div class="demo-code">&lt;div class="spinner spinner-success"&gt;&lt;/div&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Skeleton Loaders -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Skeleton Loaders</h3>
+                <div style="max-width: 400px;">
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                    <br>
+                    <div class="skeleton skeleton-button"></div>
+                </div>
+                <div class="demo-code">&lt;div class="skeleton skeleton-title"&gt;&lt;/div&gt;
+&lt;div class="skeleton skeleton-text"&gt;&lt;/div&gt;</div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <!-- Progress Bar -->
+            <div class="demo-group">
+                <h3 class="demo-group-title">Barra de Progresso</h3>
+                <div style="max-width: 500px;">
+                    <div class="progress">
+                        <div class="progress-bar" style="width: 35%;"></div>
+                    </div>
+                    <br>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: 65%;"></div>
+                    </div>
+                    <br>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="demo-code">&lt;div class="progress"&gt;
+  &lt;div class="progress-bar" style="width: 65%;"&gt;&lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <!-- 7. MODALS -->
+        <div id="modals" class="demo-section">
+            <h2 class="demo-section-title">7. Modais</h2>
+
+            <div class="demo-group">
+                <h3 class="demo-group-title">Modal Básico</h3>
+                <button class="btn btn-primary" onclick="toggleModal()">Abrir Modal</button>
+                <div class="demo-code">&lt;div class="modal-backdrop"&gt;
+  &lt;div class="modal"&gt;
+    &lt;div class="modal-header"&gt;
+      &lt;h3 class="modal-title"&gt;Título&lt;/h3&gt;
+      &lt;button class="modal-close"&gt;✕&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="modal-body"&gt;...&lt;/div&gt;
+    &lt;div class="modal-footer"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <!-- 8. DROPDOWNS -->
+        <div id="dropdowns" class="demo-section">
+            <h2 class="demo-section-title">8. Dropdowns</h2>
+
+            <div class="demo-group">
+                <h3 class="demo-group-title">Dropdown Básico</h3>
+                <div class="dropdown">
+                    <button class="btn btn-primary" onclick="toggleDropdown()">Menu ▼</button>
+                    <div class="dropdown-menu" id="demoDropdown">
+                        <div class="dropdown-header">Ações</div>
+                        <a href="#" class="dropdown-item">Editar</a>
+                        <a href="#" class="dropdown-item">Duplicar</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item dropdown-item-danger">Excluir</a>
+                    </div>
+                </div>
+                <div class="demo-code">&lt;div class="dropdown"&gt;
+  &lt;button class="btn btn-primary"&gt;Menu&lt;/button&gt;
+  &lt;div class="dropdown-menu"&gt;
+    &lt;a class="dropdown-item"&gt;Ação 1&lt;/a&gt;
+    &lt;div class="dropdown-divider"&gt;&lt;/div&gt;
+    &lt;a class="dropdown-item"&gt;Ação 2&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <!-- 9. COLORS -->
+        <div id="colors" class="demo-section">
+            <h2 class="demo-section-title">9. Cores do Sistema</h2>
+
+            <div class="demo-group">
+                <h3 class="demo-group-title">Cores Principais</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-4);">
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--primary);"></div>
+                        <div>
+                            <div style="font-weight: 600;">Primary</div>
+                            <div style="font-size: var(--text-xs); color: var(--gray-600);">--primary</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--secondary);"></div>
+                        <div>
+                            <div style="font-weight: 600;">Secondary</div>
+                            <div style="font-size: var(--text-xs); color: var(--gray-600);">--secondary</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--success);"></div>
+                        <div>
+                            <div style="font-weight: 600;">Success</div>
+                            <div style="font-size: var(--text-xs); color: var(--gray-600);">--success</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--error);"></div>
+                        <div>
+                            <div style="font-weight: 600;">Error</div>
+                            <div style="font-size: var(--text-xs); color: var(--gray-600);">--error</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--warning);"></div>
+                        <div>
+                            <div style="font-weight: 600;">Warning</div>
+                            <div style="font-size: var(--text-xs); color: var(--gray-600);">--warning</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--info);"></div>
+                        <div>
+                            <div style="font-weight: 600;">Info</div>
+                            <div style="font-size: var(--text-xs); color: var(--gray-600);">--info</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-divider"></div>
+
+            <div class="demo-group">
+                <h3 class="demo-group-title">Escala de Cinza</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3);">
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-50);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-50</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-100);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-100</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-200);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-200</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-300);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-300</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-400);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-400</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-500);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-500</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-600);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-600</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-700);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-700</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-800);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-800</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-box" style="background: var(--gray-900);"></div>
+                        <div>
+                            <div style="font-size: var(--text-sm);">gray-900</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Modal for Demo -->
+    <div id="demoModal" class="modal-backdrop" style="display: none;" onclick="if(event.target === this) toggleModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">Título do Modal</h3>
+                <button class="modal-close" onclick="toggleModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>Este é um exemplo de modal. Você pode colocar qualquer conteúdo aqui.</p>
+                <div class="form-group">
+                    <label class="form-label">Nome</label>
+                    <input type="text" class="form-control" placeholder="Digite seu nome">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" placeholder="seu@email.com">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="toggleModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="toggleModal()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container for Demo -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Modal Toggle
+        function toggleModal() {
+            const modal = document.getElementById('demoModal');
+            modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        // Dropdown Toggle
+        function toggleDropdown() {
+            const dropdown = document.getElementById('demoDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('demoDropdown');
+            if (!event.target.closest('.dropdown')) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Toast Notification
+        function showToast() {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastTypes = ['success', 'error', 'warning', 'info'];
+            const toastType = toastTypes[Math.floor(Math.random() * toastTypes.length)];
+
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+
+            const titles = {
+                success: 'Sucesso!',
+                error: 'Erro',
+                warning: 'Atenção',
+                info: 'Informação'
+            };
+
+            const messages = {
+                success: 'Operação concluída com sucesso.',
+                error: 'Ocorreu um erro ao processar.',
+                warning: 'Verifique os dados inseridos.',
+                info: 'Esta é uma notificação informativa.'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${toastType}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[toastType]}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${titles[toastType]}</div>
+                    <div class="toast-message">${messages[toastType]}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -21,6 +21,8 @@ class Usuario(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     ultimo_acesso = db.Column(db.DateTime)
     senha_temporaria = db.Column(db.Boolean, default=False)  # Indica se precisa trocar senha
+    reset_token = db.Column(db.String(100))  # Token para reset de senha
+    reset_token_expires = db.Column(db.DateTime)  # Expiração do token
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
 
@@ -41,6 +43,8 @@ class Relatorio(db.Model):
     temporada = db.Column(db.String(50))  # Verão 2025, Inverno 2024
     ano = db.Column(db.Integer)
     ppt_path = db.Column(db.String(500))
+    imagem_produto = db.Column(db.String(500))  # Imagem do produto
+    ficha_tecnica = db.Column(db.String(500))  # Ficha técnica do produto
     status_geral = db.Column(db.String(50), default='Em Andamento')
     is_active = db.Column(db.Boolean, default=True)
     created_by = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
@@ -149,10 +153,34 @@ class FotoProva(db.Model):
     tamanho = db.Column(db.String(50))  # Para amostra/prova_modelo
     file_path = db.Column(db.String(500), nullable=False)
 
-# Classes removidas (não existem no banco de dados real):
-# - HistoricoStatus
-# - ConfiguracaoSistema
-# - AuditLog
+# =============================================================================
+# SISTEMA DE AUDITORIA
+# =============================================================================
+
+class AuditLog(db.Model):
+    """
+    Tabela de auditoria para rastreamento de ações no sistema
+    Registra todas as ações importantes realizadas pelos usuários
+    """
+    __tablename__ = 'audit_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, index=True)
+    usuario_nome = db.Column(db.String(255))  # Nome do usuário (cache para performance)
+    acao = db.Column(db.String(50), nullable=False, index=True)  # criar, editar, excluir, login, etc
+    entidade_tipo = db.Column(db.String(50))  # relatorio, prova, referencia, usuario, etc
+    entidade_id = db.Column(db.Integer)  # ID da entidade afetada
+    entidade_descricao = db.Column(db.String(500))  # Descrição da entidade (para histórico)
+    detalhes = db.Column(db.Text)  # JSON com detalhes adicionais da ação
+    ip_address = db.Column(db.String(50))  # IP do usuário
+    user_agent = db.Column(db.String(500))  # Navegador/dispositivo
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    # Relacionamento
+    usuario = db.relationship('Usuario', backref='audit_logs', lazy=True)
+
+    def __repr__(self):
+        return f'<AuditLog {self.usuario_nome} {self.acao} {self.entidade_tipo}#{self.entidade_id}>'
 
 
 # Manter compatibilidade com código antigo (aliases)

@@ -1,0 +1,287 @@
+<!-- ========================================
+     ANALYTICS CHARTS TEMPLATE
+     Gráficos interativos usando Chart.js
+     ======================================== -->
+
+<!-- Gráficos Principais -->
+<div class="row g-4 mb-4">
+    <!-- Gráfico: Distribuição por Status (Doughnut) -->
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5>
+                    <i class="bi bi-pie-chart-fill"></i>
+                    Distribuição por Status
+                </h5>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="ChartConfig.destroyChart('statusChart'); loadStatusChart();" title="Recarregar">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container" id="statusChartContainer">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico: Top Fornecedores (Bar Horizontal) -->
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5>
+                    <i class="bi bi-building"></i>
+                    Top 10 Fornecedores
+                </h5>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="ChartConfig.destroyChart('suppliersChart'); loadSuppliersChart();" title="Recarregar">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container" id="suppliersChartContainer">
+                <canvas id="suppliersChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico: Timeline (Area Chart) -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5>
+                    <i class="bi bi-graph-up"></i>
+                    Relatórios por Mês (Últimos 12 Meses)
+                </h5>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="ChartConfig.destroyChart('timelineChart'); loadTimelineChart();" title="Recarregar">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container" id="timelineChartContainer">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos Secundários -->
+<div class="row g-4 mb-4">
+    <!-- Gráfico: Distribuição por Categoria (Bar Vertical) -->
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5>
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                    Referências por Categoria
+                </h5>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="ChartConfig.destroyChart('categoryChart'); loadCategoryChart();" title="Recarregar">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container-sm" id="categoryChartContainer">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico Misto: Performance (Bar + Line) -->
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5>
+                    <i class="bi bi-speedometer2"></i>
+                    Performance (Últimos 6 Meses)
+                </h5>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="ChartConfig.destroyChart('mixedChart'); loadMixedChart();" title="Recarregar">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container-sm" id="mixedChartContainer">
+                <canvas id="mixedChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script de Inicialização dos Gráficos -->
+<script>
+// ========================================
+// CARREGAMENTO DOS GRÁFICOS
+// ========================================
+
+// Variáveis globais para armazenar instâncias dos gráficos
+let chartsInstances = {};
+
+/**
+ * Carrega dados da API
+ */
+async function loadChartData() {
+    try {
+        const response = await fetch('/api/analytics/charts');
+        const result = await response.json();
+
+        if (result.success) {
+            return result.data;
+        } else {
+            throw new Error(result.error || 'Erro ao carregar dados');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar dados dos gráficos:', error);
+        throw error;
+    }
+}
+
+/**
+ * Carrega gráfico de status
+ */
+async function loadStatusChart() {
+    const container = document.getElementById('statusChartContainer');
+    if (!container) return;
+
+    // Mostrar loader padronizado
+    showSpinner(container, 'lg', 'primary', 'Carregando gráfico...');
+
+    try {
+        const data = await loadChartData();
+        container.innerHTML = '<canvas id="statusChart"></canvas>';
+
+        // Criar gráfico
+        chartsInstances.statusChart = ChartConfig.createStatusChart(
+            'statusChart',
+            data.statusChart,
+            'doughnut'
+        );
+    } catch (error) {
+        ChartConfig.showChartError('statusChartContainer', 'Erro ao carregar gráfico de status');
+    }
+}
+
+/**
+ * Carrega gráfico de fornecedores
+ */
+async function loadSuppliersChart() {
+    const container = document.getElementById('suppliersChartContainer');
+    if (!container) return;
+
+    showSpinner(container, 'lg', 'primary', 'Carregando gráfico...');
+
+    try {
+        const data = await loadChartData();
+        container.innerHTML = '<canvas id="suppliersChart"></canvas>';
+
+        chartsInstances.suppliersChart = ChartConfig.createSuppliersChart(
+            'suppliersChart',
+            data.suppliersChart
+        );
+    } catch (error) {
+        ChartConfig.showChartError('suppliersChartContainer', 'Erro ao carregar gráfico de fornecedores');
+    }
+}
+
+/**
+ * Carrega gráfico de timeline
+ */
+async function loadTimelineChart() {
+    const container = document.getElementById('timelineChartContainer');
+    if (!container) return;
+
+    showSpinner(container, 'lg', 'primary', 'Carregando gráfico...');
+
+    try {
+        const data = await loadChartData();
+        container.innerHTML = '<canvas id="timelineChart"></canvas>';
+
+        chartsInstances.timelineChart = ChartConfig.createTimelineChart(
+            'timelineChart',
+            data.timelineChart
+        );
+    } catch (error) {
+        ChartConfig.showChartError('timelineChartContainer', 'Erro ao carregar gráfico de timeline');
+    }
+}
+
+/**
+ * Carrega gráfico de categorias
+ */
+async function loadCategoryChart() {
+    const container = document.getElementById('categoryChartContainer');
+    if (!container) return;
+
+    showSpinner(container, 'lg', 'primary', 'Carregando gráfico...');
+
+    try {
+        const data = await loadChartData();
+        container.innerHTML = '<canvas id="categoryChart"></canvas>';
+
+        chartsInstances.categoryChart = ChartConfig.createCategoryChart(
+            'categoryChart',
+            data.categoryChart
+        );
+    } catch (error) {
+        ChartConfig.showChartError('categoryChartContainer', 'Erro ao carregar gráfico de categorias');
+    }
+}
+
+/**
+ * Carrega gráfico misto
+ */
+async function loadMixedChart() {
+    const container = document.getElementById('mixedChartContainer');
+    if (!container) return;
+
+    showSpinner(container, 'lg', 'primary', 'Carregando gráfico...');
+
+    try {
+        const data = await loadChartData();
+        container.innerHTML = '<canvas id="mixedChart"></canvas>';
+
+        chartsInstances.mixedChart = ChartConfig.createMixedChart(
+            'mixedChart',
+            data.mixedChart
+        );
+    } catch (error) {
+        ChartConfig.showChartError('mixedChartContainer', 'Erro ao carregar gráfico de performance');
+    }
+}
+
+/**
+ * Inicializa todos os gráficos
+ */
+async function initializeCharts() {
+    console.log('Inicializando gráficos...');
+
+    await Promise.all([
+        loadStatusChart(),
+        loadSuppliersChart(),
+        loadTimelineChart(),
+        loadCategoryChart(),
+        loadMixedChart()
+    ]);
+
+    console.log('Gráficos carregados com sucesso!');
+}
+
+// Inicializar quando o documento estiver pronto
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCharts);
+} else {
+    initializeCharts();
+}
+
+// Recarregar gráficos quando os filtros mudarem (opcional)
+const filterForm = document.getElementById('filterForm');
+if (filterForm) {
+    filterForm.addEventListener('submit', function() {
+        // Os gráficos serão recarregados quando a página recarregar
+        console.log('Filtros alterados, recarregando página...');
+    });
+}
+</script>

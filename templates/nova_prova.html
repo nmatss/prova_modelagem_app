@@ -119,7 +119,7 @@
 </style>
 {% endblock %}
 
-{% block content %}
+{% block main_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Adicionar {{ novo_numero_prova }}ª Prova</h1>
     <a href="{{ url_for('detalhes_relatorio', id=referencia.relatorio_id) }}"
@@ -136,22 +136,22 @@
             <input type="hidden" name="numero_prova" value="{{ novo_numero_prova }}">
 
             <div class="mb-3">
-                <label class="form-label">Desenho do produto</label>
-                <input type="file" class="form-control" name="fotos_desenho_{{ referencia.tipo_categoria }}" multiple>
+                <label for="fotos_desenho_{{ referencia.tipo_categoria }}" class="form-label">Desenho do produto</label>
+                <input type="file" id="fotos_desenho_{{ referencia.tipo_categoria }}" class="form-control" name="fotos_desenho_{{ referencia.tipo_categoria }}" multiple>
             </div>
             <div class="mb-3">
-                <label class="form-label">Tabela de Medidas</label>
-                <input type="file" class="form-control" name="tabela_medidas_{{ referencia.tipo_categoria }}">
+                <label for="tabela_medidas_{{ referencia.tipo_categoria }}" class="form-label">Tabela de Medidas</label>
+                <input type="file" id="tabela_medidas_{{ referencia.tipo_categoria }}" class="form-control" name="tabela_medidas_{{ referencia.tipo_categoria }}">
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label class="form-label">Data de recebimento da amostra</label>
-                    <input type="date" class="form-control" name="data_recebimento_{{ referencia.tipo_categoria }}">
+                    <label for="data_recebimento_{{ referencia.tipo_categoria }}" class="form-label">Data de recebimento da amostra</label>
+                    <input type="date" id="data_recebimento_{{ referencia.tipo_categoria }}" class="form-control" name="data_recebimento_{{ referencia.tipo_categoria }}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Data da prova</label>
-                    <input type="date" class="form-control" name="data_prova_{{ referencia.tipo_categoria }}">
+                    <label for="data_prova_{{ referencia.tipo_categoria }}" class="form-label">Data da prova</label>
+                    <input type="date" id="data_prova_{{ referencia.tipo_categoria }}" class="form-control" name="data_prova_{{ referencia.tipo_categoria }}">
                 </div>
             </div>
 
@@ -169,8 +169,8 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Informações de medidas das amostras</label>
-                <textarea class="form-control" name="info_medidas_{{ referencia.tipo_categoria }}" rows="3"></textarea>
+                <label for="info_medidas_{{ referencia.tipo_categoria }}" class="form-label">Informações de medidas das amostras</label>
+                <textarea id="info_medidas_{{ referencia.tipo_categoria }}" class="form-control" name="info_medidas_{{ referencia.tipo_categoria }}" rows="3"></textarea>
             </div>
 
             <div class="mb-3">
@@ -306,17 +306,17 @@
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label class="form-label">Data de liberação - peça lacre</label>
-                    <input type="date" class="form-control" name="data_lacre_{{ referencia.tipo_categoria }}">
+                    <label for="data_lacre_{{ referencia.tipo_categoria }}" class="form-label">Data de liberação - peça lacre</label>
+                    <input type="date" id="data_lacre_{{ referencia.tipo_categoria }}" class="form-control" name="data_lacre_{{ referencia.tipo_categoria }}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Número do lacre</label>
-                    <input type="text" class="form-control" name="numero_lacre_{{ referencia.tipo_categoria }}">
+                    <label for="numero_lacre_{{ referencia.tipo_categoria }}" class="form-label">Número do lacre</label>
+                    <input type="text" id="numero_lacre_{{ referencia.tipo_categoria }}" class="form-control" name="numero_lacre_{{ referencia.tipo_categoria }}">
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label">Informações adicionais</label>
-                <textarea class="form-control" name="info_adicionais_{{ referencia.tipo_categoria }}" rows="2"></textarea>
+                <label for="info_adicionais_{{ referencia.tipo_categoria }}" class="form-label">Informações adicionais</label>
+                <textarea id="info_adicionais_{{ referencia.tipo_categoria }}" class="form-control" name="info_adicionais_{{ referencia.tipo_categoria }}" rows="2"></textarea>
             </div>
 
             <div class="d-grid gap-2 mt-4">
@@ -388,6 +388,19 @@
 
         document.querySelectorAll('.size-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', handleSizeChange);
+        });
+
+        // Converter inputs de texto para MAIÚSCULO automaticamente
+        document.querySelectorAll('input[type="text"], textarea').forEach(input => {
+            // Verificar se não é um campo que não deve ser maiúsculo (como emails)
+            if (!input.classList.contains('no-uppercase')) {
+                input.addEventListener('input', function(e) {
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    this.value = this.value.toUpperCase();
+                    this.setSelectionRange(start, end);
+                });
+            }
         });
     });
 </script>

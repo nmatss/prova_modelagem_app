@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Exemplo de Tabela Moderna{% endblock %}
+
+{% block styles %}
+<!-- Include table styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid py-4">
+    <h1 class="mb-4">
+        <i class="bi bi-table text-primary me-2"></i>
+        Exemplo de Tabela Moderna
+    </h1>
+
+    <!-- EXAMPLE 1: Basic Modern Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Buscar na tabela..." class="table-search-input">
+            </div>
+            <div class="table-actions">
+                <button class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus"></i> Novo
+                </button>
+                <button class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-download"></i> Exportar
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-modern">
+                <thead>
+                    <tr>
+                        <th data-sortable="true" data-type="number">
+                            ID
+                            <span class="sort-icon">
+                                <i class="bi bi-chevron-expand"></i>
+                            </span>
+                        </th>
+                        <th data-sortable="true" data-type="string">
+                            Nome
+                            <span class="sort-icon">
+                                <i class="bi bi-chevron-expand"></i>
+                            </span>
+                        </th>
+                        <th data-sortable="true" data-type="string">
+                            Email
+                            <span class="sort-icon">
+                                <i class="bi bi-chevron-expand"></i>
+                            </span>
+                        </th>
+                        <th data-sortable="true" data-type="date">
+                            Data Criação
+                            <span class="sort-icon">
+                                <i class="bi bi-chevron-expand"></i>
+                            </span>
+                        </th>
+                        <th data-sortable="true" data-type="string">Status</th>
+                        <th class="actions-column">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-label="ID">1</td>
+                        <td data-label="Nome">João Silva</td>
+                        <td data-label="Email">joao@example.com</td>
+                        <td data-label="Data" data-sort-value="2025-01-10">10/01/2025</td>
+                        <td data-label="Status">
+                            <span class="badge badge-success">Ativo</span>
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <button class="btn-action" title="Visualizar">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn-action" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-action btn-action-danger" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td data-label="ID">2</td>
+                        <td data-label="Nome">Maria Santos</td>
+                        <td data-label="Email">maria@example.com</td>
+                        <td data-label="Data" data-sort-value="2025-01-15">15/01/2025</td>
+                        <td data-label="Status">
+                            <span class="badge badge-success">Ativo</span>
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <button class="btn-action" title="Visualizar">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn-action" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-action btn-action-danger" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td data-label="ID">3</td>
+                        <td data-label="Nome">Pedro Oliveira</td>
+                        <td data-label="Email">pedro@example.com</td>
+                        <td data-label="Data" data-sort-value="2025-01-12">12/01/2025</td>
+                        <td data-label="Status">
+                            <span class="badge badge-warning">Pendente</span>
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <button class="btn-action" title="Visualizar">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn-action" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-action btn-action-danger" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <div class="table-info">
+                Mostrando <strong>1-3</strong> de <strong>3</strong> registros
+            </div>
+            <nav class="pagination-nav">
+                <button class="btn-page" disabled>
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="btn-page active">1</button>
+                <button class="btn-page">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </nav>
+            <select class="per-page-select">
+                <option value="10">10 por página</option>
+                <option value="20" selected>20 por página</option>
+                <option value="50">50 por página</option>
+                <option value="100">100 por página</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Documentation -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                Como Usar
+            </h5>
+        </div>
+        <div class="card-body">
+            <h6>1. Incluir CSS e JS</h6>
+            <pre><code>&lt;link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}"&gt;
+&lt;script src="{{ url_for('static', filename='js/datatable.js') }}"&gt;&lt;/script&gt;</code></pre>
+
+            <h6 class="mt-4">2. Estrutura HTML Básica</h6>
+            <pre><code>&lt;div class="table-container"&gt;
+  &lt;div class="table-header"&gt;
+    &lt;div class="table-search"&gt;
+      &lt;i class="bi bi-search"&gt;&lt;/i&gt;
+      &lt;input type="text" class="table-search-input" placeholder="Buscar..."&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="table-responsive"&gt;
+    &lt;table class="table-modern"&gt;
+      &lt;thead&gt;
+        &lt;tr&gt;
+          &lt;th data-sortable="true" data-type="string"&gt;Coluna&lt;/th&gt;
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;
+          &lt;td data-label="Coluna"&gt;Valor&lt;/td&gt;
+        &lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/div&gt;
+
+  &lt;div class="table-footer"&gt;
+    &lt;div class="table-info"&gt;&lt;/div&gt;
+    &lt;nav class="pagination-nav"&gt;&lt;/nav&gt;
+    &lt;select class="per-page-select"&gt;&lt;/select&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+            <h6 class="mt-4">3. Atributos de Colunas</h6>
+            <ul>
+                <li><code>data-sortable="true"</code> - Habilita ordenação na coluna</li>
+                <li><code>data-type="string|number|date"</code> - Define tipo de dados para ordenação correta</li>
+                <li><code>data-sort-value</code> - Valor customizado para ordenação (opcional)</li>
+                <li><code>data-label</code> - Label para modo mobile (obrigatório para responsividade)</li>
+            </ul>
+
+            <h6 class="mt-4">4. Inicialização Manual (Opcional)</h6>
+            <pre><code>const table = document.querySelector('.table-modern');
+const dt = new DataTable(table, {
+  sortable: true,
+  searchable: true,
+  perPage: 20,
+  pagination: true
+});</code></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Include DataTable script -->
+<script src="{{ url_for('static', filename='js/datatable.js') }}"></script>
+{% endblock %}

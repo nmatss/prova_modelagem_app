@@ -1,0 +1,2005 @@
+{% extends "base.html" %}
+
+{% block title %}Painel - Prova de Modelagem{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active"><i class="bi bi-house-door-fill me-1"></i>Dashboard</li>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Clean Professional Dashboard */
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Compact Header - Reduzido */
+    .dashboard-header {
+        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%);
+        border-radius: 12px;
+        padding: 18px 24px;
+        margin-bottom: 20px;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .dashboard-header-content h1 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0 0 3px 0;
+    }
+
+    .dashboard-header-content p {
+        font-size: 0.825rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .btn-new-report {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-new-report:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    /* Compact Stats Grid - Otimizado 2x2 em médio */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 12px 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+        max-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    .stat-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .stat-icon.blue { background: #eff6ff; color: #3b82f6; }
+    .stat-icon.pink { background: #fdf2f8; color: #ec4899; }
+    .stat-icon.green { background: #ecfdf5; color: #10b981; }
+    .stat-icon.orange { background: #fffbeb; color: #f59e0b; }
+
+    .stat-trend {
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .stat-trend.up { background: #ecfdf5; color: #059669; }
+    .stat-trend.down { background: #fef2f2; color: #dc2626; }
+    .stat-trend.neutral { background: #f3f4f6; color: #6b7280; }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1;
+        margin-bottom: 3px;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-detail {
+        font-size: 0.65rem;
+        color: #9ca3af;
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid #f3f4f6;
+        display: none; /* Ocultar em telas pequenas para compactar */
+    }
+
+    @media (min-width: 1200px) {
+        .stat-detail {
+            display: block;
+        }
+    }
+
+    /* Mini Sparkline SVG para KPIs */
+    .stat-sparkline {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 80px;
+        height: 30px;
+        opacity: 0.15;
+        pointer-events: none;
+    }
+
+    /* Search Bar */
+    .search-section {
+        margin-bottom: 20px;
+    }
+
+    .search-wrapper {
+        position: relative;
+        max-width: 400px;
+    }
+
+    .search-wrapper i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 0.875rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 12px 10px 36px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        background: white;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #ec4899;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+    }
+
+    /* Premium Collapsible Filters with Multi-Select - Otimizado */
+    .filters-section-premium {
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 18px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .filters-section-premium:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .filters-header-premium {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 18px;
+        background: linear-gradient(135deg, #fafafa 0%, #f9fafb 100%);
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .filters-toggle-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .filters-toggle-btn:hover {
+        border-color: #ec4899;
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+    }
+
+    .filters-toggle-btn i.bi-funnel-fill {
+        color: #ec4899;
+        font-size: 1rem;
+    }
+
+    .filters-toggle-text {
+        flex: 1;
+    }
+
+    .filters-chevron {
+        color: #9ca3af;
+        transition: transform 0.3s;
+        font-size: 0.875rem;
+    }
+
+    .filters-toggle-btn.active .filters-chevron {
+        transform: rotate(180deg);
+    }
+
+    .filters-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 8px;
+        background: linear-gradient(135deg, #ec4899, #8b5cf6);
+        color: white;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        animation: badgePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes badgePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+    }
+
+    .clear-filters-btn-premium {
+        margin-left: 12px;
+        padding: 10px 16px;
+        background: white;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .clear-filters-btn-premium:hover {
+        background: #fef2f2;
+        border-color: #dc2626;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+    }
+
+    .filters-body-premium {
+        padding: 20px;
+        display: none;
+        animation: filterExpand 0.3s ease-out;
+        background: white;
+    }
+
+    @keyframes filterExpand {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .filter-group-premium {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .filter-group-premium:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .filter-group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .filter-label-premium {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-label-premium i {
+        color: #ec4899;
+        font-size: 0.9rem;
+    }
+
+    .clear-category-btn {
+        padding: 4px 10px;
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .clear-category-btn:hover {
+        background: #dc2626;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .filter-pills-premium {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .filter-pill-premium {
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .filter-pill-premium input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .filter-pill-premium .pill-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: #f9fafb;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .filter-pill-premium:hover .pill-content {
+        background: #fdf2f8;
+        border-color: #f9a8d4;
+        color: #ec4899;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+    }
+
+    .filter-pill-premium input:checked + .pill-content {
+        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%);
+        color: white;
+        border-color: transparent;
+        font-weight: 600;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(236, 72, 153, 0.3);
+    }
+
+    .filter-pill-premium input:checked + .pill-content i {
+        color: white !important;
+    }
+
+    .filter-pill-premium .pill-content i {
+        font-size: 0.8rem;
+        transition: transform 0.2s;
+    }
+
+    .filter-pill-premium input:checked + .pill-content i {
+        transform: scale(1.1);
+    }
+
+    @media (max-width: 768px) {
+        .filters-header-premium {
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .clear-filters-btn-premium {
+            margin-left: 0;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .filters-body-premium {
+            padding: 16px;
+        }
+
+        .filter-pills-premium {
+            gap: 6px;
+        }
+
+        .filter-pill-premium .pill-content {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+
+        .filter-group-premium {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .filters-toggle-btn {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+        }
+
+        .filter-pills-premium {
+            gap: 6px;
+        }
+
+        .filter-pill-premium .pill-content {
+            font-size: 0.75rem;
+            padding: 6px 10px;
+        }
+
+        .filter-label-premium {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Reports Section */
+    .reports-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .reports-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fafafa;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+    }
+
+    .section-title i {
+        color: #ec4899;
+    }
+
+    .reports-count {
+        background: #fdf2f8;
+        color: #be185d;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .view-toggle {
+        display: flex;
+        background: #f3f4f6;
+        border-radius: 6px;
+        padding: 2px;
+    }
+
+    .view-toggle-btn {
+        padding: 6px 10px;
+        border: none;
+        background: transparent;
+        color: #6b7280;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .view-toggle-btn.active {
+        background: white;
+        color: #ec4899;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Reports Grid - Otimizado para ocupar 80% viewport */
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 16px;
+        padding: 20px;
+        min-height: calc(80vh - 400px);
+        max-height: calc(80vh);
+        overflow-y: auto;
+        scroll-behavior: smooth;
+    }
+
+    /* Estilização da scrollbar */
+    .reports-grid::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .reports-grid::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 4px;
+    }
+
+    .reports-grid::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .reports-grid::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    @media (max-width: 768px) {
+        .reports-grid {
+            grid-template-columns: 1fr;
+            padding: 16px;
+            min-height: calc(70vh - 300px);
+        }
+    }
+
+    /* Loading Skeleton para performance percebida */
+    @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+
+    .skeleton-card {
+        background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 20%, #f3f4f6 40%, #f3f4f6 100%);
+        background-size: 1000px 100%;
+        animation: shimmer 2s infinite linear;
+        border-radius: 10px;
+        height: 380px;
+    }
+
+    .skeleton-loading {
+        display: none; /* Será ativado via JS quando necessário */
+    }
+
+    .report-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 16px;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .report-card:hover {
+        border-color: #ec4899;
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+    }
+
+    .report-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, #ec4899, #8b5cf6);
+        border-radius: 10px 0 0 10px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .report-card:hover::before {
+        opacity: 1;
+    }
+
+    .report-image {
+        margin-bottom: 12px;
+        overflow: hidden;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+    }
+
+    .report-image:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
+    }
+
+    .report-image img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s;
+    }
+
+    .report-image:hover img {
+        transform: scale(1.05);
+    }
+
+    .report-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .report-code {
+        background: linear-gradient(135deg, #ec4899, #8b5cf6);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .report-status {
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .status-approved { background: #ecfdf5; color: #059669; }
+    .status-rejected { background: #fef2f2; color: #dc2626; }
+    .status-progress { background: #fffbeb; color: #d97706; }
+    .status-other { background: #f3f4f6; color: #6b7280; }
+
+    .report-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 10px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .report-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .meta-item i {
+        color: #9ca3af;
+        font-size: 0.75rem;
+        width: 14px;
+    }
+
+    .report-actions {
+        display: flex;
+        gap: 8px;
+        padding-top: 12px;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    .btn-view {
+        flex: 1;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #ec4899, #8b5cf6);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .btn-view:hover {
+        opacity: 0.9;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-export {
+        padding: 8px 12px;
+        background: #f3f4f6;
+        color: #6b7280;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.2s;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-export:hover {
+        background: #fdf2f8;
+        color: #ec4899;
+    }
+
+    .btn-export i,
+    .btn-delete-report i {
+        pointer-events: none;
+    }
+
+    .btn-delete-report:hover {
+        background: #fef2f2 !important;
+        color: #dc2626 !important;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        background: #fdf2f8;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .empty-icon i {
+        font-size: 2rem;
+        color: #ec4899;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 20px;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .empty-state .btn-new-report {
+        background: linear-gradient(135deg, #ec4899, #8b5cf6);
+        border: none;
+        padding: 10px 20px;
+    }
+
+    /* No Results */
+    .no-results {
+        display: none;
+        text-align: center;
+        padding: 40px 20px;
+        background: #fdf2f8;
+        border-radius: 8px;
+        margin: 20px;
+    }
+
+    .no-results i {
+        font-size: 2rem;
+        color: #ec4899;
+        opacity: 0.5;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    /* Responsive adjustments - Otimizado */
+    @media (max-width: 768px) {
+        .dashboard-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 16px;
+        }
+
+        .dashboard-header-content h1 {
+            font-size: 1.2rem;
+        }
+
+        .btn-new-report {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .reports-header {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .report-actions {
+            flex-direction: column;
+        }
+
+        .btn-view, .btn-export {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* KPIs compactos em mobile */
+        .stat-card {
+            max-height: 90px;
+            padding: 10px 12px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+        }
+    }
+
+    /* Smooth transitions globais */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="dashboard-container">
+    <!-- Compact Header -->
+    <div class="dashboard-header">
+        <div class="dashboard-header-content">
+            <h1>Controle de Provas de Modelagem</h1>
+            <p>Gerencie relatórios e provas de forma centralizada</p>
+        </div>
+        <a href="{{ url_for('novo_relatorio') }}" class="btn-new-report">
+            <i class="bi bi-plus-lg"></i>
+            Novo Relatório
+        </a>
+    </div>
+
+    <!-- Compact Statistics - Otimizado com Sparklines -->
+    {% if stats %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon blue">
+                    <i class="bi bi-folder-fill"></i>
+                </div>
+                {% if stats.relatorios_recentes > 0 %}
+                <span class="stat-trend up">+{{ stats.relatorios_recentes }}</span>
+                {% endif %}
+            </div>
+            <div class="stat-value">{{ stats.total_relatorios }}</div>
+            <div class="stat-label">Relatórios</div>
+            <div class="stat-detail">{{ stats.relatorios_recentes }} nos últimos 30 dias</div>
+            <svg class="stat-sparkline" viewBox="0 0 80 30" preserveAspectRatio="none">
+                <polyline points="0,25 20,20 40,15 60,18 80,10"
+                          fill="none" stroke="#3b82f6" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon pink">
+                    <i class="bi bi-tag-fill"></i>
+                </div>
+                <span class="stat-trend neutral">{{ stats.categorias|length }} cats</span>
+            </div>
+            <div class="stat-value">{{ stats.total_referencias }}</div>
+            <div class="stat-label">Referências</div>
+            <div class="stat-detail">Distribuídas em {{ stats.categorias|length }} categorias</div>
+            <svg class="stat-sparkline" viewBox="0 0 80 30" preserveAspectRatio="none">
+                <polyline points="0,20 20,15 40,18 60,12 80,14"
+                          fill="none" stroke="#ec4899" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon green">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                {% if stats.taxa_aprovacao >= 70 %}
+                <span class="stat-trend up">Excelente</span>
+                {% elif stats.taxa_aprovacao > 0 %}
+                <span class="stat-trend neutral">Regular</span>
+                {% else %}
+                <span class="stat-trend down">Sem dados</span>
+                {% endif %}
+            </div>
+            <div class="stat-value">{{ stats.taxa_aprovacao }}%</div>
+            <div class="stat-label">Aprovação</div>
+            <div class="stat-detail">{{ stats.provas_aprovadas }}/{{ stats.total_provas }} provas aprovadas</div>
+            <svg class="stat-sparkline" viewBox="0 0 80 30" preserveAspectRatio="none">
+                <polyline points="0,22 20,18 40,14 60,12 80,8"
+                          fill="none" stroke="#10b981" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon orange">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+                {% if stats.taxa_retrabalho == 0 %}
+                <span class="stat-trend up">Ótimo</span>
+                {% elif stats.taxa_retrabalho < 30 %}
+                <span class="stat-trend neutral">Atenção</span>
+                {% else %}
+                <span class="stat-trend down">Alto</span>
+                {% endif %}
+            </div>
+            <div class="stat-value">{{ stats.taxa_retrabalho }}%</div>
+            <div class="stat-label">Retrabalho</div>
+            <div class="stat-detail">Meta: abaixo de 30%</div>
+            <svg class="stat-sparkline" viewBox="0 0 80 30" preserveAspectRatio="none">
+                <polyline points="0,15 20,18 40,16 60,20 80,17"
+                          fill="none" stroke="#f59e0b" stroke-width="2"/>
+            </svg>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Premium Collapsible Filters Section with Multi-Select -->
+    <div class="filters-section-premium">
+        <div class="filters-header-premium">
+            <button type="button" id="toggleFilters" class="filters-toggle-btn">
+                <i class="bi bi-funnel-fill"></i>
+                <span class="filters-toggle-text">Filtros Avançados</span>
+                <span id="filtersActiveIndicatorPremium" class="filters-badge" style="display: none;">
+                    <span id="filtersActiveCountPremium">0</span>
+                </span>
+                <i class="bi bi-chevron-down filters-chevron"></i>
+            </button>
+            <button type="button" id="clearAllFiltersPremium" class="clear-filters-btn-premium" style="display: none;">
+                <i class="bi bi-x-circle-fill"></i>
+                Limpar Todos
+            </button>
+        </div>
+
+        <div class="filters-body-premium" id="filtersBody" style="display: none;">
+            <!-- Status Filter -->
+            <div class="filter-group-premium">
+                <div class="filter-group-header">
+                    <span class="filter-label-premium">
+                        <i class="bi bi-circle-fill"></i>
+                        Status
+                    </span>
+                    <button type="button" class="clear-category-btn" data-category="status" style="display: none;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="filter-pills-premium" data-category="status">
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="status" data-value="Novo">
+                        <span class="pill-content">
+                            <i class="bi bi-circle-fill" style="color: #6b7280;"></i>
+                            Novo
+                        </span>
+                    </label>
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="status" data-value="Aprovada">
+                        <span class="pill-content">
+                            <i class="bi bi-check-circle-fill" style="color: #10b981;"></i>
+                            Aprovada
+                        </span>
+                    </label>
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="status" data-value="Reprovada">
+                        <span class="pill-content">
+                            <i class="bi bi-x-circle-fill" style="color: #ef4444;"></i>
+                            Reprovada
+                        </span>
+                    </label>
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="status" data-value="Em Andamento">
+                        <span class="pill-content">
+                            <i class="bi bi-clock-fill" style="color: #f59e0b;"></i>
+                            Em Andamento
+                        </span>
+                    </label>
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="status" data-value="Comitê">
+                        <span class="pill-content">
+                            <i class="bi bi-people-fill" style="color: #06b6d4;"></i>
+                            Comitê
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            {% if relatorios %}
+            <!-- Collection Filter -->
+            <div class="filter-group-premium">
+                <div class="filter-group-header">
+                    <span class="filter-label-premium">
+                        <i class="bi bi-collection-fill"></i>
+                        Coleção
+                    </span>
+                    <button type="button" class="clear-category-btn" data-category="colecao" style="display: none;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="filter-pills-premium" data-category="colecao">
+                    {% set colecoes = [] %}
+                    {% for relatorio in relatorios %}
+                        {% if relatorio.colecao and relatorio.colecao not in colecoes %}
+                            {% if colecoes.append(relatorio.colecao) %}{% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for colecao in colecoes|sort %}
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="colecao" data-value="{{ colecao }}">
+                        <span class="pill-content">
+                            <i class="bi bi-tag-fill"></i>
+                            {{ colecao }}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Season Filter -->
+            <div class="filter-group-premium">
+                <div class="filter-group-header">
+                    <span class="filter-label-premium">
+                        <i class="bi bi-calendar-range-fill"></i>
+                        Temporada
+                    </span>
+                    <button type="button" class="clear-category-btn" data-category="temporada" style="display: none;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="filter-pills-premium" data-category="temporada">
+                    {% set temporadas = [] %}
+                    {% for relatorio in relatorios %}
+                        {% if relatorio.temporada and relatorio.temporada not in temporadas %}
+                            {% if temporadas.append(relatorio.temporada) %}{% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for temporada in temporadas|sort %}
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="temporada" data-value="{{ temporada }}">
+                        <span class="pill-content">
+                            <i class="bi bi-sun-fill"></i>
+                            {{ temporada }}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Year Filter -->
+            <div class="filter-group-premium">
+                <div class="filter-group-header">
+                    <span class="filter-label-premium">
+                        <i class="bi bi-calendar-fill"></i>
+                        Ano
+                    </span>
+                    <button type="button" class="clear-category-btn" data-category="ano" style="display: none;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="filter-pills-premium" data-category="ano">
+                    {% set anos = [] %}
+                    {% for relatorio in relatorios %}
+                        {% if relatorio.ano and relatorio.ano not in anos %}
+                            {% if anos.append(relatorio.ano) %}{% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for ano in anos|sort|reverse %}
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="ano" data-value="{{ ano }}">
+                        <span class="pill-content">
+                            <i class="bi bi-calendar2-check-fill"></i>
+                            {{ ano }}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Image Filter (NEW) -->
+            <div class="filter-group-premium">
+                <div class="filter-group-header">
+                    <span class="filter-label-premium">
+                        <i class="bi bi-image-fill"></i>
+                        Imagem do Produto
+                    </span>
+                    <button type="button" class="clear-category-btn" data-category="has-image" style="display: none;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="filter-pills-premium" data-category="has-image">
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="has-image" data-value="true">
+                        <span class="pill-content">
+                            <i class="bi bi-check-circle-fill" style="color: #10b981;"></i>
+                            Com Imagem
+                        </span>
+                    </label>
+                    <label class="filter-pill-premium">
+                        <input type="checkbox" data-filter="has-image" data-value="false">
+                        <span class="pill-content">
+                            <i class="bi bi-dash-circle-fill" style="color: #6b7280;"></i>
+                            Sem Imagem
+                        </span>
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- Reports Section -->
+    <div class="reports-section">
+        <div class="reports-header">
+            <h2 class="section-title">
+                <i class="bi bi-file-text-fill"></i>
+                Relatórios
+            </h2>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                {% if relatorios %}
+                <a href="{{ url_for('exportar_relatorios_excel') }}" class="btn btn-sm btn-outline-success" title="Exportar todos para Excel">
+                    <i class="bi bi-file-earmark-excel"></i> Exportar
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importExcelModal" title="Importar relatórios do Excel">
+                    <i class="bi bi-file-earmark-arrow-up"></i> Importar
+                </button>
+                {% if relatorios %}
+                <span class="reports-count" id="reportsCount">{{ relatorios|length }} item{% if relatorios|length != 1 %}s{% endif %}</span>
+                {% endif %}
+                <div class="view-toggle">
+                    <button class="view-toggle-btn active" data-view="grid">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                    </button>
+                    <button class="view-toggle-btn" data-view="list">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div style="padding: 12px 20px; border-bottom: 1px solid #e5e7eb;">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="searchInput" class="form-control border-start-0 no-uppercase"
+                       placeholder="Buscar por referência, descrição ou coleção..." style="box-shadow: none;">
+            </div>
+            <small class="text-muted d-block mt-1">
+                <i class="bi bi-info-circle me-1"></i>
+                Digite para filtrar relatórios em tempo real
+            </small>
+        </div>
+
+        {% if relatorios %}
+        <div class="reports-grid" id="reportsGrid">
+            {% for relatorio in relatorios %}
+            <div class="report-card"
+                 data-status="{{ relatorio.status_atual or 'Novo' }}"
+                 data-colecao="{{ relatorio.colecao or '' }}"
+                 data-temporada="{{ relatorio.temporada or '' }}"
+                 data-ano="{{ relatorio.ano|string if relatorio.ano else '' }}">
+                <div class="report-top">
+                    <span class="report-code">
+                        <i class="bi bi-hash"></i>{{ relatorio['codigo'] or 'S/C' }}
+                    </span>
+                    <span class="report-status status-{% if relatorio.status_atual == 'Aprovada' %}approved{% elif relatorio.status_atual == 'Reprovada' %}rejected{% elif relatorio.status_atual == 'Em Andamento' %}progress{% else %}other{% endif %}">
+                        <i class="bi bi-{% if relatorio.status_atual == 'Aprovada' %}check-circle{% elif relatorio.status_atual == 'Reprovada' %}x-circle{% elif relatorio.status_atual == 'Em Andamento' %}clock{% else %}circle{% endif %}"></i>
+                        {{ relatorio.status_atual }}
+                    </span>
+                </div>
+
+                {% if relatorio.get('imagem_produto') %}
+                <div class="report-image">
+                    <img src="{{ url_for('serve_upload', filename=relatorio['imagem_produto']) }}"
+                         alt="{{ relatorio['descricao_geral'] }}"
+                         loading="lazy">
+                </div>
+                {% endif %}
+
+                <h3 class="report-title">{{ relatorio['descricao_geral'] }}</h3>
+
+                <div class="report-meta">
+                    <div class="meta-item">
+                        <i class="bi bi-collection"></i>
+                        {{ relatorio['colecao'] or 'Sem coleção' }}
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-calendar3"></i>
+                        {{ relatorio['created_at'].strftime('%d/%m/%Y') if relatorio['created_at'] else 'N/A' }}
+                    </div>
+                    {% if relatorio['temporada'] %}
+                    <div class="meta-item">
+                        <i class="bi bi-calendar-range"></i>
+                        {{ relatorio['temporada'] }}{% if relatorio['ano'] %} {{ relatorio['ano'] }}{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="report-actions">
+                    <a href="{{ url_for('detalhes_relatorio', id=relatorio['id']) }}" class="btn-view">
+                        <i class="bi bi-eye"></i>
+                        Ver Detalhes
+                    </a>
+                    <a href="{{ url_for('relatorio_pdf', id=relatorio['id']) }}" class="btn-export" target="_blank" title="Exportar PDF">
+                        <i class="bi bi-file-pdf"></i>
+                    </a>
+                    <button type="button" class="btn-export btn-delete-report"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteModalDashboard"
+                            data-relatorio-id="{{ relatorio['id'] }}"
+                            data-relatorio-nome="{{ relatorio['descricao_geral'] }}"
+                            title="Excluir relatório">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="no-results" id="no-results">
+            <i class="bi bi-search"></i>
+            <strong>Nenhum resultado encontrado</strong><br>
+            <small>Tente usar termos diferentes</small>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="bi bi-inbox"></i>
+            </div>
+            <h3>Nenhum relatório encontrado</h3>
+            <p>Comece criando seu primeiro relatório de prova de modelagem.</p>
+            <a href="{{ url_for('novo_relatorio') }}" class="btn-new-report">
+                <i class="bi bi-plus-lg"></i>
+                Criar Relatório
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Importar Excel -->
+<div class="modal fade" id="importExcelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark-arrow-up me-2"></i>
+                    Importar Relatórios do Excel
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('importar_relatorios_excel') }}" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Formato do arquivo:</strong><br>
+                        O arquivo Excel deve conter as colunas: <code>Descrição</code>, <code>Coleção</code>, <code>Temporada</code>, <code>Ano</code>, <code>Status Geral</code>
+                    </div>
+                    <div class="mb-3">
+                        <label for="arquivo_excel" class="form-label">Selecione o arquivo Excel:</label>
+                        <input type="file" class="form-control" id="arquivo_excel" name="arquivo_excel" accept=".xlsx,.xls" required>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Formatos aceitos: .xlsx ou .xls
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload me-1"></i>
+                        Importar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Excluir Relatório Dashboard -->
+<div class="modal fade" id="deleteModalDashboard" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning border-0 mb-3">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p>Você está prestes a excluir o relatório:</p>
+                <p class="fw-bold text-center fs-5" id="deleteRelatorioNome"></p>
+                <p class="text-muted small">Isso irá excluir permanentemente todas as referências, provas e arquivos associados.</p>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteFormDashboard" method="POST" action="" style="display: flex; gap: 0.5rem; width: 100%; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Sim, Excluir
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // =====================================================
+    // GLOBAL STATE & ELEMENTS
+    // =====================================================
+    const reportsGrid = document.getElementById('reportsGrid');
+    const reportsCount = document.getElementById('reportsCount');
+    const noResults = document.getElementById('no-results');
+    const searchInput = document.getElementById('searchInput');
+    const viewBtns = document.querySelectorAll('.view-toggle-btn');
+
+    // Premium Multi-Select Filters
+    const filterCheckboxes = document.querySelectorAll('.filter-pill-premium input[type="checkbox"]');
+    const clearAllFiltersPremium = document.getElementById('clearAllFiltersPremium');
+    const clearCategoryBtns = document.querySelectorAll('.clear-category-btn');
+    const toggleFiltersBtn = document.getElementById('toggleFilters');
+    const filtersBody = document.getElementById('filtersBody');
+
+    // Active filters state - NOW SUPPORTS MULTIPLE VALUES PER CATEGORY
+    const activeFilters = {
+        status: [],
+        colecao: [],
+        temporada: [],
+        ano: [],
+        'has-image': []
+    };
+
+    // Search term state
+    let currentSearchTerm = '';
+
+    // Modal state - prevents filter updates during modal operations
+    let isModalOpen = false;
+
+    // =====================================================
+    // CORE FUNCTION: UPDATE DISPLAY
+    // =====================================================
+    function updateDisplay() {
+        if (!reportsGrid) return;
+
+        // Prevent display updates while modal is open to avoid conflicts
+        if (isModalOpen) {
+            console.log('updateDisplay blocked: modal is open');
+            return;
+        }
+
+        const reportCards = reportsGrid.querySelectorAll('.report-card');
+        let visibleCount = 0;
+
+        reportCards.forEach(card => {
+            let shouldShow = true;
+
+            // Get card data
+            const cardStatus = (card.getAttribute('data-status') || '').trim();
+            const cardColecao = (card.getAttribute('data-colecao') || '').trim();
+            const cardTemporada = (card.getAttribute('data-temporada') || '').trim();
+            const cardAno = (card.getAttribute('data-ano') || '').trim();
+
+            // Check if has image (NEW FILTER)
+            const hasImage = card.querySelector('.report-image') !== null;
+
+            // Apply MULTI-SELECT filters (if any active in category, card must match one)
+            if (activeFilters.status.length > 0) {
+                if (!activeFilters.status.includes(cardStatus)) {
+                    shouldShow = false;
+                }
+            }
+
+            if (activeFilters.colecao.length > 0) {
+                if (!activeFilters.colecao.includes(cardColecao)) {
+                    shouldShow = false;
+                }
+            }
+
+            if (activeFilters.temporada.length > 0) {
+                if (!activeFilters.temporada.includes(cardTemporada)) {
+                    shouldShow = false;
+                }
+            }
+
+            if (activeFilters.ano.length > 0) {
+                if (!activeFilters.ano.includes(cardAno)) {
+                    shouldShow = false;
+                }
+            }
+
+            // Apply has-image filter
+            if (activeFilters['has-image'].length > 0) {
+                const hasImageValue = hasImage ? 'true' : 'false';
+                if (!activeFilters['has-image'].includes(hasImageValue)) {
+                    shouldShow = false;
+                }
+            }
+
+            // Apply search term
+            if (shouldShow && currentSearchTerm) {
+                const cardText = card.textContent.toUpperCase();
+                if (!cardText.includes(currentSearchTerm)) {
+                    shouldShow = false;
+                }
+            }
+
+            // Show/hide card
+            card.style.display = shouldShow ? '' : 'none';
+            if (shouldShow) visibleCount++;
+        });
+
+        // Update counter
+        if (reportsCount) {
+            reportsCount.textContent = `${visibleCount} item${visibleCount !== 1 ? 's' : ''}`;
+        }
+
+        // Show/hide no results message
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        // Update clear filters button
+        updateClearButton();
+    }
+
+    // =====================================================
+    // PREMIUM COLLAPSIBLE FILTER SYSTEM WITH MULTI-SELECT
+    // =====================================================
+
+    // Toggle Filters Collapse/Expand
+    if (toggleFiltersBtn && filtersBody) {
+        toggleFiltersBtn.addEventListener('click', function() {
+            const isExpanded = filtersBody.style.display !== 'none';
+
+            if (isExpanded) {
+                // Collapse
+                filtersBody.style.display = 'none';
+                toggleFiltersBtn.classList.remove('active');
+            } else {
+                // Expand
+                filtersBody.style.display = 'block';
+                toggleFiltersBtn.classList.add('active');
+            }
+        });
+    }
+
+    // Multi-Select Checkbox Filters
+    filterCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const filterType = this.getAttribute('data-filter');
+            const filterValue = this.getAttribute('data-value');
+
+            console.log('Filter checkbox changed:', filterType, '=', filterValue, 'checked:', this.checked);
+
+            if (this.checked) {
+                // Add to active filters
+                if (!activeFilters[filterType].includes(filterValue)) {
+                    activeFilters[filterType].push(filterValue);
+                }
+            } else {
+                // Remove from active filters
+                const index = activeFilters[filterType].indexOf(filterValue);
+                if (index > -1) {
+                    activeFilters[filterType].splice(index, 1);
+                }
+            }
+
+            console.log('Active filters:', activeFilters);
+            updateClearButton();
+            updateDisplay();
+        });
+    });
+
+    // Clear all filters
+    if (clearAllFiltersPremium) {
+        clearAllFiltersPremium.addEventListener('click', function() {
+            // Uncheck all checkboxes
+            filterCheckboxes.forEach(cb => cb.checked = false);
+
+            // Reset state
+            Object.keys(activeFilters).forEach(key => activeFilters[key] = []);
+
+            console.log('All filters cleared');
+            updateClearButton();
+            updateDisplay();
+        });
+    }
+
+    // Clear individual category
+    clearCategoryBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+            console.log('Clearing category:', category);
+
+            // Uncheck all checkboxes in this category
+            const categoryCheckboxes = document.querySelectorAll(`input[data-filter="${category}"]`);
+            categoryCheckboxes.forEach(cb => cb.checked = false);
+
+            // Reset category state
+            activeFilters[category] = [];
+
+            updateClearButton();
+            updateDisplay();
+        });
+    });
+
+    function updateClearButton() {
+        // Count total active filters
+        let totalActive = 0;
+        Object.keys(activeFilters).forEach(key => {
+            totalActive += activeFilters[key].length;
+        });
+
+        const hasActiveFilters = totalActive > 0;
+
+        // Update "Clear All" button
+        if (clearAllFiltersPremium) {
+            if (hasActiveFilters) {
+                clearAllFiltersPremium.style.display = 'inline-flex';
+            } else {
+                clearAllFiltersPremium.style.display = 'none';
+            }
+        }
+
+        // Update badge indicator
+        const indicatorBadge = document.getElementById('filtersActiveIndicatorPremium');
+        const countSpan = document.getElementById('filtersActiveCountPremium');
+
+        if (indicatorBadge && countSpan) {
+            if (hasActiveFilters) {
+                indicatorBadge.style.display = 'inline-flex';
+                countSpan.textContent = totalActive;
+            } else {
+                indicatorBadge.style.display = 'none';
+            }
+        }
+
+        // Update individual category clear buttons
+        clearCategoryBtns.forEach(btn => {
+            const category = btn.getAttribute('data-category');
+            const categoryHasFilters = activeFilters[category] && activeFilters[category].length > 0;
+
+            if (categoryHasFilters) {
+                btn.style.display = 'inline-flex';
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+    }
+
+    // =====================================================
+    // SEARCH SYSTEM
+    // =====================================================
+    if (searchInput) {
+        // Verify we have exactly ONE search input to prevent conflicts
+        const allSearchInputs = document.querySelectorAll('#searchInput');
+        if (allSearchInputs.length > 1) {
+            console.error('ERROR: Multiple search inputs detected! This will cause conflicts.');
+        }
+
+        let searchTimer;
+
+        searchInput.addEventListener('input', function() {
+            // Don't update display while modal is open
+            if (isModalOpen) {
+                console.log('Search blocked: modal is open');
+                return;
+            }
+
+            clearTimeout(searchTimer);
+
+            searchTimer = setTimeout(() => {
+                currentSearchTerm = this.value.toUpperCase().trim();
+                console.log('Search term:', currentSearchTerm);
+                updateDisplay();
+            }, 200);
+        });
+    }
+
+    // =====================================================
+    // VIEW TOGGLE
+    // =====================================================
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            viewBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            if (reportsGrid) {
+                reportsGrid.style.gridTemplateColumns = this.dataset.view === 'list'
+                    ? '1fr'
+                    : 'repeat(auto-fill, minmax(320px, 1fr))';
+            }
+        });
+    });
+
+    // =====================================================
+    // KEYBOARD SHORTCUTS
+    // =====================================================
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + N = New Report
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            window.location.href = "{{ url_for('novo_relatorio') }}";
+        }
+
+        // / = Focus search
+        if (e.key === '/' && document.activeElement !== searchInput) {
+            e.preventDefault();
+            searchInput?.focus();
+        }
+    });
+
+    // =====================================================
+    // MODAL STATE MANAGEMENT - Prevent conflicts
+    // =====================================================
+    // Track when ANY modal opens/closes to prevent filter conflicts
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('show.bs.modal', function() {
+            isModalOpen = true;
+            console.log('Modal opened - filters disabled');
+        });
+
+        modal.addEventListener('hidden.bs.modal', function() {
+            isModalOpen = false;
+            console.log('Modal closed - filters enabled');
+        });
+    });
+
+    // =====================================================
+    // DELETE MODAL - Solução definitiva com AJAX e timeout
+    // =====================================================
+    const deleteModalEl = document.getElementById('deleteModalDashboard');
+    const deleteForm = document.getElementById('deleteFormDashboard');
+    let currentDeleteId = null;
+    let isDeleting = false;
+
+    if (deleteModalEl) {
+        // Quando o modal abre, captura os dados do relatório
+        deleteModalEl.addEventListener('show.bs.modal', function(event) {
+            // Stop event propagation to prevent filter conflicts
+            event.stopPropagation();
+
+            let btn = event.relatedTarget;
+
+            // Se o clique foi no ícone, busca o botão pai
+            if (btn && btn.tagName === 'I') {
+                btn = btn.closest('button');
+            }
+
+            if (btn) {
+                currentDeleteId = btn.getAttribute('data-relatorio-id');
+                const nome = btn.getAttribute('data-relatorio-nome');
+
+                document.getElementById('deleteRelatorioNome').textContent = nome || 'este relatório';
+
+                // Define o action do form como fallback
+                if (deleteForm && currentDeleteId) {
+                    deleteForm.action = '/relatorio/' + currentDeleteId + '/excluir';
+                }
+            }
+
+            // Reset estado
+            isDeleting = false;
+            resetDeleteButton();
+        });
+
+        // Intercepta o submit do form para usar AJAX
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (isDeleting) return; // Previne duplo clique
+                if (!currentDeleteId) {
+                    showDeleteError('Erro: ID do relatório não encontrado. Feche o modal e tente novamente.');
+                    return;
+                }
+
+                isDeleting = true;
+                const submitBtn = deleteForm.querySelector('button[type="submit"]');
+                const originalBtnHtml = submitBtn.innerHTML;
+
+                // Mostra spinner no botão
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Excluindo...';
+                submitBtn.disabled = true;
+
+                // Timeout de 30 segundos
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                }, 30000);
+
+                // Faz a requisição AJAX
+                fetch('/relatorio/' + currentDeleteId + '/excluir', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+
+                    if (response.redirected) {
+                        // Sucesso - redireciona para a URL de destino
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error('Erro ' + response.status + ': ' + response.statusText);
+                    }
+
+                    // Se não redirecionou mas deu OK, vai para o dashboard
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    isDeleting = false;
+
+                    // Restaura o botão
+                    submitBtn.innerHTML = originalBtnHtml;
+                    submitBtn.disabled = false;
+
+                    let errorMsg = 'Erro ao excluir o relatório.';
+
+                    if (error.name === 'AbortError') {
+                        errorMsg = 'A operação excedeu o tempo limite (30s). Verifique sua conexão e tente novamente.';
+                    } else if (error.message) {
+                        errorMsg = error.message;
+                    }
+
+                    showDeleteError(errorMsg);
+                });
+            });
+        }
+    }
+
+    function showDeleteError(message) {
+        // Remove erro anterior se existir
+        const existingError = deleteModalEl.querySelector('.delete-error-msg');
+        if (existingError) existingError.remove();
+
+        // Cria mensagem de erro
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'delete-error-msg alert alert-danger mt-3 mb-0';
+        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>' + message;
+
+        // Insere no modal body
+        const modalBody = deleteModalEl.querySelector('.modal-body');
+        if (modalBody) {
+            modalBody.appendChild(errorDiv);
+        }
+    }
+
+    function resetDeleteButton() {
+        if (deleteForm) {
+            const submitBtn = deleteForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-trash"></i> Sim, Excluir';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Remove erro anterior se existir
+        const existingError = deleteModalEl?.querySelector('.delete-error-msg');
+        if (existingError) existingError.remove();
+    }
+
+    // =====================================================
+    // SCROLL VIRTUAL & PERFORMANCE OPTIMIZATION
+    // =====================================================
+    // Implementa lazy loading de imagens e otimização de scroll
+    if (reportsGrid) {
+        const reportCards = reportsGrid.querySelectorAll('.report-card');
+
+        // Lazy loading de imagens usando Intersection Observer
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            observer.unobserve(img);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '50px'
+            });
+
+            // Observar todas as imagens
+            reportsGrid.querySelectorAll('.report-image img').forEach(img => {
+                if (img.src) {
+                    // Marcar para lazy load se necessário
+                    imageObserver.observe(img);
+                }
+            });
+        }
+
+        // Debounce scroll para melhor performance
+        let scrollTimeout;
+        reportsGrid.addEventListener('scroll', function() {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                console.log('Scroll position:', reportsGrid.scrollTop);
+            }, 150);
+        });
+    }
+
+    // =====================================================
+    // PERFORMANCE METRICS
+    // =====================================================
+    // Medir tempo de render inicial
+    if (performance && performance.now) {
+        const renderStart = performance.now();
+
+        window.addEventListener('load', function() {
+            const renderEnd = performance.now();
+            const renderTime = (renderEnd - renderStart).toFixed(2);
+            console.log(`%c⚡ Dashboard Render Time: ${renderTime}ms`, 'color: #10b981; font-weight: bold; font-size: 14px;');
+
+            // Performance metrics
+            if (reportsGrid) {
+                const totalCards = reportsGrid.querySelectorAll('.report-card').length;
+                const visibleCards = Array.from(reportsGrid.querySelectorAll('.report-card'))
+                    .filter(card => card.style.display !== 'none').length;
+
+                console.log('%c📊 Dashboard Performance Metrics', 'color: #ec4899; font-weight: bold; font-size: 14px;');
+                console.log(`Total Cards: ${totalCards}`);
+                console.log(`Visible Cards: ${visibleCards}`);
+                console.log(`Avg Render per Card: ${(renderTime / totalCards).toFixed(2)}ms`);
+
+                // Estimated performance category
+                let perfCategory = 'Excellent';
+                let perfColor = '#10b981';
+                if (renderTime > 1000) {
+                    perfCategory = 'Needs Optimization';
+                    perfColor = '#dc2626';
+                } else if (renderTime > 500) {
+                    perfCategory = 'Good';
+                    perfColor = '#f59e0b';
+                }
+
+                console.log(`%cPerformance Category: ${perfCategory}`, `color: ${perfColor}; font-weight: bold;`);
+            }
+        });
+    }
+
+    // =====================================================
+    // INITIAL SETUP & DEBUG
+    // =====================================================
+    // Initialize clear button state
+    updateClearButton();
+
+    // Debug info
+    if (reportsGrid) {
+        const totalCards = reportsGrid.querySelectorAll('.report-card').length;
+        console.log('=== DASHBOARD FILTER SYSTEM INITIALIZED ===');
+        console.log('Total report cards:', totalCards);
+        console.log('Filter checkboxes:', filterCheckboxes.length);
+        console.log('Search input:', searchInput ? 'Found' : 'Not found');
+
+        // Log data attributes for first card (debug)
+        const firstCard = reportsGrid.querySelector('.report-card');
+        if (firstCard) {
+            console.log('First card data:', {
+                status: firstCard.getAttribute('data-status'),
+                colecao: firstCard.getAttribute('data-colecao'),
+                temporada: firstCard.getAttribute('data-temporada'),
+                ano: firstCard.getAttribute('data-ano')
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
