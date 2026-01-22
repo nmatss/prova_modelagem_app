@@ -12,7 +12,7 @@ import string
 from audit_helpers import (log_criacao, log_atualizacao, log_exclusao,
                            log_reset_senha, log_mudanca_role,
                            AuditEntity, AuditAction)
-from auth import validar_senha
+from security import PasswordValidator
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -243,7 +243,7 @@ def set_password(user_id):
             return redirect(url_for('admin.users'))
 
         # Validar complexidade da senha
-        valido, mensagem = validar_senha(nova_senha)
+        valido, mensagem = PasswordValidator.validate_password_strength(nova_senha)
         if not valido:
             flash(mensagem, "error")
             return redirect(url_for('admin.users'))
@@ -374,7 +374,7 @@ def change_my_password():
                 return redirect(url_for('admin.change_my_password'))
 
             # Validar complexidade da senha
-            valido, mensagem = validar_senha(nova_senha)
+            valido, mensagem = PasswordValidator.validate_password_strength(nova_senha)
             if not valido:
                 flash(mensagem, "error")
                 return redirect(url_for('admin.change_my_password'))

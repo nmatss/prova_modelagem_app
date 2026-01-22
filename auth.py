@@ -63,3 +63,13 @@ def logout():
     log_logout(current_user)
     logout_user()
     return redirect(url_for('auth.login'))
+
+@auth_bp.route('/esqueci-senha', methods=['GET', 'POST'])
+def esqueci_senha():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        # Por enquanto apenas simula o envio
+        flash(f'Se o e-mail {email} estiver cadastrado, você receberá um link para redefinir sua senha.', 'info')
+        return redirect(url_for('auth.login'))
+        
+    return render_template('esqueci_senha.html')

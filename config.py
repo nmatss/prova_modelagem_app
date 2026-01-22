@@ -21,7 +21,9 @@ class Config:
     WTF_CSRF_TIME_LIMIT = None  # Token não expira (válido durante a sessão)
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///instance/provas.db'
+    # Database
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/provas.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_size': 10,
@@ -52,6 +54,8 @@ class Config:
         """Inicializa configurações no app Flask"""
         os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
         os.makedirs(Config.PDF_FOLDER, exist_ok=True)
+        # Ensure instance folder exists
+        os.makedirs(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance'), exist_ok=True)
 
         # Criar diretório de logs se necessário
         if Config.LOG_FILE:
@@ -63,7 +67,7 @@ class Config:
 class DevelopmentConfig(Config):
     """Configuração de desenvolvimento"""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///instance/provas.db'
+    # SQLALCHEMY_DATABASE_URI = 'sqlite:///instance/provas.db'
 
 
 class ProductionConfig(Config):
