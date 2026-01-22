@@ -69,21 +69,22 @@
                         <i class="bi bi-info-circle-fill"></i>
                         Informações Gerais
                     </h2>
-                    <p class="wizard-step-description">Preencha as informações básicas do produto e faça upload dos arquivos</p>
+                    <p class="wizard-step-description">Preencha as informações básicas do produto e faça upload dos
+                        arquivos</p>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="colecao" class="form-label">Coleção *</label>
-                        <input type="text" class="form-control" id="colecao" name="colecao"
-                               placeholder="Ex: Verão 26" value="{{ form_data.get('colecao', '') }}" required>
+                        <input type="text" class="form-control" id="colecao" name="colecao" placeholder="Ex: Verão 26"
+                            value="{{ form_data.get('colecao', '') }}" required>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label for="descricao_geral" class="form-label">Descrição Geral *</label>
                         <input type="text" class="form-control text-uppercase-input" id="descricao_geral"
-                               name="descricao_geral" placeholder="Ex: PIJAMA ML VISCO UNI DIAMANTE"
-                               value="{{ form_data.get('descricao_geral', '') }}" required>
+                            name="descricao_geral" placeholder="Ex: PIJAMA ML VISCO UNI DIAMANTE"
+                            value="{{ form_data.get('descricao_geral', '') }}" required>
                     </div>
                 </div>
 
@@ -93,7 +94,7 @@
                             <i class="bi bi-image"></i> Imagem do Produto
                         </label>
                         <input type="file" class="form-control" id="imagem_produto" name="imagem_produto"
-                               accept="image/*">
+                            accept="image/*">
                         <div class="form-text">
                             <i class="bi bi-info-circle me-1"></i>
                             JPG, PNG, GIF (máx. 16MB)
@@ -117,7 +118,7 @@
                         <i class="bi bi-file-earmark-text"></i> Ficha Técnica do Produto
                     </label>
                     <input type="file" class="form-control" id="ficha_tecnica" name="ficha_tecnica"
-                           accept=".pdf,.doc,.docx,.xlsx,.xls">
+                        accept=".pdf,.doc,.docx,.xlsx,.xls">
                     <div class="form-text">
                         <i class="bi bi-info-circle me-1"></i>
                         PDF, DOC, DOCX, XLS, XLSX (máx. 16MB)
@@ -214,25 +215,30 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Fornecedor</label>
-                                    <input type="text" class="form-control" name="fornecedor_{{ tipo }}" placeholder="Nome do fornecedor">
+                                    <input type="text" class="form-control" name="fornecedor_{{ tipo }}"
+                                        placeholder="Nome do fornecedor">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Matéria Prima</label>
-                                    <input type="text" class="form-control" name="materia_prima_{{ tipo }}" placeholder="Ex: Algodão">
+                                    <input type="text" class="form-control" name="materia_prima_{{ tipo }}"
+                                        placeholder="Ex: Algodão">
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Composição</label>
-                                    <input type="text" class="form-control" name="composicao_{{ tipo }}" placeholder="Ex: 100% Algodão">
+                                    <input type="text" class="form-control" name="composicao_{{ tipo }}"
+                                        placeholder="Ex: 100% Algodão">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Gramatura</label>
-                                    <input type="text" class="form-control" name="gramatura_{{ tipo }}" placeholder="Ex: 180g/m²">
+                                    <input type="text" class="form-control" name="gramatura_{{ tipo }}"
+                                        placeholder="Ex: 180g/m²">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Aviamentos</label>
-                                    <input type="text" class="form-control" name="aviamentos_{{ tipo }}" placeholder="Ex: Botões, zíper">
+                                    <input type="text" class="form-control" name="aviamentos_{{ tipo }}"
+                                        placeholder="Ex: Botões, zíper">
                                 </div>
                             </div>
                         </div>
@@ -285,19 +291,18 @@
                             <div class="mb-3 checkbox-group" data-type="{{ tipo }}">
                                 <label class="form-label d-block">Tamanhos recebidos das amostras</label>
                                 {% set tamanhos_disponiveis = {
-                                    'baby': ['3a6meses', '6a9meses', '9a12meses', 'UN'],
-                                    'kids': ['1', '2', '4', '6', '8', 'UN'],
-                                    'teen': ['10', '12', '14', 'UN'],
-                                    'adulto': ['PP', 'P', 'M', 'G', 'GG', 'UN']
+                                'baby': ['3a6meses', '6a9meses', '9a12meses', 'UN'],
+                                'kids': ['1', '2', '4', '6', '8', 'UN'],
+                                'teen': ['10', '12', '14', 'UN'],
+                                'adulto': ['PP', 'P', 'M', 'G', 'GG', 'UN']
                                 } %}
                                 <div class="btn-group" role="group">
                                     {% for tamanho in tamanhos_disponiveis[tipo] %}
                                     <input type="checkbox" class="btn-check size-checkbox"
-                                        id="btn_new_{{ tipo }}_{{ loop.index }}"
-                                        name="tamanhos_recebidos_{{ tipo }}" value="{{ tamanho }}"
-                                        autocomplete="off">
-                                    <label class="btn btn-outline-success"
-                                        for="btn_new_{{ tipo }}_{{ loop.index }}">{{ tamanho }}</label>
+                                        id="btn_new_{{ tipo }}_{{ loop.index }}" name="tamanhos_recebidos_{{ tipo }}"
+                                        value="{{ tamanho }}" autocomplete="off">
+                                    <label class="btn btn-outline-success" for="btn_new_{{ tipo }}_{{ loop.index }}">{{
+                                        tamanho }}</label>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -328,22 +333,40 @@
                                         <div class="card-body">
                                             <div class="mb-2">
                                                 <label class="form-label">Responsável</label>
-                                                <input type="text" class="form-control"
-                                                    name="time_qualidade_{{ tipo }}" placeholder="Nome do responsável">
+                                                <input type="text" class="form-control" name="time_qualidade_{{ tipo }}"
+                                                    placeholder="Nome do responsável">
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label d-block">Itens de Avaliação</label>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="SOLIDEZ" id="qual_solidez_{{ tipo }}"><label class="form-check-label" for="qual_solidez_{{ tipo }}">Solidez</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="PILLING" id="qual_pilling_{{ tipo }}"><label class="form-check-label" for="qual_pilling_{{ tipo }}">Pilling</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="AGUA_DO_MAR" id="qual_agua_mar_{{ tipo }}"><label class="form-check-label" for="qual_agua_mar_{{ tipo }}">Água do Mar</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="LAVAGEM_DOMESTICA" id="qual_lavagem_{{ tipo }}"><label class="form-check-label" for="qual_lavagem_{{ tipo }}">Lavagem Doméstica</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="DIMENSIONAL" id="qual_dimensional_{{ tipo }}"><label class="form-check-label" for="qual_dimensional_{{ tipo }}">Dimensional</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ tipo }}" value="GRAMATURA" id="qual_gramatura_{{ tipo }}"><label class="form-check-label" for="qual_gramatura_{{ tipo }}">Gramatura</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_qualidade_{{ tipo }}" value="SOLIDEZ"
+                                                        id="qual_solidez_{{ tipo }}"><label class="form-check-label"
+                                                        for="qual_solidez_{{ tipo }}">Solidez</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_qualidade_{{ tipo }}" value="PILLING"
+                                                        id="qual_pilling_{{ tipo }}"><label class="form-check-label"
+                                                        for="qual_pilling_{{ tipo }}">Pilling</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_qualidade_{{ tipo }}" value="AGUA_DO_MAR"
+                                                        id="qual_agua_mar_{{ tipo }}"><label class="form-check-label"
+                                                        for="qual_agua_mar_{{ tipo }}">Água do Mar</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_qualidade_{{ tipo }}" value="LAVAGEM_DOMESTICA"
+                                                        id="qual_lavagem_{{ tipo }}"><label class="form-check-label"
+                                                        for="qual_lavagem_{{ tipo }}">Lavagem Doméstica</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_qualidade_{{ tipo }}" value="DIMENSIONAL"
+                                                        id="qual_dimensional_{{ tipo }}"><label class="form-check-label"
+                                                        for="qual_dimensional_{{ tipo }}">Dimensional</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_qualidade_{{ tipo }}" value="GRAMATURA"
+                                                        id="qual_gramatura_{{ tipo }}"><label class="form-check-label"
+                                                        for="qual_gramatura_{{ tipo }}">Gramatura</label></div>
                                             </div>
                                             <div class="mb-2">
                                                 <label class="form-label">Comentários</label>
-                                                <textarea class="form-control"
-                                                    name="comentarios_qualidade_{{ tipo }}" rows="2"></textarea>
+                                                <textarea class="form-control" name="comentarios_qualidade_{{ tipo }}"
+                                                    rows="2"></textarea>
                                             </div>
                                             <div class="mb-2">
                                                 <label class="form-label">Anexar Arquivos</label>
@@ -361,15 +384,28 @@
                                         <div class="card-body">
                                             <div class="mb-2">
                                                 <label class="form-label">Responsável</label>
-                                                <input type="text" class="form-control"
-                                                    name="time_estilo_{{ tipo }}" placeholder="Nome do responsável">
+                                                <input type="text" class="form-control" name="time_estilo_{{ tipo }}"
+                                                    placeholder="Nome do responsável">
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label d-block">Itens de Avaliação</label>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTAR_FICHA_TECNICA" id="est_ficha_{{ tipo }}"><label class="form-check-label" for="est_ficha_{{ tipo }}">Ajustar Ficha Técnica</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_DESENHO" id="est_desenho_{{ tipo }}"><label class="form-check-label" for="est_desenho_{{ tipo }}">Ajuste de Desenho</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="AJUSTE_CORES" id="est_cores_{{ tipo }}"><label class="form-check-label" for="est_cores_{{ tipo }}">Ajuste de Cores</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ tipo }}" value="ORIENTACAO_FORNECEDOR" id="est_orientacao_{{ tipo }}"><label class="form-check-label" for="est_orientacao_{{ tipo }}">Orientação para Fornecedor</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_estilo_{{ tipo }}" value="AJUSTAR_FICHA_TECNICA"
+                                                        id="est_ficha_{{ tipo }}"><label class="form-check-label"
+                                                        for="est_ficha_{{ tipo }}">Ajustar Ficha Técnica</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_estilo_{{ tipo }}" value="AJUSTE_DESENHO"
+                                                        id="est_desenho_{{ tipo }}"><label class="form-check-label"
+                                                        for="est_desenho_{{ tipo }}">Ajuste de Desenho</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_estilo_{{ tipo }}" value="AJUSTE_CORES"
+                                                        id="est_cores_{{ tipo }}"><label class="form-check-label"
+                                                        for="est_cores_{{ tipo }}">Ajuste de Cores</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_estilo_{{ tipo }}" value="ORIENTACAO_FORNECEDOR"
+                                                        id="est_orientacao_{{ tipo }}"><label class="form-check-label"
+                                                        for="est_orientacao_{{ tipo }}">Orientação para
+                                                        Fornecedor</label></div>
                                             </div>
                                             <div class="mb-2">
                                                 <label class="form-label">Comentários</label>
@@ -378,8 +414,8 @@
                                             </div>
                                             <div class="mb-2">
                                                 <label class="form-label">Anexar Arquivos</label>
-                                                <input type="file" class="form-control"
-                                                    name="fotos_estilo_{{ tipo }}" multiple>
+                                                <input type="file" class="form-control" name="fotos_estilo_{{ tipo }}"
+                                                    multiple>
                                             </div>
                                         </div>
                                     </div>
@@ -392,15 +428,29 @@
                                         <div class="card-body">
                                             <div class="mb-2">
                                                 <label class="form-label">Responsável</label>
-                                                <input type="text" class="form-control"
-                                                    name="time_modelagem_{{ tipo }}" placeholder="Nome do responsável">
+                                                <input type="text" class="form-control" name="time_modelagem_{{ tipo }}"
+                                                    placeholder="Nome do responsável">
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label d-block">Itens de Avaliação</label>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_TABELA_MEDIDAS" id="mod_tabela_{{ tipo }}"><label class="form-check-label" for="mod_tabela_{{ tipo }}">Ajustar Tabela de Medidas</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_MODELAGEM" id="mod_modelagem_{{ tipo }}"><label class="form-check-label" for="mod_modelagem_{{ tipo }}">Ajustar Modelagem</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="REPILOTAR" id="mod_repilotar_{{ tipo }}"><label class="form-check-label" for="mod_repilotar_{{ tipo }}">Repilotar</label></div>
-                                                <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ tipo }}" value="MODELO_FORA_MEDIDAS" id="mod_fora_{{ tipo }}"><label class="form-check-label" for="mod_fora_{{ tipo }}">Modelo Fora das Medidas</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_modelagem_{{ tipo }}"
+                                                        value="AJUSTAR_TABELA_MEDIDAS" id="mod_tabela_{{ tipo }}"><label
+                                                        class="form-check-label" for="mod_tabela_{{ tipo }}">Ajustar
+                                                        Tabela de Medidas</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_modelagem_{{ tipo }}" value="AJUSTAR_MODELAGEM"
+                                                        id="mod_modelagem_{{ tipo }}"><label class="form-check-label"
+                                                        for="mod_modelagem_{{ tipo }}">Ajustar Modelagem</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_modelagem_{{ tipo }}" value="REPILOTAR"
+                                                        id="mod_repilotar_{{ tipo }}"><label class="form-check-label"
+                                                        for="mod_repilotar_{{ tipo }}">Repilotar</label></div>
+                                                <div class="form-check"><input class="form-check-input" type="checkbox"
+                                                        name="checklist_modelagem_{{ tipo }}"
+                                                        value="MODELO_FORA_MEDIDAS" id="mod_fora_{{ tipo }}"><label
+                                                        class="form-check-label" for="mod_fora_{{ tipo }}">Modelo Fora
+                                                        das Medidas</label></div>
                                             </div>
                                             <div class="mb-2">
                                                 <label class="form-label">Comentários</label>
@@ -517,7 +567,8 @@
 
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle-fill"></i>
-                    <strong>Atenção:</strong> Certifique-se de que todas as informações estão corretas antes de finalizar.
+                    <strong>Atenção:</strong> Certifique-se de que todas as informações estão corretas antes de
+                    finalizar.
                     Após o envio, você poderá editar o relatório a qualquer momento.
                 </div>
             </div>
@@ -541,26 +592,42 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/wizard.js') }}"></script>
+
 <script>
     // Mostrar/ocultar seções baseadas na categoria selecionada
     document.querySelectorAll('input[name="tipo_produto"]').forEach(radio => {
-        radio.addEventListener('change', function() {
+        radio.addEventListener('change', function () {
             const tipo = this.value;
 
-            // Esconder todas as seções de referência e prova
+            // Esconder todas as seções de referência e prova e DESABILITAR inputs
             ['baby', 'kids', 'teen', 'adulto'].forEach(t => {
                 const refSection = document.getElementById(`ref_section_${t}`);
                 const provaSection = document.getElementById(`prova_section_${t}`);
-                if (refSection) refSection.style.display = 'none';
-                if (provaSection) provaSection.style.display = 'none';
+
+                if (refSection) {
+                    refSection.style.display = 'none';
+                    // Desabilitar inputs para evitar validação
+                    refSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = true);
+                }
+                if (provaSection) {
+                    provaSection.style.display = 'none';
+                    // Desabilitar inputs para evitar validação
+                    provaSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = true);
+                }
             });
 
-            // Mostrar apenas a seção selecionada
+            // Mostrar apenas a seção selecionada e HABILITAR inputs
             const selectedRefSection = document.getElementById(`ref_section_${tipo}`);
             const selectedProvaSection = document.getElementById(`prova_section_${tipo}`);
-            if (selectedRefSection) selectedRefSection.style.display = 'block';
-            if (selectedProvaSection) selectedProvaSection.style.display = 'block';
+
+            if (selectedRefSection) {
+                selectedRefSection.style.display = 'block';
+                selectedRefSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = false);
+            }
+            if (selectedProvaSection) {
+                selectedProvaSection.style.display = 'block';
+                selectedProvaSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = false);
+            }
         });
     });
 
@@ -570,6 +637,23 @@
         document.querySelectorAll(`.size-checkbox`).forEach(checkbox => {
             checkbox.addEventListener('change', handleSizeChange);
         });
+    });
+
+    // Inicialização: Disparar evento para configurar estado inicial
+    document.addEventListener('DOMContentLoaded', () => {
+        // Desabilitar todos inicialmente
+        ['baby', 'kids', 'teen', 'adulto'].forEach(t => {
+            const refSection = document.getElementById(`ref_section_${t}`);
+            const provaSection = document.getElementById(`prova_section_${t}`);
+            if (refSection) refSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = true);
+            if (provaSection) provaSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = true);
+        });
+
+        // Se já tiver algum selecionado (ex: reload), reativar
+        const checked = document.querySelector('input[name="tipo_produto"]:checked');
+        if (checked) {
+            checked.dispatchEvent(new Event('change'));
+        }
     });
 </script>
 {% endblock %}

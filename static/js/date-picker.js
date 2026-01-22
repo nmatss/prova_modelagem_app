@@ -3,7 +3,7 @@
 // Sistema de validação e formatação para inputs HTML5 type="date"
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
     // ========================================
     // CONFIGURAÇÕES E CONSTANTES
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
         format: 'DD/MM/YYYY',
         isoFormat: 'YYYY-MM-DD',
         minDate: '1900-01-01',
-        maxDate: new Date().toISOString().split('T')[0], // hoje
+        maxDate: '2100-12-31', // Permitir datas futuras por padrão
         futureMaxDate: '2100-12-31'
     };
 

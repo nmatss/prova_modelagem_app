@@ -134,7 +134,7 @@
 
                 <div class="menu-divider"></div>
                 <div class="menu-item">
-                    <a href="{{ url_for('auth.alterar_senha') }}" class="menu-link" data-bs-toggle="tooltip" data-bs-placement="right" title="Redefinir Senha">
+                    <a href="#" class="menu-link" data-bs-toggle="tooltip" data-bs-placement="right" title="Redefinir Senha">
                         <i class="bi bi-key-fill"></i>
                         <span class="menu-link-text">Redefinir Senha</span>
                     </a>
@@ -143,7 +143,7 @@
 
             <!-- Sidebar Footer -->
             <div class="sidebar-footer">
-                <a href="{{ url_for('auth.alterar_senha') }}" class="user-profile">
+                <a href="#" class="user-profile">
                     <div class="user-avatar">
                         {{ current_user.username[0].upper() }}
                     </div>
@@ -236,7 +236,7 @@
                 <span>Relatórios</span>
             </a>
             {% endif %}
-            <a href="{{ url_for('auth.alterar_senha') }}" class="bottom-nav-item">
+            <a href="#" class="bottom-nav-item">
                 <i class="bi bi-key-fill"></i>
                 <span>Redefinir Senha</span>
             </a>
