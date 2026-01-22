@@ -706,7 +706,10 @@ def editar_relatorio(id):
             provas_completas.append(prova_dict)
         
         ref_dict['provas'] = provas_completas
-        referencias_por_tipo[ref.tipo_categoria] = ref_dict
+        tipo_lower = ref.tipo_categoria.lower() if ref.tipo_categoria else ""
+        if tipo_lower not in referencias_por_tipo:
+            referencias_por_tipo[tipo_lower] = []
+        referencias_por_tipo[tipo_lower].append(ref_dict)
 
     return render_template('editar_relatorio.html', relatorio=relatorio, referencias_por_tipo=referencias_por_tipo)
 
