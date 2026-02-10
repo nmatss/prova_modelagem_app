@@ -694,12 +694,15 @@ def editar_relatorio(id):
                             prova.info_medidas = request.form.get(f'info_medidas_{prova_id}')
                             prova.data_prova = request.form.get(f'data_prova_{prova_id}')
                             prova.time_qualidade = request.form.get(f'time_qualidade_{prova_id}')
+                            prova.checklist_qualidade = ", ".join(request.form.getlist(f'checklist_qualidade_{prova_id}'))
                             prova.comentarios_qualidade = request.form.get(f'comentarios_qualidade_{prova_id}')
                             prova.obs_qualidade = request.form.get(f'obs_qualidade_{prova_id}')
                             prova.time_estilo = request.form.get(f'time_estilo_{prova_id}')
+                            prova.checklist_estilo = ", ".join(request.form.getlist(f'checklist_estilo_{prova_id}'))
                             prova.comentarios_estilo = request.form.get(f'comentarios_estilo_{prova_id}')
                             prova.obs_estilo = request.form.get(f'obs_estilo_{prova_id}')
                             prova.time_modelagem = request.form.get(f'time_modelagem_{prova_id}')
+                            prova.checklist_modelagem = ", ".join(request.form.getlist(f'checklist_modelagem_{prova_id}'))
                             prova.comentarios_modelagem = request.form.get(f'comentarios_modelagem_{prova_id}')
                             prova.obs_modelagem = request.form.get(f'obs_modelagem_{prova_id}')
                             prova.data_lacre = request.form.get(f'data_lacre_{prova_id}')
@@ -750,12 +753,15 @@ def editar_relatorio(id):
                         info_medidas=request.form.get(f'info_medidas_{tipo}'),
                         data_prova=request.form.get(f'data_prova_{tipo}'),
                         time_qualidade=request.form.get(f'time_qualidade_{tipo}'),
+                        checklist_qualidade=", ".join(request.form.getlist(f'checklist_qualidade_{tipo}')),
                         comentarios_qualidade=request.form.get(f'comentarios_qualidade_{tipo}'),
                         obs_qualidade=request.form.get(f'obs_qualidade_{tipo}'),
                         time_estilo=request.form.get(f'time_estilo_{tipo}'),
+                        checklist_estilo=", ".join(request.form.getlist(f'checklist_estilo_{tipo}')),
                         comentarios_estilo=request.form.get(f'comentarios_estilo_{tipo}'),
                         obs_estilo=request.form.get(f'obs_estilo_{tipo}'),
                         time_modelagem=request.form.get(f'time_modelagem_{tipo}'),
+                        checklist_modelagem=", ".join(request.form.getlist(f'checklist_modelagem_{tipo}')),
                         comentarios_modelagem=request.form.get(f'comentarios_modelagem_{tipo}'),
                         obs_modelagem=request.form.get(f'obs_modelagem_{tipo}'),
                         data_lacre=request.form.get(f'data_lacre_{tipo}'),
@@ -764,7 +770,7 @@ def editar_relatorio(id):
                     )
                     db.session.add(nova_prova)
                     db.session.flush()
-                    
+
                     campos_fotos = ['desenho', 'qualidade', 'estilo', 'modelagem']
                     for contexto in campos_fotos:
                         for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
@@ -795,13 +801,13 @@ def editar_relatorio(id):
     referencias_por_tipo = {}
     for ref in relatorio.referencias:
         ref_dict = {c.name: getattr(ref, c.name) for c in ref.__table__.columns}
-        
+
         provas_completas = []
         provas_ordenadas = sorted(ref.provas, key=lambda x: x.numero_prova)
         for prova in provas_ordenadas:
             prova_dict = {c.name: getattr(prova, c.name) for c in prova.__table__.columns}
             prova_dict['tamanhos_lista'] = [t.strip() for t in (prova.tamanhos_recebidos or '').split(',') if t.strip()]
-            
+
             prova_dict['fotos'] = {}
             for foto in prova.fotos:
                 contexto = foto.contexto
@@ -809,12 +815,10 @@ def editar_relatorio(id):
                     prova_dict['fotos'][contexto] = []
                 prova_dict['fotos'][contexto].append({c.name: getattr(foto, c.name) for c in foto.__table__.columns})
             provas_completas.append(prova_dict)
-        
+
         ref_dict['provas'] = provas_completas
         tipo_lower = ref.tipo_categoria.lower() if ref.tipo_categoria else ""
-        if tipo_lower not in referencias_por_tipo:
-            referencias_por_tipo[tipo_lower] = []
-        referencias_por_tipo[tipo_lower].append(ref_dict)
+        referencias_por_tipo[tipo_lower] = ref_dict
 
     return render_template('editar_relatorio.html', relatorio=relatorio, referencias_por_tipo=referencias_por_tipo)
 
@@ -897,12 +901,15 @@ def novo_relatorio():
                         info_medidas=request.form.get(f'info_medidas_{tipo}'),
                         data_prova=request.form.get(f'data_prova_{tipo}'),
                         time_qualidade=request.form.get(f'time_qualidade_{tipo}'),
+                        checklist_qualidade=", ".join(request.form.getlist(f'checklist_qualidade_{tipo}')),
                         comentarios_qualidade=request.form.get(f'comentarios_qualidade_{tipo}'),
                         obs_qualidade=request.form.get(f'obs_qualidade_{tipo}'),
                         time_estilo=request.form.get(f'time_estilo_{tipo}'),
+                        checklist_estilo=", ".join(request.form.getlist(f'checklist_estilo_{tipo}')),
                         comentarios_estilo=request.form.get(f'comentarios_estilo_{tipo}'),
                         obs_estilo=request.form.get(f'obs_estilo_{tipo}'),
                         time_modelagem=request.form.get(f'time_modelagem_{tipo}'),
+                        checklist_modelagem=", ".join(request.form.getlist(f'checklist_modelagem_{tipo}')),
                         comentarios_modelagem=request.form.get(f'comentarios_modelagem_{tipo}'),
                         obs_modelagem=request.form.get(f'obs_modelagem_{tipo}'),
                         data_lacre=request.form.get(f'data_lacre_{tipo}'),
@@ -911,7 +918,7 @@ def novo_relatorio():
                     )
                     db.session.add(nova_prova)
                     db.session.flush()
-                    
+
                     campos_fotos = ['desenho', 'qualidade', 'estilo', 'modelagem']
                     for contexto in campos_fotos:
                         for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
@@ -927,7 +934,7 @@ def novo_relatorio():
                                 if filename:
                                     foto = Foto(prova_id=nova_prova.id, contexto=contexto, tamanho=tamanho, file_path=filename)
                                     db.session.add(foto)
-            
+
             db.session.commit()
             flash("Relatório criado com sucesso!", "success")
             
@@ -995,6 +1002,33 @@ def excluir_relatorio(id):
         db.session.rollback()
         flash(f"Erro ao excluir o relatório: {e}", "error")
         return redirect(url_for('detalhes_relatorio', id=id))
+
+
+@app.route('/foto/<int:foto_id>/excluir', methods=['POST'])
+@login_required
+def excluir_foto(foto_id):
+    """Exclui uma foto individual de uma prova"""
+    foto = Foto.query.get_or_404(foto_id)
+    relatorio_id = foto.prova.referencia.relatorio_id
+
+    try:
+        file_path = foto.file_path
+        db.session.delete(foto)
+        db.session.commit()
+
+        if file_path:
+            from utils import delete_file
+            delete_file(file_path)
+
+        flash("Foto excluída com sucesso!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir a foto: {e}", "error")
+
+    redirect_to = request.form.get('redirect_to', '')
+    if redirect_to == 'editar':
+        return redirect(url_for('editar_relatorio', id=relatorio_id))
+    return redirect(url_for('detalhes_relatorio', id=relatorio_id))
 
 
 @app.route('/referencia/<int:referencia_id>/nova_prova', methods=['GET', 'POST'])

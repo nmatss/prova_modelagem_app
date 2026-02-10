@@ -332,9 +332,44 @@ class ReportWizard {
 
             const fornecedor = document.querySelector(`input[name="fornecedor_${tipo}"]`)?.value;
             this.setReviewValue('review_fornecedor', fornecedor || 'Não informado');
+
+            const materiaPrima = document.querySelector(`input[name="materia_prima_${tipo}"]`)?.value;
+            this.setReviewValue('review_materia_prima', materiaPrima || 'Não informado');
+
+            const composicao = document.querySelector(`input[name="composicao_${tipo}"]`)?.value;
+            this.setReviewValue('review_composicao', composicao || 'Não informado');
+
+            const gramatura = document.querySelector(`input[name="gramatura_${tipo}"]`)?.value;
+            this.setReviewValue('review_gramatura', gramatura || 'Não informado');
+
+            // Step 4 - Prova de Modelagem
+            const dataRecebimento = document.querySelector(`input[name="data_recebimento_${tipo}"]`)?.value;
+            this.setReviewValue('review_data_recebimento', dataRecebimento || 'Não informado');
+
+            const dataProva = document.querySelector(`input[name="data_prova_${tipo}"]`)?.value;
+            this.setReviewValue('review_data_prova', dataProva || 'Não informado');
+
+            const tamanhos = Array.from(document.querySelectorAll(`input[name="tamanhos_recebidos_${tipo}"]:checked`)).map(cb => cb.value);
+            this.setReviewValue('review_tamanhos', tamanhos.length > 0 ? tamanhos.join(', ') : 'Nenhum selecionado');
+
+            // Contar fotos anexadas
+            let totalFotos = 0;
+            const fileInputs = document.querySelectorAll(`#prova_section_${tipo} input[type="file"]`);
+            fileInputs.forEach(input => { totalFotos += input.files.length; });
+            this.setReviewValue('review_fotos_count', totalFotos > 0 ? `${totalFotos} arquivo(s)` : 'Nenhum');
+
+            // Checklists resumidos
+            const qualChecked = Array.from(document.querySelectorAll(`input[name="checklist_qualidade_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
+            this.setReviewValue('review_qualidade', qualChecked.length > 0 ? qualChecked.join(', ') : 'Sem itens');
+
+            const estChecked = Array.from(document.querySelectorAll(`input[name="checklist_estilo_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
+            this.setReviewValue('review_estilo', estChecked.length > 0 ? estChecked.join(', ') : 'Sem itens');
+
+            const modChecked = Array.from(document.querySelectorAll(`input[name="checklist_modelagem_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
+            this.setReviewValue('review_modelagem', modChecked.length > 0 ? modChecked.join(', ') : 'Sem itens');
         }
 
-        // Step 4 - Preview da imagem se existir
+        // Preview da imagem se existir
         const imagemPreview = document.getElementById('image_preview_container');
         const reviewImageContainer = document.getElementById('review_image_preview');
         if (imagemPreview && reviewImageContainer) {

@@ -700,11 +700,16 @@
             <h6>Desenho do Produto</h6>
             <div class="d-flex flex-wrap gap-2">
                 {% for foto in prova['fotos']['desenho'] %}
-                <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
-                     alt="Desenho técnico do produto {{ prova.numero_prova }}ª prova"
-                     class="img-thumbnail photo-clickable"
-                     style="width: 150px; height: 150px; object-fit: cover;"
-                     role="button" title="Clique para ampliar">
+                <div class="position-relative d-inline-block">
+                    <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                         alt="Desenho técnico do produto {{ prova.numero_prova }}ª prova"
+                         class="img-thumbnail photo-clickable"
+                         style="width: 150px; height: 150px; object-fit: cover;"
+                         role="button" title="Clique para ampliar">
+                    <form action="{{ url_for('excluir_foto', foto_id=foto['id']) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                        <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 24px; height: 24px; font-size: 0.7rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                    </form>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -766,13 +771,16 @@
                 <h6>Fotos da Amostra</h6>
                 <div class="d-flex flex-wrap gap-2">
                     {% for foto in prova['fotos']['amostra'] %}
-                    <div class="text-center">
+                    <div class="position-relative d-inline-block text-center">
                         <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
                              alt="Foto da amostra {{ prova.numero_prova }}ª prova - Tamanho {{ foto.get('tamanho', 'não especificado') }}"
                              class="img-thumbnail photo-clickable"
                              style="width: 100px; height: 100px; object-fit: cover;"
                              role="button" title="Clique para ampliar">
                         <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
+                        <form action="{{ url_for('excluir_foto', foto_id=foto['id']) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                            <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                        </form>
                     </div>
                     {% endfor %}
                 </div>
@@ -783,13 +791,16 @@
                 <h6>Fotos na Modelo</h6>
                 <div class="d-flex flex-wrap gap-2">
                     {% for foto in prova['fotos']['prova_modelo'] %}
-                    <div class="text-center">
+                    <div class="position-relative d-inline-block text-center">
                         <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
                              alt="Foto da prova na modelo {{ prova.numero_prova }}ª prova - Tamanho {{ foto.get('tamanho', 'não especificado') }}"
                              class="img-thumbnail photo-clickable"
                              style="width: 100px; height: 100px; object-fit: cover;"
                              role="button" title="Clique para ampliar">
                         <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
+                        <form action="{{ url_for('excluir_foto', foto_id=foto['id']) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                            <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                        </form>
                     </div>
                     {% endfor %}
                 </div>
@@ -820,11 +831,16 @@
                         {% if prova['fotos'].get('qualidade') %}
                         <div class="d-flex flex-wrap gap-1 mt-2">
                             {% for foto in prova['fotos']['qualidade'] %}
-                            <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
-                                 alt="Foto da avaliação de qualidade {{ prova.numero_prova }}ª prova"
-                                 class="img-thumbnail photo-clickable"
-                                 style="width: 60px; height: 60px; object-fit: cover;"
-                                 role="button" title="Clique para ampliar">
+                            <div class="position-relative d-inline-block">
+                                <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                     alt="Foto da avaliação de qualidade {{ prova.numero_prova }}ª prova"
+                                     class="img-thumbnail photo-clickable"
+                                     style="width: 60px; height: 60px; object-fit: cover;"
+                                     role="button" title="Clique para ampliar">
+                                <form action="{{ url_for('excluir_foto', foto_id=foto['id']) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                    <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                </form>
+                            </div>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -847,11 +863,16 @@
                         {% if prova['fotos'].get('estilo') %}
                         <div class="d-flex flex-wrap gap-1 mt-2">
                             {% for foto in prova['fotos']['estilo'] %}
-                            <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
-                                 alt="Foto da avaliação de estilo {{ prova.numero_prova }}ª prova"
-                                 class="img-thumbnail photo-clickable"
-                                 style="width: 60px; height: 60px; object-fit: cover;"
-                                 role="button" title="Clique para ampliar">
+                            <div class="position-relative d-inline-block">
+                                <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                     alt="Foto da avaliação de estilo {{ prova.numero_prova }}ª prova"
+                                     class="img-thumbnail photo-clickable"
+                                     style="width: 60px; height: 60px; object-fit: cover;"
+                                     role="button" title="Clique para ampliar">
+                                <form action="{{ url_for('excluir_foto', foto_id=foto['id']) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                    <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                </form>
+                            </div>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -874,11 +895,16 @@
                         {% if prova['fotos'].get('modelagem') %}
                         <div class="d-flex flex-wrap gap-1 mt-2">
                             {% for foto in prova['fotos']['modelagem'] %}
-                            <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
-                                 alt="Foto da avaliação de modelagem {{ prova.numero_prova }}ª prova"
-                                 class="img-thumbnail photo-clickable"
-                                 style="width: 60px; height: 60px; object-fit: cover;"
-                                 role="button" title="Clique para ampliar">
+                            <div class="position-relative d-inline-block">
+                                <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                     alt="Foto da avaliação de modelagem {{ prova.numero_prova }}ª prova"
+                                     class="img-thumbnail photo-clickable"
+                                     style="width: 60px; height: 60px; object-fit: cover;"
+                                     role="button" title="Clique para ampliar">
+                                <form action="{{ url_for('excluir_foto', foto_id=foto['id']) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                    <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                </form>
+                            </div>
                             {% endfor %}
                         </div>
                         {% endif %}

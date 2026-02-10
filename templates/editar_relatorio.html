@@ -445,6 +445,84 @@
                                     <textarea class="form-control" name="info_medidas_{{ prova.id }}" rows="3">{{ prova.info_medidas or '' }}</textarea>
                                 </div>
 
+                                <!-- DESENHO DO PRODUTO -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Desenho do produto</label>
+                                        {% if prova.fotos.get('desenho') %}
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            {% for foto in prova.fotos['desenho'] %}
+                                            <div class="position-relative d-inline-block">
+                                                <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                                                <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                                                    <input type="hidden" name="redirect_to" value="editar">
+                                                    <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                </form>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <input type="file" class="form-control" name="fotos_desenho_{{ prova.id }}" multiple>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tabela de Medidas</label>
+                                        {% if prova.tabela_medidas_path %}
+                                        <div class="mb-2">
+                                            <a href="{{ url_for('serve_upload', filename=prova.tabela_medidas_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i> Ver atual
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        <input type="file" class="form-control" name="tabela_medidas_{{ prova.id }}">
+                                    </div>
+                                </div>
+
+                                <!-- FOTOS AMOSTRA E PROVA MODELO (existentes) -->
+                                {% if prova.fotos.get('amostra') %}
+                                <div class="mb-3">
+                                    <label class="form-label">Fotos da Amostra (existentes)</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for foto in prova.fotos['amostra'] %}
+                                        <div class="position-relative d-inline-block text-center">
+                                            <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                                            <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
+                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                                                <input type="hidden" name="redirect_to" value="editar">
+                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                            </form>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if prova.fotos.get('prova_modelo') %}
+                                <div class="mb-3">
+                                    <label class="form-label">Fotos na Modelo (existentes)</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for foto in prova.fotos['prova_modelo'] %}
+                                        <div class="position-relative d-inline-block text-center">
+                                            <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                                            <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
+                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                                                <input type="hidden" name="redirect_to" value="editar">
+                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                            </form>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Placeholders para novas fotos de amostra/prova_modelo por tamanho -->
+                                <div class="mb-3">
+                                    <label class="form-label">Adicionar fotos da amostra (por tamanho)</label>
+                                    <div id="placeholder_fotos_amostra_existing_{{ prova.id }}" class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Adicionar fotos da prova na modelo (por tamanho)</label>
+                                    <div id="placeholder_fotos_prova_modelo_existing_{{ prova.id }}" class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                </div>
+
                                 <div class="row mb-3">
                                     <!-- QUALIDADE -->
                                     <div class="col-md-4">
@@ -483,6 +561,22 @@
                                                     <label class="form-label">Observações Adicionais</label>
                                                     <textarea class="form-control" name="obs_qualidade_{{ prova.id }}" rows="2">{{ prova.obs_qualidade or '' }}</textarea>
                                                 </div>
+                                                {% if prova.fotos.get('qualidade') %}
+                                                <div class="mb-2">
+                                                    <label class="form-label small text-muted">Fotos existentes:</label>
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        {% for foto in prova.fotos['qualidade'] %}
+                                                        <div class="position-relative d-inline-block">
+                                                            <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                                                <input type="hidden" name="redirect_to" value="editar">
+                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                            </form>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                {% endif %}
                                                 <div class="mb-2">
                                                     <label class="form-label">Anexar Arquivos</label>
                                                     <input type="file" class="form-control" name="fotos_qualidade_{{ prova.id }}" multiple>
@@ -517,6 +611,22 @@
                                                     <label class="form-label">Observações Adicionais</label>
                                                     <textarea class="form-control" name="obs_estilo_{{ prova.id }}" rows="2">{{ prova.obs_estilo or '' }}</textarea>
                                                 </div>
+                                                {% if prova.fotos.get('estilo') %}
+                                                <div class="mb-2">
+                                                    <label class="form-label small text-muted">Fotos existentes:</label>
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        {% for foto in prova.fotos['estilo'] %}
+                                                        <div class="position-relative d-inline-block">
+                                                            <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                                                <input type="hidden" name="redirect_to" value="editar">
+                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                            </form>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                {% endif %}
                                                 <div class="mb-2">
                                                     <label class="form-label">Anexar Arquivos</label>
                                                     <input type="file" class="form-control" name="fotos_estilo_{{ prova.id }}" multiple>
@@ -550,6 +660,22 @@
                                                     <label class="form-label">Observações Adicionais</label>
                                                     <textarea class="form-control" name="obs_modelagem_{{ prova.id }}" rows="2">{{ prova.obs_modelagem or '' }}</textarea>
                                                 </div>
+                                                {% if prova.fotos.get('modelagem') %}
+                                                <div class="mb-2">
+                                                    <label class="form-label small text-muted">Fotos existentes:</label>
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        {% for foto in prova.fotos['modelagem'] %}
+                                                        <div class="position-relative d-inline-block">
+                                                            <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                                                <input type="hidden" name="redirect_to" value="editar">
+                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                            </form>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                {% endif %}
                                                 <div class="mb-2">
                                                     <label class="form-label">Anexar Arquivos</label>
                                                     <input type="file" class="form-control" name="fotos_modelagem_{{ prova.id }}" multiple>
@@ -878,10 +1004,74 @@
             }
         }
 
+        // Handler para checkboxes de tamanho em provas existentes
+        function createExistingUploadField(contexto, provaId, size, labelText) {
+            const safeSize = size.replace(/\s+/g, '');
+            const fieldId = `dynamic_${contexto}_existing_${provaId}_${safeSize}`;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'mb-2';
+            wrapper.id = fieldId;
+
+            const label = document.createElement('label');
+            label.className = 'form-label small';
+            label.textContent = `${labelText} (Tamanho: ${size})`;
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.className = 'form-control form-control-sm';
+            input.name = `fotos_${contexto}_${provaId}_${safeSize}`;
+            input.multiple = true;
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+            return wrapper;
+        }
+
+        function handleExistingSizeChange(event) {
+            const checkbox = event.target;
+            const size = checkbox.value;
+            const provaId = checkbox.name.replace('tamanhos_recebidos_', '');
+            const safeSize = size.replace(/\s+/g, '');
+
+            const amostraPlaceholder = document.getElementById(`placeholder_fotos_amostra_existing_${provaId}`);
+            const provaPlaceholder = document.getElementById(`placeholder_fotos_prova_modelo_existing_${provaId}`);
+
+            if (!amostraPlaceholder || !provaPlaceholder) return;
+
+            const fieldIdAmostra = `dynamic_amostra_existing_${provaId}_${safeSize}`;
+            const fieldIdProva = `dynamic_prova_modelo_existing_${provaId}_${safeSize}`;
+
+            if (checkbox.checked) {
+                if (!document.getElementById(fieldIdAmostra)) {
+                    amostraPlaceholder.appendChild(createExistingUploadField('amostra', provaId, size, 'Fotos da amostra'));
+                }
+                if (!document.getElementById(fieldIdProva)) {
+                    provaPlaceholder.appendChild(createExistingUploadField('prova_modelo', provaId, size, 'Fotos da prova na modelo'));
+                }
+            } else {
+                const af = document.getElementById(fieldIdAmostra);
+                if (af) af.remove();
+                const pf = document.getElementById(fieldIdProva);
+                if (pf) pf.remove();
+            }
+        }
+
         // Inicia os listeners
         ['baby', 'kids', 'teen', 'adulto'].forEach(setupReferenceListener);
         document.querySelectorAll('.size-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', handleSizeChange);
+        });
+
+        // Listeners para checkboxes de provas existentes (sem classe size-checkbox)
+        document.querySelectorAll('.btn-check[name^="tamanhos_recebidos_"]').forEach(checkbox => {
+            // Pular os que já têm handleSizeChange (os .size-checkbox)
+            if (checkbox.classList.contains('size-checkbox')) return;
+
+            checkbox.addEventListener('change', handleExistingSizeChange);
+            // Criar campos para tamanhos já marcados
+            if (checkbox.checked) {
+                handleExistingSizeChange({ target: checkbox });
+            }
         });
 
         // Converter inputs de texto para MAIÚSCULO automaticamente
