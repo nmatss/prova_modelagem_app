@@ -90,6 +90,31 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
+                        <label for="data_limite" class="form-label">
+                            <i class="bi bi-calendar-event"></i> Prazo / Data Limite
+                        </label>
+                        <input type="date" class="form-control" id="data_limite" name="data_limite"
+                            value="{{ form_data.get('data_limite', '') }}">
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Data limite para conclusão do relatório
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="linha" class="form-label">Linha de Produto</label>
+                        <select class="form-select" id="linha" name="linha">
+                            <option value="">Selecione a linha...</option>
+                            <option value="PRAIA" {{ 'selected' if form_data.get('linha') == 'PRAIA' else '' }}>PRAIA</option>
+                            <option value="ACESSÓRIO" {{ 'selected' if form_data.get('linha') == 'ACESSÓRIO' else '' }}>ACESSÓRIO</option>
+                            <option value="LINGERIE" {{ 'selected' if form_data.get('linha') == 'LINGERIE' else '' }}>LINGERIE</option>
+                            <option value="MEIAS" {{ 'selected' if form_data.get('linha') == 'MEIAS' else '' }}>MEIAS</option>
+                            <option value="HOMEWEAR" {{ 'selected' if form_data.get('linha') == 'HOMEWEAR' else '' }}>HOMEWEAR</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label for="imagem_produto" class="form-label">
                             <i class="bi bi-image"></i> Imagem do Produto
                         </label>

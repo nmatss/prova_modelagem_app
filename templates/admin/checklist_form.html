@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if template else 'Novo' }} Template de Checklist - Admin{% endblock %}
+
+{% block main_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-{{ 'pencil-square' if template else 'plus-circle' }} text-primary me-2"></i>
+                    {{ 'Editar' if template else 'Novo' }} Template de Checklist
+                </h1>
+                <p class="text-muted mb-0">
+                    {% if template %}
+                    Editando o template "{{ template.nome }}"
+                    {% else %}
+                    Crie um novo template de checklist para qualidade, estilo ou modelagem
+                    {% endif %}
+                </p>
+            </div>
+            <a href="{{ url_for('checklist.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST"
+                      action="{{ url_for('checklist.editar', id=template.id) if template else url_for('checklist.novo') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Nome -->
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">
+                            <i class="bi bi-tag me-1"></i>
+                            Nome do Template <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="nome"
+                               name="nome"
+                               required
+                               maxlength="200"
+                               placeholder="Ex: Checklist de Qualidade - Lingerie"
+                               value="{{ form_data.get('nome', '') if form_data else (template.nome if template else '') }}">
+                        <small class="text-muted">Nome descritivo para identificar o template</small>
+                    </div>
+
+                    <!-- Categoria -->
+                    <div class="mb-3">
+                        <label for="categoria" class="form-label">
+                            <i class="bi bi-folder me-1"></i>
+                            Categoria <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="categoria" name="categoria" required>
+                            <option value="">Selecione uma categoria...</option>
+                            {% set current_cat = form_data.get('categoria', '') if form_data else (template.categoria if template else '') %}
+                            {% for cat in categorias %}
+                            <option value="{{ cat }}"
+                                    {{ 'selected' if current_cat == cat else '' }}>
+                                {{ categorias_display.get(cat, cat) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Categoria do checklist: qualidade, estilo ou modelagem</small>
+                    </div>
+
+                    <!-- Itens -->
+                    <div class="mb-3">
+                        <label for="itens" class="form-label">
+                            <i class="bi bi-list-ul me-1"></i>
+                            Itens do Checklist <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control"
+                                  id="itens"
+                                  name="itens"
+                                  rows="8"
+                                  required
+                                  placeholder="Verificar acabamento da costura, Conferir alinhamento das estampas, Medir comprimento das mangas">{% if form_data %}{{ form_data.get('itens', '') }}{% elif template %}{{ template.get_itens()|join(', ') }}{% endif %}</textarea>
+                        <small class="text-muted">
+                            Separe os itens por <strong>virgula</strong> ou insira um <strong>JSON array</strong>
+                            (ex: <code>["Item 1", "Item 2", "Item 3"]</code>)
+                        </small>
+                    </div>
+
+                    <!-- Preview dos itens -->
+                    <div class="mb-4" id="preview-container" style="display: none;">
+                        <label class="form-label">
+                            <i class="bi bi-eye me-1"></i>
+                            Preview dos Itens
+                        </label>
+                        <div id="preview-itens" class="border rounded p-3 bg-light">
+                        </div>
+                        <small class="text-muted" id="preview-count"></small>
+                    </div>
+
+                    {% if template %}
+                    <!-- Info adicional para edicao -->
+                    <div class="alert alert-info border-0 mb-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Template #{{ template.id }}</strong> -
+                        Criado em {{ template.created_at.strftime('%d/%m/%Y %H:%M') if template.created_at else 'N/A' }}
+                        {% if template.updated_at %}
+                        | Ultima atualizacao em {{ template.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Botoes -->
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-{{ 'check-lg' if template else 'plus-lg' }}"></i>
+                            {{ 'Salvar Alteracoes' if template else 'Criar Template' }}
+                        </button>
+                        <a href="{{ url_for('checklist.index') }}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card de Ajuda -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-question-circle me-2"></i>Dicas para Criar Itens</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-success"><i class="bi bi-check2-square me-1"></i> Qualidade</h6>
+                    <p class="text-muted small mb-0">
+                        Ex: Verificar costuras, Conferir acabamento, Inspecionar ziper, Verificar elastico, Checar etiqueta
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <h6 class="text-info"><i class="bi bi-palette me-1"></i> Estilo</h6>
+                    <p class="text-muted small mb-0">
+                        Ex: Conferir cor, Verificar estampa, Avaliar caimento visual, Checar proporcoes do design, Validar aviamentos
+                    </p>
+                </div>
+                <div>
+                    <h6 class="text-warning"><i class="bi bi-rulers me-1"></i> Modelagem</h6>
+                    <p class="text-muted small mb-0">
+                        Ex: Medir comprimento, Conferir largura do busto, Verificar entrepernas, Medir manga, Conferir decote
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Preview de itens em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    var textarea = document.getElementById('itens');
+    var previewContainer = document.getElementById('preview-container');
+    var previewItens = document.getElementById('preview-itens');
+    var previewCount = document.getElementById('preview-count');
+
+    function updatePreview() {
+        var raw = textarea.value.trim();
+        if (!raw) {
+            previewContainer.style.display = 'none';
+            return;
+        }
+
+        var itens = [];
+
+        // Tentar como JSON primeiro
+        try {
+            var parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                itens = parsed.map(function(item) { return String(item).trim(); }).filter(function(item) { return item.length > 0; });
+            }
+        } catch(e) {
+            // Separar por virgula
+            itens = raw.split(',').map(function(item) { return item.trim(); }).filter(function(item) { return item.length > 0; });
+        }
+
+        if (itens.length === 0) {
+            previewContainer.style.display = 'none';
+            return;
+        }
+
+        previewContainer.style.display = 'block';
+        var html = '<div class="row">';
+        for (var i = 0; i < itens.length; i++) {
+            html += '<div class="col-md-6 mb-1">';
+            html += '<span class="badge bg-primary me-1">' + (i + 1) + '</span> ';
+            html += itens[i].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            html += '</div>';
+        }
+        html += '</div>';
+        previewItens.innerHTML = html;
+        previewCount.textContent = itens.length + ' item(ns) detectado(s)';
+    }
+
+    textarea.addEventListener('input', updatePreview);
+    textarea.addEventListener('change', updatePreview);
+
+    // Atualizar preview na carga (para edicao)
+    updatePreview();
+});
+</script>
+{% endblock %}

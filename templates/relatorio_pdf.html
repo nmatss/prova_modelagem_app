@@ -326,6 +326,10 @@
                 <span>{{ relatorio.colecao or 'Não informada' }}</span>
             </div>
             <div class="detail-item">
+                <strong>Linha:</strong>
+                <span>{{ relatorio.linha or 'Não informada' }}</span>
+            </div>
+            <div class="detail-item">
                 <strong>Data de Criação:</strong>
                 <span>{{ relatorio.created_at.strftime('%d/%m/%Y às %H:%M') if relatorio.created_at else 'N/A' }}</span>
             </div>
@@ -437,7 +441,7 @@
             <div class="photo-gallery">
                 {% for foto in prova.fotos.desenho %}
                 <div class="photo-item">
-                    <img src="file://{{ foto.caminho_absoluto }}" alt="Desenho técnico do produto {{ prova.numero_prova }}ª prova - Referência {{ ref.numero_ref }}">
+                    <img src="{{ foto.base64 }}" alt="Desenho técnico do produto {{ prova.numero_prova }}ª prova - Referência {{ ref.numero_ref }}">
                 </div>
                 {% endfor %}
             </div>
@@ -486,7 +490,7 @@
             <div class="photo-gallery">
                 {% for foto in prova.fotos.amostra %}
                 <div class="photo-item">
-                    <img src="file://{{ foto.caminho_absoluto }}" alt="Foto da amostra {{ prova.numero_prova }}ª prova{% if foto.tamanho %} - Tamanho {{ foto.tamanho }}{% endif %}">
+                    <img src="{{ foto.base64 }}" alt="Foto da amostra {{ prova.numero_prova }}ª prova{% if foto.tamanho %} - Tamanho {{ foto.tamanho }}{% endif %}">
                     {% if foto.tamanho %}
                     <div class="photo-caption">Tamanho: {{ foto.tamanho }}</div>
                     {% endif %}
@@ -503,7 +507,7 @@
             <div class="photo-gallery">
                 {% for foto in prova.fotos.prova_modelo %}
                 <div class="photo-item">
-                    <img src="file://{{ foto.caminho_absoluto }}" alt="Foto da prova na modelo {{ prova.numero_prova }}ª prova{% if foto.tamanho %} - Tamanho {{ foto.tamanho }}{% endif %}">
+                    <img src="{{ foto.base64 }}" alt="Foto da prova na modelo {{ prova.numero_prova }}ª prova{% if foto.tamanho %} - Tamanho {{ foto.tamanho }}{% endif %}">
                     {% if foto.tamanho %}
                     <div class="photo-caption">Tamanho: {{ foto.tamanho }}</div>
                     {% endif %}
@@ -547,7 +551,7 @@
                 <div class="photo-gallery">
                     {% for foto in prova.fotos.qualidade %}
                     <div class="photo-item">
-                        <img src="file://{{ foto.caminho_absoluto }}" alt="Foto da avaliação de qualidade {{ prova.numero_prova }}ª prova">
+                        <img src="{{ foto.base64 }}" alt="Foto da avaliação de qualidade {{ prova.numero_prova }}ª prova">
                     </div>
                     {% endfor %}
                 </div>
@@ -584,7 +588,7 @@
                 <div class="photo-gallery">
                     {% for foto in prova.fotos.estilo %}
                     <div class="photo-item">
-                        <img src="file://{{ foto.caminho_absoluto }}" alt="Foto da avaliação de estilo {{ prova.numero_prova }}ª prova">
+                        <img src="{{ foto.base64 }}" alt="Foto da avaliação de estilo {{ prova.numero_prova }}ª prova">
                     </div>
                     {% endfor %}
                 </div>
@@ -621,7 +625,7 @@
                 <div class="photo-gallery">
                     {% for foto in prova.fotos.modelagem %}
                     <div class="photo-item">
-                        <img src="file://{{ foto.caminho_absoluto }}" alt="Foto da avaliação de modelagem {{ prova.numero_prova }}ª prova">
+                        <img src="{{ foto.base64 }}" alt="Foto da avaliação de modelagem {{ prova.numero_prova }}ª prova">
                     </div>
                     {% endfor %}
                 </div>

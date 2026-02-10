@@ -114,6 +114,18 @@
                         <span class="menu-link-text">Novo Relatório</span>
                     </a>
                 </div>
+                <div class="menu-item">
+                    <a href="{{ url_for('kanban.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('kanban.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Kanban">
+                        <i class="bi bi-kanban-fill"></i>
+                        <span class="menu-link-text">Kanban</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a href="{{ url_for('fornecedor.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('fornecedor.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Fornecedores">
+                        <i class="bi bi-truck"></i>
+                        <span class="menu-link-text">Fornecedores</span>
+                    </a>
+                </div>
 
                 {% if current_user.is_admin %}
                 <div class="menu-divider"></div>
@@ -128,6 +140,12 @@
                     <a href="{{ url_for('logs') }}" class="menu-link {% if request.endpoint == 'logs' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Logs de Auditoria">
                         <i class="bi bi-shield-check"></i>
                         <span class="menu-link-text">Logs</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a href="{{ url_for('checklist.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('checklist.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Checklists">
+                        <i class="bi bi-list-check"></i>
+                        <span class="menu-link-text">Checklists</span>
                     </a>
                 </div>
                 {% endif %}
@@ -221,6 +239,10 @@
             <a href="{{ url_for('analytics') }}" class="bottom-nav-item {% if request.endpoint == 'analytics' %}active{% endif %}">
                 <i class="bi bi-graph-up-arrow"></i>
                 <span>Analytics</span>
+            </a>
+            <a href="{{ url_for('kanban.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('kanban.') %}active{% endif %}">
+                <i class="bi bi-kanban-fill"></i>
+                <span>Kanban</span>
             </a>
             <a href="{{ url_for('novo_relatorio') }}" class="bottom-nav-item bottom-nav-item-primary">
                 <i class="bi bi-plus-circle-fill"></i>

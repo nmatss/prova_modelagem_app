@@ -277,10 +277,56 @@
             align-items: center;
             justify-content: center;
         }
+    }
 
-        .img-thumbnail {
-            cursor: pointer;
-        }
+    /* ===== LIGHTBOX / PHOTO CLICKABLE ===== */
+    .photo-clickable {
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .photo-clickable:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    #photoLightbox .modal-body {
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        min-height: 300px;
+    }
+
+    #photoLightbox .modal-body img {
+        max-width: 100%;
+        max-height: 85vh;
+        object-fit: contain;
+    }
+
+    #photoLightbox .modal-content {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #000;
+    }
+
+    #photoLightbox .modal-header {
+        background: rgba(0,0,0,0.85);
+        border-bottom: none;
+        padding: 0.5rem 1rem;
+    }
+
+    #photoLightbox .modal-header .modal-title {
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 400;
+        opacity: 0.9;
+    }
+
+    #photoLightbox .btn-close-white {
+        filter: brightness(2);
     }
 </style>
 {% endblock %}
@@ -320,6 +366,15 @@
                 </span>
                 {% endif %}
             </div>
+            {% if relatorio.data_limite %}
+            <div class="mt-2">
+                <span class="badge bg-{% if prazo_status is defined and prazo_status == 'vencido' %}danger{% elif prazo_status is defined and prazo_status == 'proximo' %}warning text-dark{% else %}info{% endif %}" style="font-size: 0.85rem;">
+                    <i class="bi bi-calendar-event me-1"></i>
+                    Prazo: {{ relatorio.data_limite }}
+                    {% if prazo_status is defined and prazo_status == 'vencido' %} (Vencido){% elif prazo_status is defined and prazo_status == 'proximo' %} (Proximo){% endif %}
+                </span>
+            </div>
+            {% endif %}
             {% if relatorio.created_at %}
             <small class="text-muted d-block mt-2">
                 <i class="bi bi-calendar3"></i> Criado em {{ relatorio.created_at.strftime('%d/%m/%Y às %H:%M') }}
@@ -339,6 +394,12 @@
                 </a>
             </div>
             <div class="d-flex gap-2">
+                <form action="{{ url_for('duplicar_relatorio', id=relatorio.id) }}" method="POST" class="d-inline"
+                      onsubmit="return confirm('Duplicar este relatório? Será criada uma cópia com todas as referências (sem provas).')">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-copy"></i> Duplicar
+                    </button>
+                </form>
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                     <i class="bi bi-trash"></i> Excluir
                 </button>
@@ -420,6 +481,16 @@
                         </div>
                     </div>
                     {% endif %}
+                    {% if relatorio.linha %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Linha</span>
+                            <span class="info-value">
+                                <span class="badge bg-primary-subtle text-primary">{{ relatorio.linha }}</span>
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% if relatorio.temporada %}
                     <div class="col-md-6">
                         <div class="info-item">
@@ -455,8 +526,9 @@
                             <div class="mt-2">
                                 <img src="{{ url_for('serve_upload', filename=relatorio.imagem_produto) }}"
                                      alt="Imagem do produto {{ relatorio.descricao_geral }} - Coleção {{ relatorio.colecao or 'Sem coleção' }}"
-                                     class="img-thumbnail"
-                                     style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                     class="img-thumbnail photo-clickable"
+                                     style="max-width: 200px; max-height: 200px; object-fit: cover;"
+                                     role="button" title="Clique para ampliar">
                             </div>
                         </div>
                     </div>
@@ -583,6 +655,14 @@
             </a>
         </div>
         {% endif %}
+
+        {% if ref.provas|length >= 2 %}
+        <div class="border-top pt-3 mt-3">
+            <a href="{{ url_for('comparar_provas', id=ref.id, prova1=ref.provas[0].id, prova2=ref.provas[-1].id) }}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-arrow-left-right me-1"></i> Comparar Provas ({{ ref.provas|length }})
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -622,8 +702,9 @@
                 {% for foto in prova['fotos']['desenho'] %}
                 <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
                      alt="Desenho técnico do produto {{ prova.numero_prova }}ª prova"
-                     class="img-thumbnail"
-                     style="width: 150px; height: 150px; object-fit: cover;">
+                     class="img-thumbnail photo-clickable"
+                     style="width: 150px; height: 150px; object-fit: cover;"
+                     role="button" title="Clique para ampliar">
                 {% endfor %}
             </div>
         </div>
@@ -688,8 +769,9 @@
                     <div class="text-center">
                         <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
                              alt="Foto da amostra {{ prova.numero_prova }}ª prova - Tamanho {{ foto.get('tamanho', 'não especificado') }}"
-                             class="img-thumbnail"
-                             style="width: 100px; height: 100px; object-fit: cover;">
+                             class="img-thumbnail photo-clickable"
+                             style="width: 100px; height: 100px; object-fit: cover;"
+                             role="button" title="Clique para ampliar">
                         <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
                     </div>
                     {% endfor %}
@@ -704,8 +786,9 @@
                     <div class="text-center">
                         <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
                              alt="Foto da prova na modelo {{ prova.numero_prova }}ª prova - Tamanho {{ foto.get('tamanho', 'não especificado') }}"
-                             class="img-thumbnail"
-                             style="width: 100px; height: 100px; object-fit: cover;">
+                             class="img-thumbnail photo-clickable"
+                             style="width: 100px; height: 100px; object-fit: cover;"
+                             role="button" title="Clique para ampliar">
                         <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
                     </div>
                     {% endfor %}
@@ -739,8 +822,9 @@
                             {% for foto in prova['fotos']['qualidade'] %}
                             <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
                                  alt="Foto da avaliação de qualidade {{ prova.numero_prova }}ª prova"
-                                 class="img-thumbnail"
-                                 style="width: 60px; height: 60px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#fotoModal{{ loop.index }}" role="button">
+                                 class="img-thumbnail photo-clickable"
+                                 style="width: 60px; height: 60px; object-fit: cover;"
+                                 role="button" title="Clique para ampliar">
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -765,8 +849,9 @@
                             {% for foto in prova['fotos']['estilo'] %}
                             <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
                                  alt="Foto da avaliação de estilo {{ prova.numero_prova }}ª prova"
-                                 class="img-thumbnail"
-                                 style="width: 60px; height: 60px; object-fit: cover;">
+                                 class="img-thumbnail photo-clickable"
+                                 style="width: 60px; height: 60px; object-fit: cover;"
+                                 role="button" title="Clique para ampliar">
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -791,8 +876,9 @@
                             {% for foto in prova['fotos']['modelagem'] %}
                             <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
                                  alt="Foto da avaliação de modelagem {{ prova.numero_prova }}ª prova"
-                                 class="img-thumbnail"
-                                 style="width: 60px; height: 60px; object-fit: cover;">
+                                 class="img-thumbnail photo-clickable"
+                                 style="width: 60px; height: 60px; object-fit: cover;"
+                                 role="button" title="Clique para ampliar">
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -866,6 +952,27 @@
             </a>
         </div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Modal Lightbox para Fotos -->
+<div class="modal fade" id="photoLightbox" tabindex="-1" aria-hidden="true" data-bs-keyboard="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="photoLightboxTitle"></h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="photoLightboxImg" src="" alt="Foto ampliada">
+            </div>
+            <div class="modal-footer justify-content-center" style="background: rgba(0,0,0,0.85); border-top: none; padding: 0.5rem;">
+                <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i> Fechar
+                </button>
+                <small class="text-muted ms-3">ESC ou clique fora para fechar</small>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -993,6 +1100,37 @@
         document.getElementById('modalProvaId').value = provaId;
         document.getElementById('modalNovoStatus').value = novoStatus;
     });
+
+    // =====================================================
+    // PHOTO LIGHTBOX - Clique para ampliar fotos
+    // =====================================================
+    (function() {
+        const lightboxEl = document.getElementById('photoLightbox');
+        const lightboxImg = document.getElementById('photoLightboxImg');
+        const lightboxTitle = document.getElementById('photoLightboxTitle');
+
+        if (!lightboxEl || !lightboxImg) return;
+
+        // Instância única do modal (keyboard: true + backdrop: true)
+        const lightboxModal = new bootstrap.Modal(lightboxEl, {
+            keyboard: true,
+            backdrop: true
+        });
+
+        document.querySelectorAll('.photo-clickable').forEach(function(img) {
+            img.addEventListener('click', function() {
+                lightboxImg.src = this.src;
+                lightboxTitle.textContent = this.alt || 'Foto';
+                lightboxModal.show();
+            });
+        });
+
+        // Limpar src ao fechar para liberar memória
+        lightboxEl.addEventListener('hidden.bs.modal', function() {
+            lightboxImg.src = '';
+            lightboxTitle.textContent = '';
+        });
+    })();
 
     // =====================================================
     // DELETE MODAL - Solução com AJAX e timeout

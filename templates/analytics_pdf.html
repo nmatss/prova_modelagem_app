@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório Gerencial - Analytics</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11pt;
+            color: #333;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 22pt;
+            margin: 0 0 5px 0;
+        }
+        .header .subtitle {
+            color: #666;
+            font-size: 10pt;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section h2 {
+            color: #667eea;
+            font-size: 14pt;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .kpi-grid {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .kpi-card {
+            flex: 1;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .kpi-card .value {
+            font-size: 24pt;
+            font-weight: 700;
+            color: #333;
+        }
+        .kpi-card .label {
+            font-size: 9pt;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .kpi-card.success { border-left: 4px solid #22C55E; }
+        .kpi-card.danger { border-left: 4px solid #EF4444; }
+        .kpi-card.warning { border-left: 4px solid #F59E0B; }
+        .kpi-card.info { border-left: 4px solid #3B82F6; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 10pt;
+        }
+        th {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 9pt;
+            font-weight: 600;
+        }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 8pt;
+            border-top: 1px solid #e9ecef;
+            padding-top: 10px;
+            margin-top: 30px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .stat-row .stat-label { color: #666; }
+        .stat-row .stat-value { font-weight: 600; }
+        .alert-box {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 10pt;
+        }
+        .alert-box.alert-danger {
+            background: #fee2e2;
+            border-left: 4px solid #EF4444;
+            color: #991b1b;
+        }
+        .alert-box.alert-success {
+            background: #d1fae5;
+            border-left: 4px solid #22C55E;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Relatório Gerencial</h1>
+        <div class="subtitle">Provas de Modelagem - Gerado em {{ now().strftime('%d/%m/%Y às %H:%M') }}</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="section">
+        <h2>Indicadores Principais</h2>
+        <div class="kpi-grid">
+            <div class="kpi-card info">
+                <div class="value">{{ total_relatorios }}</div>
+                <div class="label">Relatórios</div>
+            </div>
+            <div class="kpi-card info">
+                <div class="value">{{ total_referencias }}</div>
+                <div class="label">Referências</div>
+            </div>
+            <div class="kpi-card success">
+                <div class="value">{{ taxa_aprovacao }}%</div>
+                <div class="label">Taxa Aprovação</div>
+            </div>
+            <div class="kpi-card warning">
+                <div class="value">{{ taxa_retrabalho }}%</div>
+                <div class="label">Taxa Retrabalho</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status das Provas -->
+    <div class="section">
+        <h2>Status das Provas</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Quantidade</th>
+                    <th>Percentual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-success">Aprovadas</span></td>
+                    <td>{{ provas_aprovadas }}</td>
+                    <td>{{ (provas_aprovadas / total_provas * 100)|round(1) if total_provas > 0 else 0 }}%</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">Reprovadas</span></td>
+                    <td>{{ provas_reprovadas }}</td>
+                    <td>{{ (provas_reprovadas / total_provas * 100)|round(1) if total_provas > 0 else 0 }}%</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-info">Em Andamento</span></td>
+                    <td>{{ provas_em_andamento }}</td>
+                    <td>{{ (provas_em_andamento / total_provas * 100)|round(1) if total_provas > 0 else 0 }}%</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">Comitê</span></td>
+                    <td>{{ provas_comite }}</td>
+                    <td>{{ (provas_comite / total_provas * 100)|round(1) if total_provas > 0 else 0 }}%</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="stat-row">
+            <span class="stat-label">Total de Provas</span>
+            <span class="stat-value">{{ total_provas }}</span>
+        </div>
+    </div>
+
+    {% if relatorios_vencidos > 0 %}
+    <div class="alert-box alert-danger">
+        <strong>Atenção:</strong> {{ relatorios_vencidos }} relatório(s) com prazo vencido.
+    </div>
+    {% endif %}
+
+    <!-- Categorias -->
+    <div class="section">
+        <h2>Referências por Categoria</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Categoria</th>
+                    <th>Quantidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat, count in categorias_stats.items() %}
+                <tr>
+                    <td>{{ cat|upper if cat else 'Não definida' }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Top Fornecedores -->
+    {% if fornecedores_stats %}
+    <div class="section">
+        <h2>Top Fornecedores</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fornecedor</th>
+                    <th>Referências</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for forn, count in fornecedores_stats %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ forn }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Sistema de Gestão de Provas de Modelagem - Relatório gerado automaticamente
+    </div>
+</body>
+</html>

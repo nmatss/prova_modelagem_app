@@ -263,7 +263,10 @@
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
             <a href="{{ url_for('analytics_exportar', status=filtro_status, categoria=filtro_categoria, colecao=filtro_colecao, fornecedor=filtro_fornecedor, referencia=filtro_referencia, data_inicio=filtro_data_inicio, data_fim=filtro_data_fim) }}" class="export-btn">
-                <i class="bi bi-file-earmark-excel me-1"></i> Exportar
+                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+            </a>
+            <a href="{{ url_for('analytics_pdf') }}" class="btn btn-outline-light btn-sm" target="_blank">
+                <i class="bi bi-file-pdf me-1"></i> PDF
             </a>
         </div>
     </div>

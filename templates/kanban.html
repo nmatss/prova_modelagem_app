@@ -1,0 +1,546 @@
+{% extends "base.html" %}
+
+{% block title %}Kanban - Prova de Modelagem{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+<li class="breadcrumb-item active"><i class="bi bi-kanban me-1"></i>Kanban</li>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* ===== KANBAN BOARD ===== */
+    .kanban-board {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+        min-height: calc(100vh - 220px);
+    }
+
+    .kanban-column {
+        flex: 0 0 25%;
+        min-width: 280px;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .kanban-column-inner {
+        background: #f8f9fa;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 400px;
+    }
+
+    /* ===== COLUMN HEADERS ===== */
+    .kanban-header {
+        padding: 1rem 1.25rem;
+        border-radius: 12px 12px 0 0;
+        color: #fff;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .kanban-header-andamento {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    }
+
+    .kanban-header-comite {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    }
+
+    .kanban-header-aprovado {
+        background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+    }
+
+    .kanban-header-reprovado {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    }
+
+    .kanban-header .badge {
+        font-size: 0.8rem;
+        padding: 0.35em 0.65em;
+    }
+
+    /* ===== CARD LIST ===== */
+    .kanban-cards {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.75rem;
+        max-height: calc(100vh - 320px);
+    }
+
+    .kanban-cards::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .kanban-cards::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .kanban-cards::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .kanban-cards::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* ===== KANBAN CARDS ===== */
+    .kanban-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        cursor: grab;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+        border-left: 4px solid transparent;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .kanban-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .kanban-card:active {
+        cursor: grabbing;
+    }
+
+    .kanban-card.sortable-ghost {
+        opacity: 0.4;
+        background: #e2e8f0;
+    }
+
+    .kanban-card.sortable-chosen {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        transform: rotate(2deg);
+    }
+
+    .kanban-card.sortable-drag {
+        opacity: 0.9;
+    }
+
+    /* Border-left colors per column */
+    .kanban-column[data-status="Em Andamento"] .kanban-card {
+        border-left-color: #3B82F6;
+    }
+
+    .kanban-column[data-status="Comite"] .kanban-card,
+    .kanban-column[data-status="Comitê"] .kanban-card {
+        border-left-color: #F59E0B;
+    }
+
+    .kanban-column[data-status="Aprovado"] .kanban-card {
+        border-left-color: #22C55E;
+    }
+
+    .kanban-column[data-status="Reprovado"] .kanban-card {
+        border-left-color: #EF4444;
+    }
+
+    .kanban-card-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        color: #1e293b;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .kanban-card-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+
+    .kanban-card-stats {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    .kanban-card-stats i {
+        margin-right: 0.2rem;
+    }
+
+    .kanban-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .kanban-card-date {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+
+    .kanban-card-date.overdue {
+        color: #EF4444;
+        font-weight: 600;
+    }
+
+    .kanban-card-date.soon {
+        color: #F59E0B;
+        font-weight: 500;
+    }
+
+    /* ===== EMPTY COLUMN STATE ===== */
+    .kanban-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #94a3b8;
+    }
+
+    .kanban-empty i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.75rem;
+        opacity: 0.5;
+    }
+
+    .kanban-empty p {
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    /* ===== PROVA STATUS INDICATOR ===== */
+    .prova-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .prova-status-dot.aprovada { background: #22C55E; }
+    .prova-status-dot.reprovada { background: #EF4444; }
+    .prova-status-dot.andamento { background: #3B82F6; }
+    .prova-status-dot.comite { background: #F59E0B; }
+
+    /* ===== TOAST NOTIFICATION ===== */
+    .kanban-toast {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 9999;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 991.98px) {
+        .kanban-board {
+            flex-direction: column;
+        }
+
+        .kanban-column {
+            flex: 0 0 auto;
+            min-width: 100%;
+        }
+
+        .kanban-column-inner {
+            min-height: auto;
+        }
+
+        .kanban-cards {
+            max-height: 350px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .kanban-card {
+            padding: 0.75rem;
+        }
+
+        .kanban-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-gray-800">
+                <i class="bi bi-kanban me-2 text-primary"></i>
+                Kanban Board
+            </h1>
+            <p class="text-muted mb-0 small">Arraste os cards para atualizar o status dos relatorios</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-list-ul me-1"></i>
+                Lista
+            </a>
+            <a href="{{ url_for('novo_relatorio') }}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i>
+                Novo Relatorio
+            </a>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board">
+        {% set colunas_config = [
+            ('Em Andamento', 'andamento', 'bi-clock-history', 'bg-light text-dark'),
+            ('Comitê', 'comite', 'bi-people-fill', 'bg-light text-dark'),
+            ('Aprovado', 'aprovado', 'bi-check-circle-fill', 'bg-light text-dark'),
+            ('Reprovado', 'reprovado', 'bi-x-circle-fill', 'bg-light text-dark')
+        ] %}
+
+        {% for status_nome, classe, icone, badge_class in colunas_config %}
+        {% set cards = columns.get(status_nome, []) %}
+        <div class="kanban-column" data-status="{{ status_nome }}">
+            <div class="kanban-column-inner">
+                <!-- Column Header -->
+                <div class="kanban-header kanban-header-{{ classe }}">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi {{ icone }}"></i>
+                        <span>{{ status_nome }}</span>
+                    </div>
+                    <span class="badge {{ badge_class }}">{{ cards|length }}</span>
+                </div>
+
+                <!-- Card List (Sortable) -->
+                <div class="kanban-cards" id="kanban-{{ classe }}">
+                    {% if cards %}
+                        {% for card in cards %}
+                        <a href="{{ url_for('detalhes_relatorio', id=card.id) }}"
+                           class="kanban-card"
+                           data-id="{{ card.id }}">
+                            <!-- Title -->
+                            <div class="kanban-card-title">{{ card.descricao_geral }}</div>
+
+                            <!-- Meta badges -->
+                            <div class="kanban-card-meta">
+                                {% if card.colecao %}
+                                <span class="badge bg-primary-subtle text-primary" style="font-size: 0.7rem;">
+                                    <i class="bi bi-collection"></i> {{ card.colecao }}
+                                </span>
+                                {% endif %}
+                                {% if card.ultima_prova_status %}
+                                <span class="d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                    <span class="prova-status-dot {{ 'aprovada' if card.ultima_prova_status == 'Aprovada' else 'reprovada' if card.ultima_prova_status == 'Reprovada' else 'comite' if card.ultima_prova_status == 'Comitê' else 'andamento' }}"></span>
+                                    <span class="text-muted">{{ card.ultima_prova_status }}</span>
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="kanban-card-stats">
+                                <span title="Referencias">
+                                    <i class="bi bi-tag"></i> {{ card.total_referencias }} ref{{ 's' if card.total_referencias != 1 else '' }}
+                                </span>
+                                <span title="Provas">
+                                    <i class="bi bi-clipboard-check"></i> {{ card.total_provas }} prova{{ 's' if card.total_provas != 1 else '' }}
+                                </span>
+                            </div>
+
+                            <!-- Footer with date -->
+                            {% if card.data_limite %}
+                            <div class="kanban-card-footer">
+                                <span class="kanban-card-date" data-date="{{ card.data_limite }}">
+                                    <i class="bi bi-calendar-event"></i> {{ card.data_limite }}
+                                </span>
+                            </div>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="kanban-empty">
+                            <i class="bi bi-inbox"></i>
+                            <p>Nenhum relatorio</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Toast para feedback -->
+<div class="kanban-toast" aria-live="polite" aria-atomic="true">
+    <div id="kanbanToast" class="toast align-items-center border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="kanbanToastBody">
+                Status atualizado com sucesso.
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- SortableJS -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+(function() {
+    'use strict';
+
+    // Status mapping: column id -> status name for the API
+    const statusMap = {
+        'kanban-andamento': 'Em Andamento',
+        'kanban-comite': 'Comitê',
+        'kanban-aprovado': 'Aprovado',
+        'kanban-reprovado': 'Reprovado'
+    };
+
+    // Toast helper
+    function showToast(message, isError) {
+        const toastEl = document.getElementById('kanbanToast');
+        const toastBody = document.getElementById('kanbanToastBody');
+        if (!toastEl || !toastBody) return;
+
+        toastBody.textContent = message;
+        toastEl.className = 'toast align-items-center border-0 text-white ' +
+            (isError ? 'bg-danger' : 'bg-success');
+
+        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        toast.show();
+    }
+
+    // Update column count badges
+    function updateColumnCounts() {
+        document.querySelectorAll('.kanban-column').forEach(function(col) {
+            const cards = col.querySelectorAll('.kanban-card');
+            const badge = col.querySelector('.kanban-header .badge');
+            if (badge) {
+                badge.textContent = cards.length;
+            }
+
+            // Toggle empty state
+            const emptyDiv = col.querySelector('.kanban-empty');
+            if (cards.length === 0 && !emptyDiv) {
+                const empty = document.createElement('div');
+                empty.className = 'kanban-empty';
+                empty.innerHTML = '<i class="bi bi-inbox"></i><p>Nenhum relatorio</p>';
+                col.querySelector('.kanban-cards').appendChild(empty);
+            } else if (cards.length > 0 && emptyDiv) {
+                emptyDiv.remove();
+            }
+        });
+    }
+
+    // Initialize Sortable on each card list
+    var sortableLists = document.querySelectorAll('.kanban-cards');
+    sortableLists.forEach(function(list) {
+        new Sortable(list, {
+            group: 'kanban',
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            handle: '.kanban-card',
+            filter: '.kanban-empty',
+            draggable: '.kanban-card',
+            easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+
+            onEnd: function(evt) {
+                var cardEl = evt.item;
+                var targetList = evt.to;
+                var relatorioId = cardEl.getAttribute('data-id');
+                var novoStatus = statusMap[targetList.id];
+
+                if (!novoStatus || !relatorioId) return;
+
+                // Remove empty state from target if present
+                var emptyState = targetList.querySelector('.kanban-empty');
+                if (emptyState) emptyState.remove();
+
+                updateColumnCounts();
+
+                // POST the status change
+                fetch('/kanban/mover', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        relatorio_id: parseInt(relatorioId),
+                        novo_status: novoStatus
+                    })
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Erro ao atualizar status');
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    showToast('Status atualizado para "' + novoStatus + '"', false);
+                })
+                .catch(function(error) {
+                    showToast('Erro: ' + error.message, true);
+                    // Revert: move card back to original list
+                    if (evt.from !== evt.to) {
+                        evt.from.insertBefore(cardEl, evt.from.children[evt.oldIndex] || null);
+                        updateColumnCounts();
+                    }
+                });
+            }
+        });
+    });
+
+    // Highlight overdue / upcoming dates
+    document.querySelectorAll('.kanban-card-date[data-date]').forEach(function(el) {
+        var dateStr = el.getAttribute('data-date');
+        if (!dateStr) return;
+
+        // Try parsing dd/mm/yyyy or yyyy-mm-dd
+        var parts;
+        var dateObj;
+        if (dateStr.indexOf('/') > -1) {
+            parts = dateStr.split('/');
+            dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else {
+            dateObj = new Date(dateStr);
+        }
+
+        if (isNaN(dateObj.getTime())) return;
+
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var diffDays = Math.ceil((dateObj - today) / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            el.classList.add('overdue');
+            el.title = 'Prazo vencido';
+        } else if (diffDays <= 3) {
+            el.classList.add('soon');
+            el.title = 'Prazo em ' + diffDays + ' dia(s)';
+        }
+    });
+
+    console.log('Kanban board initialized');
+})();
+</script>
+{% endblock %}

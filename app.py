@@ -1,7 +1,7 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify, make_response
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, send_file, flash, jsonify, make_response
 from flask_compress import Compress
 from weasyprint import HTML, CSS
 from werkzeug.datastructures import MultiDict
@@ -12,9 +12,10 @@ from auth import auth_bp, get_user_by_id
 from admin import admin_bp
 from audit_bp import audit_bp  # ✅ Habilitado - AuditLog existe no banco (models.py)
 from db import init_app as init_db
-from models import db, Relatorio, Referencia, Prova, Foto, AuditLog
+from models import db, Relatorio, Referencia, Prova, Foto, AuditLog, Fornecedor, ChecklistTemplate, ChecklistResposta, ArquivoVersao, PreferenciaUsuario
 from config import Config
 from utils import save_file
+import json
 from excel_export import export_relatorios_to_excel, export_detalhes_to_excel
 from error_handlers import register_error_handlers
 from security import init_security, SecurityHeaders
@@ -162,6 +163,14 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(audit_bp, url_prefix='/auditoria')  # ✅ Habilitado - AuditLog existe
 
+# Registrar Blueprints de Features v2
+from fornecedor_bp import fornecedor_bp
+from kanban_bp import kanban_bp
+from checklist_bp import checklist_bp
+app.register_blueprint(fornecedor_bp, url_prefix='/fornecedores')
+app.register_blueprint(kanban_bp, url_prefix='/kanban')
+app.register_blueprint(checklist_bp, url_prefix='/admin/checklists')
+
 # Registrar error handlers
 register_error_handlers(app)
 
@@ -285,8 +294,16 @@ def dashboard():
     page = request.args.get('page', 1, type=int)
     per_page = 20
 
-    # Obter relatórios paginados
-    pagination = Relatorio.query.order_by(desc(Relatorio.created_at)).paginate(
+    # Filtro por referência
+    filtro_referencia = request.args.get('referencia', '').strip()
+
+    # Obter relatórios paginados (com filtro opcional por referência)
+    query = Relatorio.query
+    if filtro_referencia:
+        query = query.join(Referencia).filter(
+            Referencia.numero_ref.ilike(f'%{filtro_referencia}%')
+        ).distinct()
+    pagination = query.order_by(desc(Relatorio.created_at)).paginate(
         page=page, per_page=per_page, error_out=False
     )
     relatorios = pagination.items
@@ -328,6 +345,29 @@ def dashboard():
         # Fornecedores únicos
         fornecedores = list(set([r.fornecedor for r in referencias if r.fornecedor]))
         relatorio_dict['fornecedores'] = ', '.join(fornecedores) if fornecedores else None
+
+        # F2: Prazo / Deadline badge
+        if relatorio.data_limite:
+            try:
+                from datetime import date
+                data_limite = date.fromisoformat(relatorio.data_limite)
+                hoje = date.today()
+                dias_restantes = (data_limite - hoje).days
+                if dias_restantes < 0:
+                    relatorio_dict['prazo_status'] = 'vencido'
+                    relatorio_dict['prazo_label'] = f'Vencido há {abs(dias_restantes)} dia(s)'
+                elif dias_restantes <= 7:
+                    relatorio_dict['prazo_status'] = 'proximo'
+                    relatorio_dict['prazo_label'] = f'{dias_restantes} dia(s) restante(s)'
+                else:
+                    relatorio_dict['prazo_status'] = 'ok'
+                    relatorio_dict['prazo_label'] = f'{dias_restantes} dias'
+                relatorio_dict['data_limite'] = relatorio.data_limite
+            except (ValueError, TypeError):
+                relatorio_dict['prazo_status'] = None
+                relatorio_dict['data_limite'] = relatorio.data_limite
+        else:
+            relatorio_dict['prazo_status'] = None
 
         # Data de criação formatada
         if relatorio.created_at:
@@ -440,7 +480,16 @@ def dashboard():
         'insights': insights
     }
 
-    return render_template('dashboard.html', relatorios=relatorios_com_status, stats=stats, pagination=pagination)
+    # F9: Carregar preferências do usuário
+    widget_prefs = {}
+    try:
+        pref = PreferenciaUsuario.query.filter_by(usuario_id=current_user.id).first()
+        if pref:
+            widget_prefs = pref.get_config()
+    except Exception:
+        pass
+
+    return render_template('dashboard.html', relatorios=relatorios_com_status, stats=stats, pagination=pagination, widget_prefs=widget_prefs)
 
 @app.route('/favicon.ico')
 def favicon():
@@ -485,12 +534,32 @@ def detalhes_relatorio(id):
         ref_dict['provas'] = provas_completas
         referencias_completas.append(ref_dict)
 
-    return render_template('detalhes_relatorio.html', relatorio=relatorio, referencias=referencias_completas)
+    # Calcular prazo_status para exibição visual
+    prazo_status = None
+    if relatorio.data_limite:
+        from datetime import date
+        try:
+            prazo_date = date.fromisoformat(relatorio.data_limite)
+            hoje = date.today()
+            diff = (prazo_date - hoje).days
+            if diff < 0:
+                prazo_status = 'vencido'
+            elif diff <= 7:
+                prazo_status = 'proximo'
+            else:
+                prazo_status = 'ok'
+        except (ValueError, TypeError):
+            pass
+
+    return render_template('detalhes_relatorio.html', relatorio=relatorio, referencias=referencias_completas, prazo_status=prazo_status)
 
 @app.route('/relatorio/<int:id>/pdf')
 @login_required
 def relatorio_pdf(id):
     """Gera e retorna o PDF do relatório"""
+    import base64
+    import mimetypes
+
     relatorio = Relatorio.query.get_or_404(id)
 
     # Preparar dados para o template (mesma estrutura do detalhes_relatorio)
@@ -509,9 +578,20 @@ def relatorio_pdf(id):
                 contexto = foto.contexto
                 if contexto not in prova_dict['fotos']:
                     prova_dict['fotos'][contexto] = []
-                # Adicionar caminho absoluto para WeasyPrint
                 foto_dict = {c.name: getattr(foto, c.name) for c in foto.__table__.columns}
-                foto_dict['caminho_absoluto'] = os.path.join(app.config['UPLOAD_FOLDER'], foto.file_path)
+                # Converter imagem para base64 data URI
+                caminho_absoluto = os.path.join(app.config['UPLOAD_FOLDER'], foto.file_path)
+                if os.path.exists(caminho_absoluto):
+                    try:
+                        mime_type = mimetypes.guess_type(caminho_absoluto)[0] or 'image/jpeg'
+                        with open(caminho_absoluto, 'rb') as img_file:
+                            img_data = base64.b64encode(img_file.read()).decode('utf-8')
+                        foto_dict['base64'] = f'data:{mime_type};base64,{img_data}'
+                    except Exception as e:
+                        app.logger.error(f'Erro ao converter foto {foto.file_path} para base64: {e}')
+                        foto_dict['base64'] = ''
+                else:
+                    foto_dict['base64'] = ''
                 prova_dict['fotos'][contexto].append(foto_dict)
 
             provas_completas.append(prova_dict)
@@ -526,8 +606,9 @@ def relatorio_pdf(id):
                                    referencias=referencias_completas,
                                    now=datetime.now)
 
-    # Gerar PDF usando WeasyPrint com base_url do diretório de uploads
-    pdf = HTML(string=html_string, base_url=request.url_root).write_pdf()
+    # Gerar PDF usando WeasyPrint
+    base_url = 'file://' + app.config.get('UPLOAD_FOLDER', '') + '/'
+    pdf = HTML(string=html_string, base_url=base_url).write_pdf()
 
     # Criar resposta
     response = make_response(pdf)
@@ -546,18 +627,42 @@ def editar_relatorio(id):
             # 1. Atualiza as informações gerais do relatório
             relatorio.colecao = request.form.get('colecao')
             relatorio.descricao_geral = request.form.get('descricao_geral')
+            relatorio.linha = request.form.get('linha')
+
+            # F2: Atualizar data_limite
+            relatorio.data_limite = request.form.get('data_limite')
 
             # Atualiza PPT se um novo arquivo foi enviado
             ppt_file = request.files.get('ppt')
             if ppt_file and ppt_file.filename:
-                # Excluir PPT antigo se existir
+                # F8: Salvar versão anterior
                 if relatorio.ppt_path:
-                    from utils import delete_file
-                    delete_file(relatorio.ppt_path)
+                    salvar_versao_arquivo('relatorio', relatorio.id, 'ppt_path', relatorio.ppt_path)
                 # Salvar novo PPT
                 ppt_filename = save_file(ppt_file)
                 if ppt_filename:
                     relatorio.ppt_path = ppt_filename
+
+            # Atualiza Imagem do Produto se um novo arquivo foi enviado
+            imagem_file = request.files.get('imagem_produto')
+            if imagem_file and imagem_file.filename:
+                # F8: Salvar versão anterior
+                if relatorio.imagem_produto:
+                    salvar_versao_arquivo('relatorio', relatorio.id, 'imagem_produto', relatorio.imagem_produto)
+                imagem_filename = save_file(imagem_file)
+                if imagem_filename:
+                    relatorio.imagem_produto = imagem_filename
+
+            # Atualiza Ficha Técnica se um novo arquivo foi enviado
+            ficha_file = request.files.get('ficha_tecnica')
+            if ficha_file and ficha_file.filename:
+                # F8: Salvar versão anterior
+                if relatorio.ficha_tecnica:
+                    from utils import delete_file
+                    delete_file(relatorio.ficha_tecnica)
+                ficha_filename = save_file(ficha_file)
+                if ficha_filename:
+                    relatorio.ficha_tecnica = ficha_filename
             
             # 2. Itera sobre todos os tipos possíveis
             for tipo in ['baby', 'kids', 'teen', 'adulto']:
@@ -752,11 +857,15 @@ def novo_relatorio():
             ficha_tecnica_filename = save_file(request.files.get('ficha_tecnica'))
 
             novo_relatorio = Relatorio(
+                codigo=gerar_codigo_relatorio(),
                 descricao_geral=request.form.get('descricao_geral'),
                 colecao=request.form.get('colecao'),
+                linha=request.form.get('linha'),
+                data_limite=request.form.get('data_limite'),
                 ppt_path=ppt_filename,
                 imagem_produto=imagem_produto_filename,
-                ficha_tecnica=ficha_tecnica_filename
+                ficha_tecnica=ficha_tecnica_filename,
+                created_by=current_user.id if current_user.is_authenticated else None
             )
             db.session.add(novo_relatorio)
             db.session.flush()
@@ -1041,6 +1150,88 @@ def exportar_relatorio_excel(id):
         return redirect(url_for('detalhes_relatorio', id=id))
 
 
+@app.route('/importar/excel/modelo')
+@login_required
+def download_modelo_excel():
+    """Gera e retorna um arquivo Excel modelo para importação"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.datavalidation import DataValidation
+    import tempfile
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Informações Gerais"
+
+    # Headers
+    headers = ['Descrição', 'Linha', 'Coleção', 'Temporada', 'Ano', 'Status Geral']
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="e6007e", end_color="e6007e", fill_type="solid")
+    header_alignment = Alignment(horizontal='center', vertical='center')
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    # Linha de exemplo
+    exemplo = ['VESTIDO FLORAL', 'PRAIA', 'VERÃO 2025', 'VERÃO', 2025, 'EM ANDAMENTO']
+    for col_idx, valor in enumerate(exemplo, 1):
+        cell = ws.cell(row=2, column=col_idx, value=valor)
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+
+    # Largura das colunas
+    col_widths = [30, 15, 20, 15, 10, 18]
+    for col_idx, width in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+    # Data validation — Linha (coluna B)
+    dv_linha = DataValidation(
+        type="list",
+        formula1='"PRAIA,ACESSÓRIO,LINGERIE,MEIAS,HOMEWEAR"',
+        allow_blank=True
+    )
+    dv_linha.prompt = "Selecione a linha do produto"
+    dv_linha.promptTitle = "Linha"
+    dv_linha.showInputMessage = True
+    ws.add_data_validation(dv_linha)
+    dv_linha.add(f'B2:B1048576')
+
+    # Data validation — Status Geral (coluna F)
+    dv_status = DataValidation(
+        type="list",
+        formula1='"EM ANDAMENTO,APROVADO,REPROVADO"',
+        allow_blank=True
+    )
+    dv_status.prompt = "Selecione o status"
+    dv_status.promptTitle = "Status Geral"
+    dv_status.showInputMessage = True
+    ws.add_data_validation(dv_status)
+    dv_status.add(f'F2:F1048576')
+
+    # Salvar e retornar
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
+        wb.save(tmp.name)
+        tmp_path = tmp.name
+
+    return send_file(
+        tmp_path,
+        as_attachment=True,
+        download_name='modelo_importacao.xlsx',
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+
 @app.route('/importar/excel', methods=['GET', 'POST'])
 @login_required
 def importar_relatorios_excel():
@@ -1091,6 +1282,7 @@ def importar_relatorios_excel():
                     # Criar relatório
                     novo_rel = Relatorio(
                         descricao_geral=str(dados.get('Descrição', '')).upper(),
+                        linha=str(dados.get('Linha', '')).upper() if dados.get('Linha') else None,
                         colecao=str(dados.get('Coleção', '')).upper() if dados.get('Coleção') else None,
                         temporada=str(dados.get('Temporada', '')).upper() if dados.get('Temporada') else None,
                         ano=int(dados.get('Ano')) if dados.get('Ano') and str(dados.get('Ano')).isdigit() else None,
@@ -1873,6 +2065,315 @@ def logs():
                          filtro_acao=filtro_acao,
                          filtro_usuario=filtro_usuario,
                          filtro_entidade=filtro_entidade)
+
+
+# ========================================
+# HELPER: Gerar Código Sequencial (F1)
+# ========================================
+
+def gerar_codigo_relatorio():
+    """Gera código sequencial REL-YYYY-NNN"""
+    from datetime import datetime
+    ano = datetime.utcnow().year
+    ultimo = Relatorio.query.filter(
+        Relatorio.codigo.like(f'REL-{ano}-%')
+    ).order_by(desc(Relatorio.id)).first()
+
+    if ultimo and ultimo.codigo:
+        try:
+            numero = int(ultimo.codigo.split('-')[-1]) + 1
+        except (ValueError, IndexError):
+            numero = 1
+    else:
+        numero = 1
+
+    return f'REL-{ano}-{numero:03d}'
+
+
+# ========================================
+# F1: DUPLICAR RELATÓRIO
+# ========================================
+
+@app.route('/relatorio/<int:id>/duplicar', methods=['POST'])
+@login_required
+def duplicar_relatorio(id):
+    """Duplica um relatório com suas referências (sem provas)"""
+    relatorio_original = Relatorio.query.get_or_404(id)
+
+    try:
+        novo_codigo = gerar_codigo_relatorio()
+
+        novo_rel = Relatorio(
+            codigo=novo_codigo,
+            descricao_geral=f"[CÓPIA] {relatorio_original.descricao_geral}",
+            colecao=relatorio_original.colecao,
+            temporada=relatorio_original.temporada,
+            ano=relatorio_original.ano,
+            linha=relatorio_original.linha,
+            status_geral='Em Andamento',
+            data_limite=relatorio_original.data_limite,
+            created_by=current_user.id if current_user.is_authenticated else None
+        )
+        db.session.add(novo_rel)
+        db.session.flush()
+
+        # Copiar referências (sem provas)
+        for ref in relatorio_original.referencias:
+            nova_ref = Referencia(
+                relatorio_id=novo_rel.id,
+                tipo_categoria=ref.tipo_categoria,
+                numero_ref=ref.numero_ref,
+                codigo_referencia=ref.codigo_referencia,
+                origem=ref.origem,
+                fornecedor=ref.fornecedor,
+                fornecedor_contato=ref.fornecedor_contato,
+                fornecedor_id=ref.fornecedor_id,
+                materia_prima=ref.materia_prima,
+                composicao=ref.composicao,
+                gramatura=ref.gramatura,
+                aviamentos=ref.aviamentos,
+                observacoes=ref.observacoes
+            )
+            db.session.add(nova_ref)
+
+        db.session.commit()
+
+        registrar_log(
+            acao='duplicar',
+            entidade_tipo='relatorio',
+            entidade_id=novo_rel.id,
+            entidade_descricao=f'Duplicado de #{id}: {relatorio_original.descricao_geral}',
+            detalhes=f'Código: {novo_codigo}'
+        )
+
+        flash(f"Relatório duplicado com sucesso! Novo código: {novo_codigo}", "success")
+        return redirect(url_for('detalhes_relatorio', id=novo_rel.id))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao duplicar relatório: {e}", "error")
+        return redirect(url_for('detalhes_relatorio', id=id))
+
+
+# ========================================
+# F5: COMPARAÇÃO DE PROVAS
+# ========================================
+
+@app.route('/referencia/<int:id>/comparar')
+@login_required
+def comparar_provas(id):
+    """Compara duas provas lado a lado"""
+    referencia = Referencia.query.get_or_404(id)
+    prova1_id = request.args.get('prova1', type=int)
+    prova2_id = request.args.get('prova2', type=int)
+
+    if not prova1_id or not prova2_id:
+        flash("Selecione duas provas para comparar.", "warning")
+        return redirect(url_for('detalhes_relatorio', id=referencia.relatorio_id))
+
+    prova1 = Prova.query.get_or_404(prova1_id)
+    prova2 = Prova.query.get_or_404(prova2_id)
+
+    # Prepare prova dicts with photos
+    def prova_to_dict(prova):
+        prova_dict = {c.name: getattr(prova, c.name) for c in prova.__table__.columns}
+        prova_dict['fotos'] = {}
+        for foto in prova.fotos:
+            contexto = foto.contexto
+            if contexto not in prova_dict['fotos']:
+                prova_dict['fotos'][contexto] = []
+            prova_dict['fotos'][contexto].append({c.name: getattr(foto, c.name) for c in foto.__table__.columns})
+
+        # Checklist respostas
+        respostas = ChecklistResposta.query.filter_by(prova_id=prova.id).all()
+        prova_dict['checklist_respostas'] = respostas
+        total = len(respostas)
+        conformes = sum(1 for r in respostas if r.conforme)
+        prova_dict['checklist_conformidade'] = round(conformes / total * 100, 1) if total > 0 else 0
+
+        return prova_dict
+
+    prova1_dict = prova_to_dict(prova1)
+    prova2_dict = prova_to_dict(prova2)
+
+    # Find differences
+    campos_comparar = [
+        'status', 'data_recebimento', 'tamanhos_recebidos', 'data_prova',
+        'time_qualidade', 'comentarios_qualidade', 'obs_qualidade',
+        'time_estilo', 'comentarios_estilo', 'obs_estilo',
+        'time_modelagem', 'comentarios_modelagem', 'obs_modelagem',
+        'data_lacre', 'numero_lacre', 'info_adicionais'
+    ]
+    diferencas = {}
+    for campo in campos_comparar:
+        v1 = prova1_dict.get(campo) or ''
+        v2 = prova2_dict.get(campo) or ''
+        if v1 != v2:
+            diferencas[campo] = True
+
+    return render_template('comparar_provas.html',
+                           referencia=referencia,
+                           prova1=prova1_dict,
+                           prova2=prova2_dict,
+                           diferencas=diferencas)
+
+
+# ========================================
+# F7: ANALYTICS PDF (Relatório Gerencial)
+# ========================================
+
+@app.route('/analytics/pdf')
+@login_required
+def analytics_pdf():
+    """Gera PDF gerencial com métricas de desempenho"""
+    from datetime import datetime, timedelta
+
+    total_relatorios = Relatorio.query.count()
+    total_referencias = Referencia.query.count()
+    total_provas = Prova.query.count()
+
+    provas_aprovadas = Prova.query.filter_by(status='APROVADA').count()
+    provas_reprovadas = Prova.query.filter_by(status='REPROVADA').count()
+    provas_em_andamento = Prova.query.filter_by(status='EM ANDAMENTO').count()
+    provas_comite = Prova.query.filter_by(status='COMITÊ').count()
+
+    taxa_aprovacao = round((provas_aprovadas / total_provas * 100) if total_provas > 0 else 0, 1)
+    provas_retrabalho = Prova.query.filter(Prova.numero_prova > 1).count()
+    taxa_retrabalho = round((provas_retrabalho / total_provas * 100) if total_provas > 0 else 0, 1)
+
+    # Por categoria
+    categorias_stats = db.session.query(
+        Referencia.tipo_categoria,
+        db.func.count(Referencia.id)
+    ).group_by(Referencia.tipo_categoria).all()
+
+    # Top fornecedores
+    fornecedores_stats = db.session.query(
+        Referencia.fornecedor,
+        db.func.count(Referencia.id)
+    ).filter(Referencia.fornecedor.isnot(None), Referencia.fornecedor != '').group_by(
+        Referencia.fornecedor
+    ).order_by(db.func.count(Referencia.id).desc()).limit(10).all()
+
+    # Relatórios com prazo vencido
+    from datetime import date
+    hoje = date.today().isoformat()
+    relatorios_vencidos = Relatorio.query.filter(
+        Relatorio.data_limite.isnot(None),
+        Relatorio.data_limite != '',
+        Relatorio.data_limite < hoje,
+        Relatorio.status_geral != 'Aprovado'
+    ).count()
+
+    html_string = render_template('analytics_pdf.html',
+                                   total_relatorios=total_relatorios,
+                                   total_referencias=total_referencias,
+                                   total_provas=total_provas,
+                                   provas_aprovadas=provas_aprovadas,
+                                   provas_reprovadas=provas_reprovadas,
+                                   provas_em_andamento=provas_em_andamento,
+                                   provas_comite=provas_comite,
+                                   taxa_aprovacao=taxa_aprovacao,
+                                   taxa_retrabalho=taxa_retrabalho,
+                                   categorias_stats=dict(categorias_stats),
+                                   fornecedores_stats=fornecedores_stats,
+                                   relatorios_vencidos=relatorios_vencidos,
+                                   now=datetime.now)
+
+    pdf = HTML(string=html_string).write_pdf()
+
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'inline; filename=analytics_relatorio_{datetime.now().strftime("%Y%m%d")}.pdf'
+    return response
+
+
+# ========================================
+# F8: VERSIONAMENTO DE ARQUIVOS
+# ========================================
+
+@app.route('/arquivo/<int:entidade_id>/versoes')
+@login_required
+def listar_versoes(entidade_id):
+    """Lista versões de arquivo de uma entidade"""
+    entidade_tipo = request.args.get('tipo', 'relatorio')
+    campo = request.args.get('campo', '')
+
+    versoes = ArquivoVersao.query.filter_by(
+        entidade_tipo=entidade_tipo,
+        entidade_id=entidade_id,
+        campo=campo
+    ).order_by(desc(ArquivoVersao.versao)).all()
+
+    return jsonify([{
+        'id': v.id,
+        'versao': v.versao,
+        'file_path': v.file_path,
+        'created_at': v.created_at.strftime('%d/%m/%Y %H:%M') if v.created_at else '',
+    } for v in versoes])
+
+
+@app.route('/arquivo/versao/<int:id>/download')
+@login_required
+def download_versao(id):
+    """Download de uma versão específica de arquivo"""
+    versao = ArquivoVersao.query.get_or_404(id)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], versao.file_path)
+
+
+def salvar_versao_arquivo(entidade_tipo, entidade_id, campo, file_path_antigo):
+    """Salva uma versão anterior do arquivo antes de substituir"""
+    if not file_path_antigo:
+        return
+
+    try:
+        # Contar versões existentes
+        ultima_versao = ArquivoVersao.query.filter_by(
+            entidade_tipo=entidade_tipo,
+            entidade_id=entidade_id,
+            campo=campo
+        ).order_by(desc(ArquivoVersao.versao)).first()
+
+        nova_versao = (ultima_versao.versao + 1) if ultima_versao else 1
+
+        versao = ArquivoVersao(
+            entidade_tipo=entidade_tipo,
+            entidade_id=entidade_id,
+            campo=campo,
+            file_path=file_path_antigo,
+            versao=nova_versao,
+            uploaded_by=current_user.id if current_user.is_authenticated else None
+        )
+        db.session.add(versao)
+    except Exception as e:
+        app.logger.error(f'Erro ao salvar versão de arquivo: {e}')
+
+
+# ========================================
+# F9: DASHBOARD PERSONALIZADO
+# ========================================
+
+@app.route('/dashboard/preferencias', methods=['POST'])
+@login_required
+def salvar_preferencias_dashboard():
+    """Salva configuração de widgets do dashboard (AJAX)"""
+    try:
+        config = request.get_json()
+        if not config:
+            return jsonify({'success': False, 'error': 'Dados inválidos'}), 400
+
+        pref = PreferenciaUsuario.query.filter_by(usuario_id=current_user.id).first()
+        if not pref:
+            pref = PreferenciaUsuario(usuario_id=current_user.id)
+            db.session.add(pref)
+
+        pref.set_config(config)
+        db.session.commit()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # ========================================

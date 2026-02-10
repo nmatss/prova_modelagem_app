@@ -20,10 +20,16 @@
             </h1>
             <p class="text-muted mb-0 small">Gerencie relatórios e provas de forma centralizada</p>
         </div>
-        <a href="{{ url_for('novo_relatorio') }}" class="btn btn-primary shadow-sm">
-            <i class="bi bi-plus-circle me-1"></i>
-            Novo Relatório
-        </a>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                <i class="bi bi-file-earmark-excel me-1"></i>
+                Importar Excel
+            </button>
+            <a href="{{ url_for('novo_relatorio') }}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i>
+                Novo Relatório
+            </a>
+        </div>
     </div>
 
     <!-- ========================================
@@ -206,6 +212,14 @@
                                    min="2020" max="2030">
                         </div>
 
+                        <!-- Filtro: Referência -->
+                        <div class="col-md-3">
+                            <label for="filtro-referencia" class="form-label small text-muted fw-semibold">REFERÊNCIA</label>
+                            <input type="text" id="filtro-referencia" name="referencia" class="form-control form-control-sm"
+                                   placeholder="Buscar por nº referência..."
+                                   value="{{ request.args.get('referencia', '') }}">
+                        </div>
+
                         <!-- Botões de Ação -->
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary btn-sm w-100 me-1">
@@ -218,7 +232,7 @@
                     </div>
 
                     <!-- Filtros Ativos -->
-                    {% if request.args.get('status') or request.args.get('colecao') or request.args.get('temporada') or request.args.get('ano') %}
+                    {% if request.args.get('status') or request.args.get('colecao') or request.args.get('temporada') or request.args.get('ano') or request.args.get('referencia') %}
                     <div class="mt-3 pt-3 border-top">
                         <span class="small text-muted me-2">Filtros ativos:</span>
                         {% if request.args.get('status') %}
@@ -243,6 +257,12 @@
                         <span class="badge bg-warning-subtle text-warning me-1">
                             Ano: {{ request.args.get('ano') }}
                             <a href="?" class="text-warning ms-1">&times;</a>
+                        </span>
+                        {% endif %}
+                        {% if request.args.get('referencia') %}
+                        <span class="badge bg-primary-subtle text-primary me-1">
+                            Ref: {{ request.args.get('referencia') }}
+                            <a href="?" class="text-primary ms-1">&times;</a>
                         </span>
                         {% endif %}
                     </div>
@@ -350,6 +370,15 @@
                             </td>
                             <td>
                                 <small class="text-muted"><i class="bi bi-calendar3"></i> {{ rel.data_criacao }}</small>
+                                {% if rel.prazo_status is defined and rel.prazo_status %}
+                                <br>
+                                <span class="badge bg-{{ 'danger' if rel.prazo_status == 'vencido' else 'warning text-dark' if rel.prazo_status == 'proximo' else 'success' }} mt-1" style="font-size: 0.7rem;">
+                                    <i class="bi bi-{{ 'exclamation-triangle' if rel.prazo_status == 'vencido' else 'clock' if rel.prazo_status == 'proximo' else 'check-circle' }}"></i>
+                                    {% if rel.prazo_status == 'vencido' %}Prazo vencido
+                                    {% elif rel.prazo_status == 'proximo' %}Prazo proximo
+                                    {% else %}No prazo{% endif %}
+                                </span>
+                                {% endif %}
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
@@ -445,7 +474,13 @@
 
                                 <!-- Informações Detalhadas -->
                                 <div class="small text-muted mb-2" style="line-height: 1.6;">
-                                    <div><i class="bi bi-calendar3 text-primary"></i> {{ rel.data_criacao }}</div>
+                                    <div><i class="bi bi-calendar3 text-primary"></i> {{ rel.data_criacao }}
+                                        {% if rel.prazo_status is defined and rel.prazo_status %}
+                                        <span class="badge bg-{{ 'danger' if rel.prazo_status == 'vencido' else 'warning text-dark' if rel.prazo_status == 'proximo' else 'success' }} ms-1" style="font-size: 0.65rem;">
+                                            {{ 'Vencido' if rel.prazo_status == 'vencido' else 'Proximo' if rel.prazo_status == 'proximo' else 'OK' }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
                                     {% if rel.fornecedores %}
                                     <div><i class="bi bi-truck text-success"></i> {{ rel.fornecedores[:30] }}{% if rel.fornecedores|length > 30 %}...{% endif %}</div>
                                     {% endif %}
@@ -582,6 +617,46 @@
 
 <!-- Modais de Exclusão (fora do main_content, direto no body) -->
 {% block modals %}
+<!-- Modal Importar Excel -->
+<div class="modal fade" id="importExcelModal" tabindex="-1" aria-labelledby="importExcelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold" id="importExcelModalLabel">
+                    <i class="bi bi-file-earmark-excel me-2"></i>Importar Relatórios do Excel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form action="{{ url_for('importar_relatorios_excel') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info border-0 mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Selecione um arquivo Excel (.xlsx ou .xls) com os dados dos relatórios. A planilha deve conter as colunas: <strong>Descrição</strong>, <strong>Linha</strong>, <strong>Coleção</strong>, <strong>Temporada</strong>, <strong>Ano</strong>, <strong>Status Geral</strong>.</small>
+                    </div>
+                    <div class="mb-3">
+                        <a href="{{ url_for('download_modelo_excel') }}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-download me-1"></i>Baixar Modelo
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <label for="arquivo_excel" class="form-label fw-semibold">Arquivo Excel</label>
+                        <input type="file" class="form-control" id="arquivo_excel" name="arquivo_excel" accept=".xlsx,.xls" required>
+                        <div class="form-text">Formatos aceitos: .xlsx, .xls</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-upload me-1"></i>Importar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% for rel in relatorios %}
 <div class="modal fade delete-modal" id="deleteModal{{ rel.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ rel.id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Checklists - Admin{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-2">
+            <i class="bi bi-list-check text-primary me-2"></i>
+            Templates de Checklist
+        </h1>
+        <p class="text-muted mb-0">Gerencie os templates de checklist para qualidade, estilo e modelagem</p>
+    </div>
+    <div>
+        <a href="{{ url_for('checklist.novo') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Novo Template
+        </a>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Resumo por Categoria -->
+<div class="row g-3 mb-4">
+    {% for cat_key, cat_nome in categorias_display.items() %}
+    {% set cat_cor = categorias_cores.get(cat_key, 'secondary') %}
+    {% set cat_icone = categorias_icones.get(cat_key, 'bi-list') %}
+    {% set ativos = templates|selectattr('categoria', 'equalto', cat_key)|selectattr('is_active')|list|length %}
+    {% set total = templates|selectattr('categoria', 'equalto', cat_key)|list|length %}
+    <div class="col-md-4">
+        <div class="card border-start border-{{ cat_cor }} border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">{{ cat_nome }}</h6>
+                        <h3 class="mb-0">{{ ativos }}</h3>
+                        <small class="text-muted">{{ total }} total ({{ ativos }} ativo{{ 's' if ativos != 1 else '' }})</small>
+                    </div>
+                    <div class="text-{{ cat_cor }}">
+                        <i class="bi {{ cat_icone }}" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Tabela de Templates -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th width="5%">ID</th>
+                        <th width="25%">Nome</th>
+                        <th width="12%">Categoria</th>
+                        <th width="8%">Itens</th>
+                        <th width="10%">Respostas</th>
+                        <th width="10%">Status</th>
+                        <th width="15%">Atualizado em</th>
+                        <th width="15%">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr class="{{ 'table-light text-muted' if not template.is_active else '' }}">
+                        <td class="text-muted">#{{ template.id }}</td>
+                        <td>
+                            <strong>{{ template.nome }}</strong>
+                            {% if not template.is_active %}
+                            <span class="badge bg-secondary ms-1">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set cor = categorias_cores.get(template.categoria, 'secondary') %}
+                            {% set icone = categorias_icones.get(template.categoria, 'bi-list') %}
+                            <span class="badge bg-{{ cor }}">
+                                <i class="bi {{ icone }}"></i>
+                                {{ categorias_display.get(template.categoria, template.categoria) }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-dark">{{ template.get_itens()|length }}</span>
+                        </td>
+                        <td>
+                            {% set count = respostas_count.get(template.id, 0) %}
+                            {% if count > 0 %}
+                            <span class="badge bg-primary">{{ count }}</span>
+                            {% else %}
+                            <span class="text-muted">0</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if template.is_active %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">
+                            {% if template.updated_at %}
+                            {{ template.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                            {% elif template.created_at %}
+                            {{ template.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Botao Ver Itens (abre collapse) -->
+                                <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#itens-{{ template.id }}"
+                                        title="Ver itens">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+
+                                <!-- Botao Editar -->
+                                <a href="{{ url_for('checklist.editar', id=template.id) }}"
+                                   class="btn btn-outline-primary"
+                                   title="Editar template">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                {% if template.is_active %}
+                                <!-- Botao Desativar -->
+                                <form action="{{ url_for('checklist.excluir', id=template.id) }}"
+                                      method="POST"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Desativar o template \'{{ template.nome }}\'? Ele nao sera excluido permanentemente.')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit"
+                                            class="btn btn-outline-danger"
+                                            title="Desativar template">
+                                        <i class="bi bi-slash-circle"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <!-- Botao Reativar -->
+                                <form action="{{ url_for('checklist.reativar', id=template.id) }}"
+                                      method="POST"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Reativar o template \'{{ template.nome }}\'?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit"
+                                            class="btn btn-outline-success"
+                                            title="Reativar template">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Linha colapsavel com itens do template -->
+                    <tr class="collapse" id="itens-{{ template.id }}">
+                        <td colspan="8" class="bg-light">
+                            <div class="p-3">
+                                <h6 class="mb-2">
+                                    <i class="bi bi-list-ul me-1"></i>
+                                    Itens do checklist "{{ template.nome }}"
+                                </h6>
+                                {% set itens = template.get_itens() %}
+                                {% if itens %}
+                                <div class="row">
+                                    {% for item in itens %}
+                                    <div class="col-md-6 col-lg-4 mb-1">
+                                        <span class="badge bg-light text-dark border me-1">{{ loop.index }}</span>
+                                        {{ item }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="text-muted mb-0">Nenhum item cadastrado.</p>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                            Nenhum template de checklist cadastrado.
+                            <br>
+                            <a href="{{ url_for('checklist.novo') }}" class="btn btn-primary mt-3">
+                                <i class="bi bi-plus-lg"></i> Criar Primeiro Template
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Informacoes sobre o sistema de checklist -->
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Sobre os Templates de Checklist</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="d-flex align-items-start mb-3">
+                    <span class="badge bg-success me-3 mt-1">
+                        <i class="bi bi-check2-square"></i>
+                    </span>
+                    <div>
+                        <h6 class="mb-1">Qualidade</h6>
+                        <p class="text-muted small mb-0">Itens de verificacao de qualidade do produto, como acabamento, costuras e materiais.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-start mb-3">
+                    <span class="badge bg-info me-3 mt-1">
+                        <i class="bi bi-palette"></i>
+                    </span>
+                    <div>
+                        <h6 class="mb-1">Estilo</h6>
+                        <p class="text-muted small mb-0">Itens de verificacao de estilo, como cores, estampas e design do produto.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-start mb-3">
+                    <span class="badge bg-warning me-3 mt-1">
+                        <i class="bi bi-rulers"></i>
+                    </span>
+                    <div>
+                        <h6 class="mb-1">Modelagem</h6>
+                        <p class="text-muted small mb-0">Itens de verificacao de modelagem, como medidas, caimento e proporcoes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

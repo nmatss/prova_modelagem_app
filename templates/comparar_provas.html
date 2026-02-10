@@ -1,0 +1,653 @@
+{% extends "base.html" %}
+
+{% block title %}Comparar Provas - {{ referencia.numero_ref or referencia.codigo_referencia or 'Referencia' }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('detalhes_relatorio', id=referencia.relatorio_id) }}">Relatorio</a></li>
+<li class="breadcrumb-item active"><i class="bi bi-arrow-left-right me-1"></i>Comparar Provas</li>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* ===== COMPARISON LAYOUT ===== */
+    .comparison-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .comparison-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .comparison-header .ref-meta {
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+
+    /* ===== PROVA COLUMN ===== */
+    .prova-column {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        background: #fff;
+        height: 100%;
+    }
+
+    .prova-column-header {
+        padding: 1rem 1.25rem;
+        color: #fff;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .prova-column-header.prova-1 {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    }
+
+    .prova-column-header.prova-2 {
+        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    }
+
+    .prova-column-body {
+        padding: 1.25rem;
+    }
+
+    /* ===== STATUS BADGES ===== */
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 0.4em 0.8em;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    /* ===== COMPARISON SECTIONS ===== */
+    .compare-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .compare-section-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #374151;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .compare-section-title i {
+        color: #6366f1;
+    }
+
+    /* ===== FIELD ROWS ===== */
+    .compare-field {
+        padding: 0.6rem 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 0.4rem;
+        transition: background-color 0.2s ease;
+    }
+
+    .compare-field-label {
+        font-weight: 600;
+        color: #6b7280;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        display: block;
+        margin-bottom: 0.2rem;
+    }
+
+    .compare-field-value {
+        color: #1f2937;
+        font-size: 0.9rem;
+        display: block;
+    }
+
+    .compare-field-value.empty {
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+    /* ===== DIFFERENCE HIGHLIGHT ===== */
+    .field-diff {
+        background-color: #fef9c3 !important;
+        border-left: 3px solid #F59E0B;
+    }
+
+    /* ===== CHECKLIST ITEMS ===== */
+    .checklist-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.35rem;
+    }
+
+    .checklist-badges .badge {
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.3em 0.6em;
+    }
+
+    /* ===== FEEDBACK CARD ===== */
+    .feedback-card {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .feedback-card-title {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .feedback-card-title .bi-clipboard-check { color: #22C55E; }
+    .feedback-card-title .bi-palette { color: #8B5CF6; }
+    .feedback-card-title .bi-rulers { color: #F59E0B; }
+
+    /* ===== PHOTOS ===== */
+    .compare-photos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .compare-photos .photo-thumb {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+
+    .compare-photos .photo-thumb:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ===== LACRE INFO ===== */
+    .lacre-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* ===== BACK BUTTON ===== */
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 767.98px) {
+        .comparison-header {
+            padding: 1rem;
+        }
+
+        .comparison-header h1 {
+            font-size: 1.25rem;
+        }
+
+        .prova-column-body {
+            padding: 1rem;
+        }
+
+        .compare-photos .photo-thumb {
+            width: 60px;
+            height: 60px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .compare-field {
+            padding: 0.5rem;
+        }
+
+        .compare-photos .photo-thumb {
+            width: 50px;
+            height: 50px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- Comparison Header -->
+    <div class="comparison-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h1 class="mb-1">
+                    <i class="bi bi-arrow-left-right me-2"></i>
+                    Comparar Provas
+                </h1>
+                <div class="ref-meta">
+                    <span>
+                        <i class="bi bi-tag me-1"></i>
+                        Referencia: <strong>{{ referencia.numero_ref or referencia.codigo_referencia or '-' }}</strong>
+                    </span>
+                    {% if referencia.tipo_categoria %}
+                    <span class="ms-3">
+                        <i class="bi bi-grid me-1"></i>
+                        {{ referencia.tipo_categoria|capitalize }}
+                    </span>
+                    {% endif %}
+                    {% if referencia.fornecedor %}
+                    <span class="ms-3">
+                        <i class="bi bi-truck me-1"></i>
+                        {{ referencia.fornecedor }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{{ url_for('detalhes_relatorio', id=referencia.relatorio_id) }}" class="btn btn-light btn-sm btn-back">
+                <i class="bi bi-arrow-left"></i> Voltar ao Relatorio
+            </a>
+        </div>
+    </div>
+
+    <!-- Comparison Columns -->
+    <div class="row g-4">
+        {% for prova, idx in [(prova1, 1), (prova2, 2)] %}
+        <div class="col-md-6">
+            <div class="prova-column">
+                <!-- Column Header -->
+                <div class="prova-column-header prova-{{ idx }}">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clipboard2-check"></i>
+                        <span>{{ prova.numero_prova }}a Prova</span>
+                    </div>
+                    {% if prova.status %}
+                    <span class="badge bg-{{ 'success' if prova.status == 'Aprovada' else 'danger' if prova.status == 'Reprovada' else 'warning text-dark' if prova.status == 'Comitê' else 'info' }}">
+                        {{ prova.status }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="prova-column-body">
+
+                    <!-- Dates Section -->
+                    <div class="compare-section">
+                        <div class="compare-section-title">
+                            <i class="bi bi-calendar3"></i> Datas
+                        </div>
+
+                        <div class="compare-field {{ 'field-diff' if 'data_recebimento' in diferencas else '' }}">
+                            <span class="compare-field-label">Data de Recebimento</span>
+                            <span class="compare-field-value {{ 'empty' if not prova.data_recebimento else '' }}">
+                                {{ prova.data_recebimento or 'Nao informada' }}
+                            </span>
+                        </div>
+
+                        <div class="compare-field {{ 'field-diff' if 'data_prova' in diferencas else '' }}">
+                            <span class="compare-field-label">Data da Prova</span>
+                            <span class="compare-field-value {{ 'empty' if not prova.data_prova else '' }}">
+                                {{ prova.data_prova or 'Nao informada' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Tamanhos Section -->
+                    <div class="compare-section">
+                        <div class="compare-section-title">
+                            <i class="bi bi-rulers"></i> Tamanhos
+                        </div>
+
+                        <div class="compare-field {{ 'field-diff' if 'tamanhos_recebidos' in diferencas else '' }}">
+                            <span class="compare-field-label">Tamanhos Recebidos</span>
+                            <span class="compare-field-value {{ 'empty' if not prova.tamanhos_recebidos else '' }}">
+                                {{ prova.tamanhos_recebidos or 'Nao informado' }}
+                            </span>
+                        </div>
+
+                        {% if prova.info_medidas %}
+                        <div class="compare-field {{ 'field-diff' if 'info_medidas' in diferencas else '' }}">
+                            <span class="compare-field-label">Informacoes de Medidas</span>
+                            <pre class="bg-light p-2 rounded border small mb-0 mt-1" style="white-space: pre-wrap; font-size: 0.8rem;">{{ prova.info_medidas }}</pre>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Status Section -->
+                    <div class="compare-section">
+                        <div class="compare-section-title">
+                            <i class="bi bi-flag"></i> Status
+                        </div>
+
+                        <div class="compare-field {{ 'field-diff' if 'status' in diferencas else '' }}">
+                            <span class="compare-field-label">Status da Prova</span>
+                            <span class="compare-field-value">
+                                <span class="badge bg-{{ 'success' if prova.status == 'Aprovada' else 'danger' if prova.status == 'Reprovada' else 'warning text-dark' if prova.status == 'Comitê' else 'info' }}">
+                                    {{ prova.status or 'Nao definido' }}
+                                </span>
+                            </span>
+                        </div>
+
+                        {% if prova.motivo_ultima_alteracao %}
+                        <div class="compare-field {{ 'field-diff' if 'motivo_ultima_alteracao' in diferencas else '' }}">
+                            <span class="compare-field-label">Motivo da Alteracao</span>
+                            <span class="compare-field-value">{{ prova.motivo_ultima_alteracao }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quality Feedback -->
+                    <div class="compare-section">
+                        <div class="compare-section-title">
+                            <i class="bi bi-clipboard-check"></i> Qualidade
+                        </div>
+
+                        <div class="feedback-card {{ 'field-diff' if 'time_qualidade' in diferencas or 'checklist_qualidade' in diferencas or 'comentarios_qualidade' in diferencas else '' }}">
+                            {% if prova.time_qualidade %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Time</span>
+                                <span class="compare-field-value">{{ prova.time_qualidade }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.checklist_qualidade %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Itens do Checklist</span>
+                                <div class="checklist-badges">
+                                    {% for item in prova.checklist_qualidade.split(', ') %}
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="bi bi-check2"></i> {{ item.replace('_', ' ').title() }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.comentarios_qualidade %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Comentarios</span>
+                                <span class="compare-field-value">{{ prova.comentarios_qualidade }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.obs_qualidade %}
+                            <div>
+                                <span class="compare-field-label">Observacoes</span>
+                                <span class="compare-field-value">{{ prova.obs_qualidade }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if not prova.time_qualidade and not prova.checklist_qualidade and not prova.comentarios_qualidade and not prova.obs_qualidade %}
+                            <span class="compare-field-value empty">Sem feedback de qualidade</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Quality Photos -->
+                        {% if prova.fotos and prova.fotos.get('qualidade') %}
+                        <div class="compare-photos mt-2">
+                            {% for foto in prova.fotos['qualidade'] %}
+                            <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                 alt="Foto qualidade - {{ prova.numero_prova }}a prova"
+                                 class="photo-thumb"
+                                 title="Foto de qualidade">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Style Feedback -->
+                    <div class="compare-section">
+                        <div class="compare-section-title">
+                            <i class="bi bi-palette"></i> Estilo
+                        </div>
+
+                        <div class="feedback-card {{ 'field-diff' if 'time_estilo' in diferencas or 'checklist_estilo' in diferencas or 'comentarios_estilo' in diferencas else '' }}">
+                            {% if prova.time_estilo %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Time</span>
+                                <span class="compare-field-value">{{ prova.time_estilo }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.checklist_estilo %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Itens do Checklist</span>
+                                <div class="checklist-badges">
+                                    {% for item in prova.checklist_estilo.split(', ') %}
+                                    <span class="badge bg-info-subtle text-info">
+                                        <i class="bi bi-check2"></i> {{ item.replace('_', ' ').title() }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.comentarios_estilo %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Comentarios</span>
+                                <span class="compare-field-value">{{ prova.comentarios_estilo }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.obs_estilo %}
+                            <div>
+                                <span class="compare-field-label">Observacoes</span>
+                                <span class="compare-field-value">{{ prova.obs_estilo }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if not prova.time_estilo and not prova.checklist_estilo and not prova.comentarios_estilo and not prova.obs_estilo %}
+                            <span class="compare-field-value empty">Sem feedback de estilo</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Style Photos -->
+                        {% if prova.fotos and prova.fotos.get('estilo') %}
+                        <div class="compare-photos mt-2">
+                            {% for foto in prova.fotos['estilo'] %}
+                            <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                 alt="Foto estilo - {{ prova.numero_prova }}a prova"
+                                 class="photo-thumb"
+                                 title="Foto de estilo">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Modeling Feedback -->
+                    <div class="compare-section">
+                        <div class="compare-section-title">
+                            <i class="bi bi-rulers"></i> Modelagem
+                        </div>
+
+                        <div class="feedback-card {{ 'field-diff' if 'time_modelagem' in diferencas or 'checklist_modelagem' in diferencas or 'comentarios_modelagem' in diferencas else '' }}">
+                            {% if prova.time_modelagem %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Time</span>
+                                <span class="compare-field-value">{{ prova.time_modelagem }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.checklist_modelagem %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Itens do Checklist</span>
+                                <div class="checklist-badges">
+                                    {% for item in prova.checklist_modelagem.split(', ') %}
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="bi bi-check2"></i> {{ item.replace('_', ' ').title() }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.comentarios_modelagem %}
+                            <div class="mb-2">
+                                <span class="compare-field-label">Comentarios</span>
+                                <span class="compare-field-value">{{ prova.comentarios_modelagem }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if prova.obs_modelagem %}
+                            <div>
+                                <span class="compare-field-label">Observacoes</span>
+                                <span class="compare-field-value">{{ prova.obs_modelagem }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if not prova.time_modelagem and not prova.checklist_modelagem and not prova.comentarios_modelagem and not prova.obs_modelagem %}
+                            <span class="compare-field-value empty">Sem feedback de modelagem</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Modeling Photos -->
+                        {% if prova.fotos and prova.fotos.get('modelagem') %}
+                        <div class="compare-photos mt-2">
+                            {% for foto in prova.fotos['modelagem'] %}
+                            <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                 alt="Foto modelagem - {{ prova.numero_prova }}a prova"
+                                 class="photo-thumb"
+                                 title="Foto de modelagem">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Sample / Model Photos -->
+                    {% if prova.fotos and (prova.fotos.get('amostra') or prova.fotos.get('prova_modelo') or prova.fotos.get('desenho')) %}
+                    <div class="compare-section">
+                        <div class="compare-section-title">
+                            <i class="bi bi-images"></i> Fotos
+                        </div>
+
+                        {% if prova.fotos.get('desenho') %}
+                        <div class="mb-3">
+                            <span class="compare-field-label">Desenho do Produto</span>
+                            <div class="compare-photos mt-1">
+                                {% for foto in prova.fotos['desenho'] %}
+                                <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                     alt="Desenho - {{ prova.numero_prova }}a prova"
+                                     class="photo-thumb"
+                                     title="Desenho do produto">
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if prova.fotos.get('amostra') %}
+                        <div class="mb-3">
+                            <span class="compare-field-label">Fotos da Amostra</span>
+                            <div class="compare-photos mt-1">
+                                {% for foto in prova.fotos['amostra'] %}
+                                <div class="text-center">
+                                    <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                         alt="Amostra - {{ prova.numero_prova }}a prova"
+                                         class="photo-thumb"
+                                         title="Foto da amostra{{ ' - ' + foto.get('tamanho', '') if foto.get('tamanho') else '' }}">
+                                    {% if foto.get('tamanho') %}
+                                    <small class="d-block text-muted mt-1" style="font-size: 0.7rem;">{{ foto.tamanho }}</small>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if prova.fotos.get('prova_modelo') %}
+                        <div class="mb-3">
+                            <span class="compare-field-label">Fotos na Modelo</span>
+                            <div class="compare-photos mt-1">
+                                {% for foto in prova.fotos['prova_modelo'] %}
+                                <div class="text-center">
+                                    <img src="{{ url_for('serve_upload', filename=foto['file_path']) }}"
+                                         alt="Prova na modelo - {{ prova.numero_prova }}a prova"
+                                         class="photo-thumb"
+                                         title="Foto na modelo{{ ' - ' + foto.get('tamanho', '') if foto.get('tamanho') else '' }}">
+                                    {% if foto.get('tamanho') %}
+                                    <small class="d-block text-muted mt-1" style="font-size: 0.7rem;">{{ foto.tamanho }}</small>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Lacre Section -->
+                    <div class="compare-section">
+                        <div class="compare-section-title">
+                            <i class="bi bi-shield-check"></i> Lacre
+                        </div>
+
+                        <div class="compare-field {{ 'field-diff' if 'numero_lacre' in diferencas or 'data_lacre' in diferencas else '' }}">
+                            {% if prova.numero_lacre %}
+                            <div class="lacre-info">
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-shield-check"></i> {{ prova.numero_lacre }}
+                                </span>
+                                {% if prova.data_lacre %}
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar-check"></i> {{ prova.data_lacre }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span class="compare-field-value empty">Sem lacre registrado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Differences Summary -->
+    {% if diferencas %}
+    <div class="card border-0 shadow-sm mt-4 mb-3">
+        <div class="card-header bg-warning-subtle border-0 py-3">
+            <h5 class="mb-0 fw-semibold">
+                <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
+                Campos com Diferencas
+                <span class="badge bg-warning text-dark ms-2">{{ diferencas|length }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+                {% for campo in diferencas %}
+                <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2" style="font-size: 0.85rem;">
+                    <i class="bi bi-arrow-left-right me-1"></i>
+                    {{ campo.replace('_', ' ').title() }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="text-center mt-4 mb-3">
+        <a href="{{ url_for('detalhes_relatorio', id=referencia.relatorio_id) }}" class="btn btn-outline-secondary btn-back">
+            <i class="bi bi-arrow-left"></i> Voltar ao Relatorio
+        </a>
+    </div>
+
+</div>
+{% endblock %}

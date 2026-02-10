@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+import json
 
 db = SQLAlchemy()
 
@@ -43,9 +44,11 @@ class Relatorio(db.Model):
     temporada = db.Column(db.String(50))  # Verão 2025, Inverno 2024
     ano = db.Column(db.Integer)
     ppt_path = db.Column(db.String(500))
+    linha = db.Column(db.String(50))  # Linha de produto: PRAIA, ACESSÓRIO, LINGERIE, MEIAS, HOMEWEAR
     imagem_produto = db.Column(db.String(500))  # Imagem do produto
     ficha_tecnica = db.Column(db.String(500))  # Ficha técnica do produto
     status_geral = db.Column(db.String(50), default='Em Andamento')
+    data_limite = db.Column(db.String(20))  # F2: Prazo/deadline
     is_active = db.Column(db.Boolean, default=True)
     created_by = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -64,6 +67,7 @@ class Referencia(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     relatorio_id = db.Column(db.Integer, db.ForeignKey('relatorios.id'), nullable=False, index=True)
+    fornecedor_id = db.Column(db.Integer, db.ForeignKey('fornecedores.id'))  # F4: FK para Fornecedor
     codigo_referencia = db.Column(db.String(100))  # Código único da referência
     tipo_categoria = db.Column(db.String(50), nullable=False)  # baby, kids, teen, adulto
     numero_ref = db.Column(db.String(100))
@@ -152,6 +156,110 @@ class FotoProva(db.Model):
     contexto = db.Column(db.String(50), nullable=False)  # desenho, qualidade, estilo, amostra, prova_modelo
     tamanho = db.Column(db.String(50))  # Para amostra/prova_modelo
     file_path = db.Column(db.String(500), nullable=False)
+
+# =============================================================================
+# F4: GESTÃO DE FORNECEDORES
+# =============================================================================
+
+class Fornecedor(db.Model):
+    __tablename__ = 'fornecedores'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(200), nullable=False)
+    contato = db.Column(db.String(200))
+    email = db.Column(db.String(255))
+    telefone = db.Column(db.String(50))
+    endereco = db.Column(db.String(500))
+    cnpj = db.Column(db.String(20), unique=True)
+    avaliacao = db.Column(db.Integer, default=0)  # 0-5
+    observacoes = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    # Relacionamento
+    referencias = db.relationship('Referencia', backref='fornecedor_obj', lazy=True)
+
+# =============================================================================
+# F3: CHECKLIST DINÂMICO
+# =============================================================================
+
+class ChecklistTemplate(db.Model):
+    __tablename__ = 'checklist_templates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(200), nullable=False)
+    categoria = db.Column(db.String(50), nullable=False)  # qualidade, estilo, modelagem
+    itens = db.Column(db.Text)  # JSON array of items
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    # Relacionamento
+    respostas = db.relationship('ChecklistResposta', backref='template', lazy=True)
+
+    def get_itens(self):
+        if self.itens:
+            try:
+                return json.loads(self.itens)
+            except (json.JSONDecodeError, TypeError):
+                return []
+        return []
+
+    def set_itens(self, itens_list):
+        self.itens = json.dumps(itens_list, ensure_ascii=False)
+
+
+class ChecklistResposta(db.Model):
+    __tablename__ = 'checklist_respostas'
+
+    id = db.Column(db.Integer, primary_key=True)
+    prova_id = db.Column(db.Integer, db.ForeignKey('provas.id'), nullable=False)
+    template_id = db.Column(db.Integer, db.ForeignKey('checklist_templates.id'), nullable=False)
+    item = db.Column(db.String(200), nullable=False)
+    conforme = db.Column(db.Boolean, default=False)
+    observacao = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# =============================================================================
+# F8: VERSIONAMENTO DE ARQUIVOS
+# =============================================================================
+
+class ArquivoVersao(db.Model):
+    __tablename__ = 'arquivo_versoes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    entidade_tipo = db.Column(db.String(50), nullable=False)  # relatorio, prova
+    entidade_id = db.Column(db.Integer, nullable=False)
+    campo = db.Column(db.String(100), nullable=False)  # ppt_path, imagem_produto, etc
+    file_path = db.Column(db.String(500), nullable=False)
+    versao = db.Column(db.Integer, default=1)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# =============================================================================
+# F9: DASHBOARD PERSONALIZADO
+# =============================================================================
+
+class PreferenciaUsuario(db.Model):
+    __tablename__ = 'preferencias_usuarios'
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, unique=True)
+    widget_config = db.Column(db.Text)  # JSON config
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    def get_config(self):
+        if self.widget_config:
+            try:
+                return json.loads(self.widget_config)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return {}
+
+    def set_config(self, config_dict):
+        self.widget_config = json.dumps(config_dict, ensure_ascii=False)
 
 # =============================================================================
 # SISTEMA DE AUDITORIA

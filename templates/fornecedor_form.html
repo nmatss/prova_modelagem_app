@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar Fornecedor - ' ~ fornecedor.nome if fornecedor else 'Novo Fornecedor' }} - Prova de Modelagem{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('fornecedor.index') }}">Fornecedores</a></li>
+{% if fornecedor %}
+<li class="breadcrumb-item active"><i class="bi bi-pencil me-1"></i>Editar</li>
+{% else %}
+<li class="breadcrumb-item active"><i class="bi bi-plus-circle me-1"></i>Novo</li>
+{% endif %}
+{% endblock %}
+
+{% block styles %}
+<style>
+    .form-card {
+        border-top: 4px solid #667eea;
+    }
+
+    .info-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .avaliacao-select .form-select {
+        max-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+        .d-flex.justify-content-between {
+            flex-direction: column !important;
+            gap: 1rem;
+        }
+
+        .d-flex.justify-content-between .btn {
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- ========================================
+         HEADER
+         ======================================== -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-gray-800">
+                {% if fornecedor %}
+                <i class="bi bi-pencil-square me-2 text-primary"></i>
+                Editar Fornecedor
+                {% else %}
+                <i class="bi bi-plus-circle me-2 text-primary"></i>
+                Novo Fornecedor
+                {% endif %}
+            </h1>
+            <p class="text-muted mb-0 small">
+                {% if fornecedor %}
+                Atualize as informacoes do fornecedor <strong>{{ fornecedor.nome }}</strong>
+                {% else %}
+                Preencha os dados para cadastrar um novo fornecedor
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('fornecedor.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- ========================================
+         FORMULARIO
+         ======================================== -->
+    <div class="card border-0 shadow-sm form-card">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 fw-semibold">
+                <i class="bi bi-truck me-2 text-primary"></i>
+                Dados do Fornecedor
+            </h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('fornecedor.editar', id=fornecedor.id) if fornecedor else url_for('fornecedor.novo') }}" method="POST">
+
+                <!-- Nome -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="nome" class="form-label fw-semibold">
+                            Nome <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="nome" name="nome"
+                               placeholder="Nome do fornecedor"
+                               value="{{ fornecedor.nome if fornecedor else '' }}" required>
+                    </div>
+
+                    <!-- CNPJ -->
+                    <div class="col-md-6 mb-3">
+                        <label for="cnpj" class="form-label fw-semibold">CNPJ</label>
+                        <input type="text" class="form-control" id="cnpj" name="cnpj"
+                               placeholder="00.000.000/0000-00"
+                               value="{{ fornecedor.cnpj if fornecedor else '' }}">
+                    </div>
+                </div>
+
+                <!-- Email e Telefone -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label fw-semibold">Email</label>
+                        <input type="email" class="form-control no-uppercase" id="email" name="email"
+                               placeholder="email@exemplo.com"
+                               value="{{ fornecedor.email if fornecedor else '' }}">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="telefone" class="form-label fw-semibold">Telefone</label>
+                        <input type="text" class="form-control" id="telefone" name="telefone"
+                               placeholder="(00) 00000-0000"
+                               value="{{ fornecedor.telefone if fornecedor else '' }}">
+                    </div>
+                </div>
+
+                <!-- Contato -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="contato" class="form-label fw-semibold">Pessoa de Contato</label>
+                        <input type="text" class="form-control" id="contato" name="contato"
+                               placeholder="Nome do responsavel"
+                               value="{{ fornecedor.contato if fornecedor else '' }}">
+                    </div>
+
+                    <!-- Avaliacao -->
+                    <div class="col-md-6 mb-3 avaliacao-select">
+                        <label for="avaliacao" class="form-label fw-semibold">Avaliacao</label>
+                        <select class="form-select" id="avaliacao" name="avaliacao">
+                            <option value="0" {{ 'selected' if not fornecedor or not fornecedor.avaliacao or fornecedor.avaliacao == 0 else '' }}>Sem avaliacao</option>
+                            <option value="1" {{ 'selected' if fornecedor and fornecedor.avaliacao == 1 else '' }}>1 - Muito Ruim</option>
+                            <option value="2" {{ 'selected' if fornecedor and fornecedor.avaliacao == 2 else '' }}>2 - Ruim</option>
+                            <option value="3" {{ 'selected' if fornecedor and fornecedor.avaliacao == 3 else '' }}>3 - Regular</option>
+                            <option value="4" {{ 'selected' if fornecedor and fornecedor.avaliacao == 4 else '' }}>4 - Bom</option>
+                            <option value="5" {{ 'selected' if fornecedor and fornecedor.avaliacao == 5 else '' }}>5 - Excelente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Endereco -->
+                <div class="mb-3">
+                    <label for="endereco" class="form-label fw-semibold">Endereco</label>
+                    <textarea class="form-control" id="endereco" name="endereco" rows="2"
+                              placeholder="Endereco completo do fornecedor">{{ fornecedor.endereco if fornecedor else '' }}</textarea>
+                </div>
+
+                <!-- Observacoes -->
+                <div class="mb-3">
+                    <label for="observacoes" class="form-label fw-semibold">Observacoes</label>
+                    <textarea class="form-control" id="observacoes" name="observacoes" rows="3"
+                              placeholder="Observacoes gerais sobre o fornecedor">{{ fornecedor.observacoes if fornecedor else '' }}</textarea>
+                </div>
+
+                <!-- Botoes -->
+                <div class="d-flex gap-2 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        {% if fornecedor %}
+                        <i class="bi bi-check-circle me-1"></i> Salvar Alteracoes
+                        {% else %}
+                        <i class="bi bi-plus-circle me-1"></i> Criar Fornecedor
+                        {% endif %}
+                    </button>
+                    <a href="{{ url_for('fornecedor.index') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mascara simples para CNPJ
+    const cnpjInput = document.getElementById('cnpj');
+    if (cnpjInput) {
+        cnpjInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 14) value = value.substring(0, 14);
+
+            if (value.length > 12) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+            } else if (value.length > 8) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+            } else if (value.length > 5) {
+                value = value.replace(/^(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d+)/, '$1.$2');
+            }
+
+            e.target.value = value;
+        });
+    }
+
+    // Mascara simples para Telefone
+    const telInput = document.getElementById('telefone');
+    if (telInput) {
+        telInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.substring(0, 11);
+
+            if (value.length > 6) {
+                value = value.replace(/^(\d{2})(\d{5})(\d+)/, '($1) $2-$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d+)/, '($1) $2');
+            }
+
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}

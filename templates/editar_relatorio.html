@@ -270,6 +270,73 @@
                         <input type="text" class="form-control" id="descricao_geral" name="descricao_geral"
                             value="{{ relatorio.descricao_geral or '' }}">
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="linha" class="form-label">Linha de Produto</label>
+                            <select class="form-select" id="linha" name="linha">
+                                <option value="">Selecione a linha...</option>
+                                <option value="PRAIA" {{ 'selected' if relatorio.linha == 'PRAIA' else '' }}>PRAIA</option>
+                                <option value="ACESSÓRIO" {{ 'selected' if relatorio.linha == 'ACESSÓRIO' else '' }}>ACESSÓRIO</option>
+                                <option value="LINGERIE" {{ 'selected' if relatorio.linha == 'LINGERIE' else '' }}>LINGERIE</option>
+                                <option value="MEIAS" {{ 'selected' if relatorio.linha == 'MEIAS' else '' }}>MEIAS</option>
+                                <option value="HOMEWEAR" {{ 'selected' if relatorio.linha == 'HOMEWEAR' else '' }}>HOMEWEAR</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="data_limite" class="form-label">
+                                <i class="bi bi-calendar-event"></i> Prazo / Data Limite
+                            </label>
+                            <input type="date" class="form-control" id="data_limite" name="data_limite"
+                                value="{{ relatorio.data_limite or '' }}">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Data limite para conclusão do relatório
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="imagem_produto" class="form-label">
+                                <i class="bi bi-image"></i> Imagem do Produto
+                            </label>
+                            {% if relatorio.imagem_produto %}
+                            <div class="mb-2">
+                                <img src="{{ url_for('serve_upload', filename=relatorio.imagem_produto) }}"
+                                     alt="Imagem atual do produto"
+                                     class="img-thumbnail d-block mb-2"
+                                     style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                                <span class="badge bg-success me-2">
+                                    <i class="bi bi-image me-1"></i>Imagem anexada
+                                </span>
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="imagem_produto" name="imagem_produto" accept="image/*">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                {% if relatorio.imagem_produto %}Selecione uma nova imagem para substituir a atual.{% else %}JPG, PNG, GIF (máx. 16MB){% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="ficha_tecnica" class="form-label">
+                                <i class="bi bi-file-earmark-text"></i> Ficha Técnica do Produto
+                            </label>
+                            {% if relatorio.ficha_tecnica %}
+                            <div class="mb-2">
+                                <span class="badge bg-success me-2">
+                                    <i class="bi bi-file-earmark-text me-1"></i>Ficha anexada
+                                </span>
+                                <a href="{{ url_for('serve_upload', filename=relatorio.ficha_tecnica) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i> Ver atual
+                                </a>
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="ficha_tecnica" name="ficha_tecnica" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                {% if relatorio.ficha_tecnica %}Selecione um novo arquivo para substituir o atual.{% else %}PDF, DOC, DOCX, XLS, XLSX (máx. 16MB){% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

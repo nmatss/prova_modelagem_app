@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+
+{% block title %}Fornecedor - {{ fornecedor.nome }} - Prova de Modelagem{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('fornecedor.index') }}">Fornecedores</a></li>
+<li class="breadcrumb-item active"><i class="bi bi-truck me-1"></i>{{ fornecedor.nome }}</li>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .card-fornecedor {
+        border-top: 4px solid #667eea;
+    }
+
+    .card-metricas {
+        border-top: 4px solid #22C55E;
+    }
+
+    .card-referencias {
+        border-top: 4px solid #8B5CF6;
+    }
+
+    .info-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .info-value {
+        color: #212529;
+        display: block;
+    }
+
+    .metric-card {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        border-radius: 10px;
+        transition: transform 0.2s ease;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .metric-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+
+    .stars-display {
+        font-size: 1.25rem;
+    }
+
+    .stars-display .bi-star-fill {
+        color: #ffc107;
+    }
+
+    .stars-display .bi-star {
+        color: #dee2e6;
+    }
+
+    @media (max-width: 768px) {
+        .page-header .d-flex {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+        }
+
+        .page-header .btn-group-actions {
+            width: 100%;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .page-header .btn-group-actions .btn {
+            flex: 1;
+        }
+
+        .metric-card {
+            padding: 1rem 0.75rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- ========================================
+         HEADER
+         ======================================== -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="h3 mb-2 fw-bold text-gray-800">
+                    <i class="bi bi-truck me-2 text-primary"></i>
+                    {{ fornecedor.nome }}
+                </h1>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    {% if fornecedor.cnpj %}
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-building me-1"></i>{{ fornecedor.cnpj }}
+                    </span>
+                    {% endif %}
+                    {% if fornecedor.avaliacao and fornecedor.avaliacao > 0 %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis">
+                        <i class="bi bi-star-fill me-1"></i>{{ fornecedor.avaliacao }}/5
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="btn-group-actions d-flex gap-2">
+                <a href="{{ url_for('fornecedor.editar', id=fornecedor.id) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i> Editar
+                </a>
+                <a href="{{ url_for('fornecedor.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         METRICAS
+         ======================================== -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body metric-card">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="bi bi-tag-fill text-white fs-5"></i>
+                    </div>
+                    <div class="metric-value text-primary">{{ total_referencias }}</div>
+                    <div class="metric-label">Referencias</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body metric-card">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <i class="bi bi-clipboard-check text-white fs-5"></i>
+                    </div>
+                    <div class="metric-value" style="color: #f5576c;">{{ total_provas }}</div>
+                    <div class="metric-label">Provas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body metric-card">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #5ee7df 0%, #b490ca 100%);">
+                        <i class="bi bi-check-circle-fill text-white fs-5"></i>
+                    </div>
+                    <div class="metric-value" style="color: #22C55E;">{{ taxa_aprovacao }}%</div>
+                    <div class="metric-label">Taxa de Aprovacao</div>
+                    {% if taxa_aprovacao >= 80 %}
+                    <small class="text-success"><i class="bi bi-check-circle"></i> Excelente</small>
+                    {% elif taxa_aprovacao >= 60 %}
+                    <small class="text-warning"><i class="bi bi-dash-circle"></i> Bom</small>
+                    {% elif taxa_aprovacao > 0 %}
+                    <small class="text-danger"><i class="bi bi-x-circle"></i> Precisa melhorar</small>
+                    {% else %}
+                    <small class="text-muted">Sem dados</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         INFORMACOES DO FORNECEDOR
+         ======================================== -->
+    <div class="card border-0 shadow-sm card-fornecedor mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 fw-semibold">
+                <i class="bi bi-info-circle me-2 text-primary"></i>
+                Informacoes do Fornecedor
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-person me-1"></i> Nome</span>
+                        <span class="info-value">{{ fornecedor.nome }}</span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-building me-1"></i> CNPJ</span>
+                        <span class="info-value">{{ fornecedor.cnpj or '-' }}</span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-envelope me-1"></i> Email</span>
+                        <span class="info-value">
+                            {% if fornecedor.email %}
+                            <a href="mailto:{{ fornecedor.email }}">{{ fornecedor.email }}</a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-telephone me-1"></i> Telefone</span>
+                        <span class="info-value">{{ fornecedor.telefone or '-' }}</span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-person-badge me-1"></i> Pessoa de Contato</span>
+                        <span class="info-value">{{ fornecedor.contato or '-' }}</span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-star me-1"></i> Avaliacao</span>
+                        <span class="info-value">
+                            {% if fornecedor.avaliacao and fornecedor.avaliacao > 0 %}
+                            <div class="stars-display">
+                                {% for i in range(1, 6) %}
+                                <i class="bi bi-star{{ '-fill' if i <= fornecedor.avaliacao else '' }}"></i>
+                                {% endfor %}
+                                <span class="ms-1 text-muted" style="font-size: 0.9rem;">({{ fornecedor.avaliacao }}/5)</span>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">Sem avaliacao</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                {% if fornecedor.endereco %}
+                <div class="col-12">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-geo-alt me-1"></i> Endereco</span>
+                        <span class="info-value">{{ fornecedor.endereco }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if fornecedor.observacoes %}
+                <div class="col-12">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-chat-left-text me-1"></i> Observacoes</span>
+                        <span class="info-value">{{ fornecedor.observacoes }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         REFERENCIAS ASSOCIADAS
+         ======================================== -->
+    <div class="card border-0 shadow-sm card-referencias">
+        <div class="card-header bg-white border-bottom py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-tag me-2" style="color: #8B5CF6;"></i>
+                    Referencias Associadas
+                    <span class="badge bg-primary-subtle text-primary ms-2">{{ referencias|length }}</span>
+                </h5>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            {% if referencias %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="px-4">Referencia</th>
+                            <th>Categoria</th>
+                            <th>Relatorio</th>
+                            <th>Origem</th>
+                            <th>Materia Prima</th>
+                            <th class="text-center">Provas</th>
+                            <th class="text-center">Acoes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ref in referencias %}
+                        <tr>
+                            <td class="px-4">
+                                <span class="fw-semibold">{{ ref.numero_ref or ref.codigo_referencia or '-' }}</span>
+                            </td>
+                            <td>
+                                {% if ref.tipo_categoria %}
+                                <span class="badge {% if ref.tipo_categoria == 'baby' %}bg-pink-subtle text-pink
+                                              {% elif ref.tipo_categoria == 'kids' %}bg-blue-subtle text-blue
+                                              {% elif ref.tipo_categoria == 'teen' %}bg-purple-subtle text-purple
+                                              {% else %}bg-teal-subtle text-teal{% endif %}">
+                                    {{ ref.tipo_categoria|upper }}
+                                </span>
+                                {% else %}
+                                <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ref.relatorio %}
+                                <a href="{{ url_for('detalhes_relatorio', id=ref.relatorio.id) }}" class="text-decoration-none">
+                                    <small>{{ ref.relatorio.descricao_geral[:30] }}{% if ref.relatorio.descricao_geral|length > 30 %}...{% endif %}</small>
+                                </a>
+                                {% else %}
+                                <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ ref.origem or '-' }}</small>
+                            </td>
+                            <td>
+                                <small>{{ ref.materia_prima or '-' }}</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-secondary">{{ ref.provas|length if ref.provas else 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if ref.relatorio %}
+                                <a href="{{ url_for('detalhes_relatorio', id=ref.relatorio.id) }}"
+                                   class="btn btn-sm btn-outline-primary" title="Ver relatorio">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <h6 class="text-muted mt-3">Nenhuma referencia associada</h6>
+                <p class="text-muted small">
+                    Este fornecedor ainda nao possui referencias vinculadas a relatorios.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<style>
+/* Custom badge colors (same as dashboard) */
+.bg-pink-subtle { background-color: #fce7f3 !important; }
+.text-pink { color: #ec4899 !important; }
+.bg-blue-subtle { background-color: #dbeafe !important; }
+.text-blue { color: #3b82f6 !important; }
+.bg-purple-subtle { background-color: #f3e8ff !important; }
+.text-purple { color: #8b5cf6 !important; }
+.bg-teal-subtle { background-color: #ccfbf1 !important; }
+.text-teal { color: #14b8a6 !important; }
+.bg-primary-subtle { background-color: #e0e7ff !important; }
+.bg-warning-subtle { background-color: #fef3c7 !important; }
+</style>
