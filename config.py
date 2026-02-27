@@ -35,13 +35,13 @@ class Config:
     MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))  # 16MB default
 
     # Extensões permitidas
-    ALLOWED_EXTENSIONS = set(os.getenv('ALLOWED_EXTENSIONS', 'png,jpg,jpeg,gif,pdf,xlsx,xls,ppt,pptx').split(','))
+    ALLOWED_EXTENSIONS = set(os.getenv('ALLOWED_EXTENSIONS', 'png,jpg,jpeg,gif,pdf,xlsx,xls,ppt,pptx,doc,docx').split(','))
 
     # Extensões de imagem
     IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
     # Extensões de documento
-    DOCUMENT_EXTENSIONS = {'pdf', 'xlsx', 'xls', 'ppt', 'pptx'}
+    DOCUMENT_EXTENSIONS = {'pdf', 'xlsx', 'xls', 'ppt', 'pptx', 'doc', 'docx'}
 
     # Logging
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')

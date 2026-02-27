@@ -202,7 +202,7 @@
 
         .status-aprovada { background-color: #dcfce7; color: #166534; border: 1px solid #22c55e; }
         .status-reprovada { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
-        .status-andamento { background-color: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .status-em-andamento { background-color: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
         .status-comite { background-color: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
 
         /* Photos - Grid otimizado para PDF */
@@ -302,6 +302,35 @@
         .emoji {
             font-size: 11pt;
             margin-right: 0.1cm;
+        }
+
+        /* Checklist Tags */
+        .checklist-tags {
+            margin: 0.15cm 0;
+        }
+
+        .checklist-tag {
+            display: inline-block;
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+            border-radius: 3px;
+            padding: 0.05cm 0.15cm;
+            font-size: 8pt;
+            margin: 0.05cm 0.05cm 0.05cm 0;
+            font-weight: 500;
+        }
+
+        .checklist-tag.estilo {
+            background-color: #fdf2f8;
+            color: #9d174d;
+            border-color: #f9a8d4;
+        }
+
+        .checklist-tag.modelagem {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border-color: #93c5fd;
         }
     </style>
 </head>
@@ -518,15 +547,25 @@
         {% endif %}
 
         <!-- Feedbacks -->
-        {% if prova.time_qualidade or prova.time_estilo or prova.time_modelagem %}
+        {% if prova.time_qualidade or prova.time_estilo or prova.time_modelagem or prova.checklist_qualidade or prova.checklist_estilo or prova.checklist_modelagem %}
         <div class="no-break">
             <h4><span class="emoji">💬</span>Feedbacks das Equipes</h4>
         </div>
 
         <!-- Qualidade -->
-        {% if prova.time_qualidade or prova.comentarios_qualidade or prova.obs_qualidade or prova.fotos.qualidade %}
+        {% if prova.time_qualidade or prova.checklist_qualidade or prova.comentarios_qualidade or prova.obs_qualidade or prova.fotos.qualidade %}
         <div class="feedback-box qualidade">
             <strong><span class="emoji">✓</span>Qualidade</strong>
+            {% if prova.checklist_qualidade %}
+            <div class="detail-item">
+                <strong>Itens de Avaliação:</strong>
+                <div class="checklist-tags">
+                    {% for item in prova.checklist_qualidade.split(', ') %}
+                    <span class="checklist-tag">✓ {{ item.replace('_', ' ').title() }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
             {% if prova.time_qualidade %}
             <div class="detail-item">
                 <strong>Responsável:</strong>
@@ -561,9 +600,19 @@
         {% endif %}
 
         <!-- Estilo -->
-        {% if prova.time_estilo or prova.comentarios_estilo or prova.obs_estilo or prova.fotos.estilo %}
+        {% if prova.time_estilo or prova.checklist_estilo or prova.comentarios_estilo or prova.obs_estilo or prova.fotos.estilo %}
         <div class="feedback-box estilo">
             <strong><span class="emoji">🎨</span>Estilo</strong>
+            {% if prova.checklist_estilo %}
+            <div class="detail-item">
+                <strong>Itens de Avaliação:</strong>
+                <div class="checklist-tags">
+                    {% for item in prova.checklist_estilo.split(', ') %}
+                    <span class="checklist-tag estilo">✓ {{ item.replace('_', ' ').title() }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
             {% if prova.time_estilo %}
             <div class="detail-item">
                 <strong>Responsável:</strong>
@@ -598,9 +647,19 @@
         {% endif %}
 
         <!-- Modelagem -->
-        {% if prova.time_modelagem or prova.comentarios_modelagem or prova.obs_modelagem or prova.fotos.modelagem %}
+        {% if prova.time_modelagem or prova.checklist_modelagem or prova.comentarios_modelagem or prova.obs_modelagem or prova.fotos.modelagem %}
         <div class="feedback-box modelagem">
             <strong><span class="emoji">📐</span>Modelagem</strong>
+            {% if prova.checklist_modelagem %}
+            <div class="detail-item">
+                <strong>Itens de Avaliação:</strong>
+                <div class="checklist-tags">
+                    {% for item in prova.checklist_modelagem.split(', ') %}
+                    <span class="checklist-tag modelagem">✓ {{ item.replace('_', ' ').title() }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
             {% if prova.time_modelagem %}
             <div class="detail-item">
                 <strong>Responsável:</strong>

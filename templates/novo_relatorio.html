@@ -31,26 +31,12 @@
             <div class="wizard-step-circle">
                 <span class="step-number">2</span>
             </div>
-            <span class="wizard-step-label">Categoria</span>
+            <span class="wizard-step-label">Prova</span>
         </div>
 
         <div class="wizard-step" data-step="3">
             <div class="wizard-step-circle">
                 <span class="step-number">3</span>
-            </div>
-            <span class="wizard-step-label">Referência</span>
-        </div>
-
-        <div class="wizard-step" data-step="4">
-            <div class="wizard-step-circle">
-                <span class="step-number">4</span>
-            </div>
-            <span class="wizard-step-label">Prova</span>
-        </div>
-
-        <div class="wizard-step" data-step="5">
-            <div class="wizard-step-circle">
-                <span class="step-number">5</span>
             </div>
             <span class="wizard-step-label">Revisão</span>
         </div>
@@ -149,20 +135,10 @@
                         PDF, DOC, DOCX, XLS, XLSX (máx. 16MB)
                     </div>
                 </div>
-            </div>
 
-            <!-- ============================================
-                 STEP 2: CATEGORIA & TIPO
-                 ============================================ -->
-            <div class="wizard-step-content" data-step="2">
-                <div class="wizard-step-header">
-                    <h2 class="wizard-step-title">
-                        <i class="bi bi-grid-3x3-gap-fill"></i>
-                        Categoria do Produto
-                    </h2>
-                    <p class="wizard-step-description">Selecione a categoria do produto que será avaliado</p>
-                </div>
+                <hr class="my-4">
 
+                <!-- Categoria do Produto (was Step 2) -->
                 <div class="category-selection">
                     <div class="category-option">
                         <input type="radio" name="tipo_produto" id="cat_baby" value="baby">
@@ -200,20 +176,8 @@
                         </label>
                     </div>
                 </div>
-            </div>
 
-            <!-- ============================================
-                 STEP 3: INFORMAÇÕES DA REFERÊNCIA
-                 ============================================ -->
-            <div class="wizard-step-content" data-step="3">
-                <div class="wizard-step-header">
-                    <h2 class="wizard-step-title">
-                        <i class="bi bi-tag-fill"></i>
-                        Informações da Referência
-                    </h2>
-                    <p class="wizard-step-description">Dados sobre origem, fornecedor e materiais</p>
-                </div>
-
+                <!-- Informações da Referência (was Step 3) -->
                 {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
                 <div id="ref_section_{{ tipo }}" style="display: none;">
                     <div class="mb-3">
@@ -273,9 +237,9 @@
             </div>
 
             <!-- ============================================
-                 STEP 4: PROVA DE MODELAGEM
+                 STEP 2: PROVA DE MODELAGEM
                  ============================================ -->
-            <div class="wizard-step-content" data-step="4">
+            <div class="wizard-step-content" data-step="2">
                 <div class="wizard-step-header">
                     <h2 class="wizard-step-title">
                         <i class="bi bi-clipboard-check"></i>
@@ -298,7 +262,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Tabela de Medidas</label>
-                                    <input type="file" class="form-control" name="tabela_medidas_{{ tipo }}">
+                                    <input type="file" class="form-control" name="tabela_medidas_{{ tipo }}" accept=".xlsx,.xls,.pdf,.png,.jpg,.jpeg">
                                 </div>
                             </div>
 
@@ -339,14 +303,16 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Fotos da amostra</label>
+                                <input type="file" class="form-control mb-2" name="fotos_amostra_{{ tipo }}" multiple accept="image/*">
                                 <div id="placeholder_fotos_amostra_{{ tipo }}"
-                                    class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                    class="dynamic-upload-placeholder"></div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Fotos da prova (na modelo)</label>
+                                <input type="file" class="form-control mb-2" name="fotos_prova_modelo_{{ tipo }}" multiple accept="image/*">
                                 <div id="placeholder_fotos_prova_modelo_{{ tipo }}"
-                                    class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                    class="dynamic-upload-placeholder"></div>
                             </div>
 
                             <!-- AVALIAÇÕES: QUALIDADE, ESTILO, MODELAGEM -->
@@ -394,6 +360,11 @@
                                                     rows="2"></textarea>
                                             </div>
                                             <div class="mb-2">
+                                                <label class="form-label">Observações Adicionais</label>
+                                                <textarea class="form-control" name="obs_qualidade_{{ tipo }}"
+                                                    rows="2"></textarea>
+                                            </div>
+                                            <div class="mb-2">
                                                 <label class="form-label">Anexar Arquivos</label>
                                                 <input type="file" class="form-control"
                                                     name="fotos_qualidade_{{ tipo }}" multiple>
@@ -435,6 +406,11 @@
                                             <div class="mb-2">
                                                 <label class="form-label">Comentários</label>
                                                 <textarea class="form-control" name="comentarios_estilo_{{ tipo }}"
+                                                    rows="2"></textarea>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Observações Adicionais</label>
+                                                <textarea class="form-control" name="obs_estilo_{{ tipo }}"
                                                     rows="2"></textarea>
                                             </div>
                                             <div class="mb-2">
@@ -483,6 +459,11 @@
                                                     rows="2"></textarea>
                                             </div>
                                             <div class="mb-2">
+                                                <label class="form-label">Observações Adicionais</label>
+                                                <textarea class="form-control" name="obs_modelagem_{{ tipo }}"
+                                                    rows="2"></textarea>
+                                            </div>
+                                            <div class="mb-2">
                                                 <label class="form-label">Anexar Arquivos</label>
                                                 <input type="file" class="form-control"
                                                     name="fotos_modelagem_{{ tipo }}" multiple>
@@ -514,9 +495,9 @@
             </div>
 
             <!-- ============================================
-                 STEP 5: REVISÃO E SUBMISSÃO
+                 STEP 3: REVISÃO E SUBMISSÃO
                  ============================================ -->
-            <div class="wizard-step-content" data-step="5">
+            <div class="wizard-step-content" data-step="3">
                 <div class="wizard-step-header">
                     <h2 class="wizard-step-title">
                         <i class="bi bi-check-circle-fill"></i>
@@ -537,6 +518,10 @@
                     <div class="review-item">
                         <span class="review-label">Descrição:</span>
                         <span class="review-value" id="review_descricao">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Linha:</span>
+                        <span class="review-value" id="review_linha">-</span>
                     </div>
                     <div class="review-item">
                         <span class="review-label">PPT:</span>
@@ -592,6 +577,10 @@
                         <span class="review-label">Gramatura:</span>
                         <span class="review-value" id="review_gramatura">-</span>
                     </div>
+                    <div class="review-item">
+                        <span class="review-label">Aviamentos:</span>
+                        <span class="review-value" id="review_aviamentos">-</span>
+                    </div>
                 </div>
 
                 <div class="review-section">
@@ -615,17 +604,79 @@
                         <span class="review-label">Fotos Anexadas:</span>
                         <span class="review-value" id="review_fotos_count">-</span>
                     </div>
+                </div>
+
+                <div class="review-section">
+                    <h3 class="review-section-title">
+                        <i class="bi bi-shield-check"></i>
+                        Conferência - Equipes
+                    </h3>
                     <div class="review-item">
-                        <span class="review-label">Qualidade:</span>
+                        <span class="review-label">Qualidade - Responsável:</span>
+                        <span class="review-value" id="review_qualidade_resp">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Qualidade - Itens:</span>
                         <span class="review-value" id="review_qualidade">-</span>
                     </div>
                     <div class="review-item">
-                        <span class="review-label">Estilo:</span>
+                        <span class="review-label">Qualidade - Comentários:</span>
+                        <span class="review-value" id="review_qualidade_comentarios">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Qualidade - Observações:</span>
+                        <span class="review-value" id="review_qualidade_obs">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Estilo - Responsável:</span>
+                        <span class="review-value" id="review_estilo_resp">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Estilo - Itens:</span>
                         <span class="review-value" id="review_estilo">-</span>
                     </div>
                     <div class="review-item">
-                        <span class="review-label">Modelagem:</span>
+                        <span class="review-label">Estilo - Comentários:</span>
+                        <span class="review-value" id="review_estilo_comentarios">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Estilo - Observações:</span>
+                        <span class="review-value" id="review_estilo_obs">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Modelagem - Responsável:</span>
+                        <span class="review-value" id="review_modelagem_resp">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Modelagem - Itens:</span>
                         <span class="review-value" id="review_modelagem">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Modelagem - Comentários:</span>
+                        <span class="review-value" id="review_modelagem_comentarios">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Modelagem - Observações:</span>
+                        <span class="review-value" id="review_modelagem_obs">-</span>
+                    </div>
+                </div>
+
+                <div class="review-section">
+                    <h3 class="review-section-title">
+                        <i class="bi bi-lock"></i>
+                        Finalização
+                    </h3>
+                    <div class="review-item">
+                        <span class="review-label">Data de Liberação (Peça Lacre):</span>
+                        <span class="review-value" id="review_data_lacre">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Número do Lacre:</span>
+                        <span class="review-value" id="review_numero_lacre">-</span>
+                    </div>
+                    <div class="review-item">
+                        <span class="review-label">Informações Adicionais:</span>
+                        <span class="review-value" id="review_info_adicionais">-</span>
                     </div>
                 </div>
 

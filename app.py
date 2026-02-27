@@ -689,6 +689,13 @@ def editar_relatorio(id):
                     for prova_id in provas_existentes_ids:
                         prova = Prova.query.get(prova_id)
                         if prova:
+                            # Atualizar tabela de medidas se novo arquivo enviado
+                            tabela_file = request.files.get(f'tabela_medidas_{prova_id}')
+                            if tabela_file and tabela_file.filename:
+                                tabela_filename = save_file(tabela_file)
+                                if tabela_filename:
+                                    prova.tabela_medidas_path = tabela_filename
+
                             prova.data_recebimento = request.form.get(f'data_recebimento_{prova_id}')
                             prova.tamanhos_recebidos = ", ".join(request.form.getlist(f'tamanhos_recebidos_{prova_id}'))
                             prova.info_medidas = request.form.get(f'info_medidas_{prova_id}')
@@ -717,7 +724,16 @@ def editar_relatorio(id):
                                     if filename:
                                         foto = Foto(prova_id=prova.id, contexto=contexto, file_path=filename)
                                         db.session.add(foto)
-                            
+
+                            # Upload direto de fotos amostra/prova_modelo (sem tamanho)
+                            for contexto in ['amostra', 'prova_modelo']:
+                                for file in request.files.getlist(f'fotos_{contexto}_{prova_id}'):
+                                    filename = save_file(file)
+                                    if filename:
+                                        foto = Foto(prova_id=prova.id, contexto=contexto, file_path=filename)
+                                        db.session.add(foto)
+
+                            # Upload por tamanho (opcional)
                             for tamanho in request.form.getlist(f'tamanhos_recebidos_{prova_id}'):
                                 for contexto in ['amostra', 'prova_modelo']:
                                     for file in request.files.getlist(f'fotos_{contexto}_{prova_id}_{tamanho.replace(" ", "")}'):
@@ -779,6 +795,15 @@ def editar_relatorio(id):
                                 foto = Foto(prova_id=nova_prova.id, contexto=contexto, file_path=filename)
                                 db.session.add(foto)
 
+                    # Upload direto de fotos amostra/prova_modelo (sem tamanho)
+                    for contexto in ['amostra', 'prova_modelo']:
+                        for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
+                            filename = save_file(file)
+                            if filename:
+                                foto = Foto(prova_id=nova_prova.id, contexto=contexto, file_path=filename)
+                                db.session.add(foto)
+
+                    # Upload por tamanho (opcional)
                     for tamanho in request.form.getlist(f'tamanhos_recebidos_{tipo}'):
                         for contexto in ['amostra', 'prova_modelo']:
                             for file in request.files.getlist(f'fotos_{contexto}_{tipo}_{tamanho.replace(" ", "")}'):
@@ -927,6 +952,15 @@ def novo_relatorio():
                                 foto = Foto(prova_id=nova_prova.id, contexto=contexto, file_path=filename)
                                 db.session.add(foto)
 
+                    # Upload direto de fotos amostra/prova_modelo (sem tamanho)
+                    for contexto in ['amostra', 'prova_modelo']:
+                        for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
+                            filename = save_file(file)
+                            if filename:
+                                foto = Foto(prova_id=nova_prova.id, contexto=contexto, file_path=filename)
+                                db.session.add(foto)
+
+                    # Upload por tamanho (opcional)
                     for tamanho in request.form.getlist(f'tamanhos_recebidos_{tipo}'):
                         for contexto in ['amostra', 'prova_modelo']:
                             for file in request.files.getlist(f'fotos_{contexto}_{tipo}_{tamanho.replace(" ", "")}'):
@@ -1004,6 +1038,61 @@ def excluir_relatorio(id):
         return redirect(url_for('detalhes_relatorio', id=id))
 
 
+@app.route('/relatorio/<int:id>/excluir_arquivo', methods=['POST'])
+@login_required
+def excluir_arquivo_relatorio(id):
+    """Exclui um arquivo individual do relatório (imagem_produto, ppt, ficha_tecnica)"""
+    relatorio = Relatorio.query.get_or_404(id)
+    campo = request.form.get('campo')
+
+    campos_permitidos = ['imagem_produto', 'ppt_path', 'ficha_tecnica']
+    if campo not in campos_permitidos:
+        flash("Campo inválido.", "error")
+        return redirect(url_for('editar_relatorio', id=id))
+
+    try:
+        file_path = getattr(relatorio, campo)
+        if file_path:
+            from utils import delete_file
+            delete_file(file_path)
+            setattr(relatorio, campo, None)
+            db.session.commit()
+            flash("Arquivo excluído com sucesso!", "success")
+        else:
+            flash("Nenhum arquivo para excluir.", "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir o arquivo: {e}", "error")
+
+    return redirect(url_for('editar_relatorio', id=id))
+
+
+@app.route('/prova/<int:prova_id>/excluir_tabela', methods=['POST'])
+@login_required
+def excluir_tabela_medidas(prova_id):
+    """Exclui a tabela de medidas de uma prova"""
+    prova = Prova.query.get_or_404(prova_id)
+    relatorio_id = prova.referencia.relatorio_id
+
+    try:
+        if prova.tabela_medidas_path:
+            from utils import delete_file
+            delete_file(prova.tabela_medidas_path)
+            prova.tabela_medidas_path = None
+            db.session.commit()
+            flash("Tabela de medidas excluída com sucesso!", "success")
+        else:
+            flash("Nenhuma tabela de medidas para excluir.", "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir a tabela de medidas: {e}", "error")
+
+    redirect_to = request.form.get('redirect_to', '')
+    if redirect_to == 'editar':
+        return redirect(url_for('editar_relatorio', id=relatorio_id))
+    return redirect(url_for('detalhes_relatorio', id=relatorio_id))
+
+
 @app.route('/foto/<int:foto_id>/excluir', methods=['POST'])
 @login_required
 def excluir_foto(foto_id):
@@ -1078,6 +1167,15 @@ def adicionar_nova_prova(referencia_id):
                         foto = Foto(prova_id=nova_prova.id, contexto=contexto, file_path=filename)
                         db.session.add(foto)
 
+            # Upload direto de fotos amostra/prova_modelo (sem tamanho)
+            for contexto in ['amostra', 'prova_modelo']:
+                for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
+                    filename = save_file(file)
+                    if filename:
+                        foto = Foto(prova_id=nova_prova.id, contexto=contexto, file_path=filename)
+                        db.session.add(foto)
+
+            # Upload por tamanho (opcional)
             for tamanho in request.form.getlist(f'tamanhos_recebidos_{tipo}'):
                 for contexto in ['amostra', 'prova_modelo']:
                     for file in request.files.getlist(f'fotos_{contexto}_{tipo}_{tamanho.replace(" ", "")}'):
@@ -1085,7 +1183,7 @@ def adicionar_nova_prova(referencia_id):
                         if filename:
                             foto = Foto(prova_id=nova_prova.id, contexto=contexto, tamanho=tamanho, file_path=filename)
                             db.session.add(foto)
-            
+
             db.session.commit()
             flash(f"{novo_numero_prova}ª prova adicionada com sucesso!", "success")
 
@@ -1187,7 +1285,7 @@ def exportar_relatorio_excel(id):
 @app.route('/importar/excel/modelo')
 @login_required
 def download_modelo_excel():
-    """Gera e retorna um arquivo Excel modelo para importação"""
+    """Gera e retorna um arquivo Excel modelo para importação (formato Analytics)"""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
@@ -1195,14 +1293,12 @@ def download_modelo_excel():
     import tempfile
 
     wb = Workbook()
-    ws = wb.active
-    ws.title = "Informações Gerais"
 
-    # Headers
-    headers = ['Descrição', 'Linha', 'Coleção', 'Temporada', 'Ano', 'Status Geral']
+    # Estilos compartilhados
     header_font = Font(bold=True, color="FFFFFF", size=11)
     header_fill = PatternFill(start_color="e6007e", end_color="e6007e", fill_type="solid")
     header_alignment = Alignment(horizontal='center', vertical='center')
+    cell_alignment = Alignment(horizontal='center', vertical='center')
     thin_border = Border(
         left=Side(style='thin'),
         right=Side(style='thin'),
@@ -1210,24 +1306,30 @@ def download_modelo_excel():
         bottom=Side(style='thin')
     )
 
-    for col_idx, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_idx, value=header)
+    # ========================================
+    # ABA 1: INFORMAÇÕES GERAIS (Relatórios)
+    # ========================================
+    ws1 = wb.active
+    ws1.title = "Informações Gerais"
+
+    headers1 = ['Descrição', 'Linha', 'Coleção', 'Temporada', 'Ano', 'Status Geral']
+    for col_idx, header in enumerate(headers1, 1):
+        cell = ws1.cell(row=1, column=col_idx, value=header)
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = header_alignment
         cell.border = thin_border
 
     # Linha de exemplo
-    exemplo = ['VESTIDO FLORAL', 'PRAIA', 'VERÃO 2025', 'VERÃO', 2025, 'EM ANDAMENTO']
-    for col_idx, valor in enumerate(exemplo, 1):
-        cell = ws.cell(row=2, column=col_idx, value=valor)
-        cell.alignment = Alignment(horizontal='center', vertical='center')
+    exemplo1 = ['VESTIDO FLORAL', 'PRAIA', 'VERÃO 2025', 'VERÃO', 2025, 'EM ANDAMENTO']
+    for col_idx, valor in enumerate(exemplo1, 1):
+        cell = ws1.cell(row=2, column=col_idx, value=valor)
+        cell.alignment = cell_alignment
         cell.border = thin_border
 
-    # Largura das colunas
-    col_widths = [30, 15, 20, 15, 10, 18]
-    for col_idx, width in enumerate(col_widths, 1):
-        ws.column_dimensions[get_column_letter(col_idx)].width = width
+    col_widths1 = [30, 15, 20, 15, 10, 18]
+    for col_idx, width in enumerate(col_widths1, 1):
+        ws1.column_dimensions[get_column_letter(col_idx)].width = width
 
     # Data validation — Linha (coluna B)
     dv_linha = DataValidation(
@@ -1238,20 +1340,78 @@ def download_modelo_excel():
     dv_linha.prompt = "Selecione a linha do produto"
     dv_linha.promptTitle = "Linha"
     dv_linha.showInputMessage = True
-    ws.add_data_validation(dv_linha)
-    dv_linha.add(f'B2:B1048576')
+    ws1.add_data_validation(dv_linha)
+    dv_linha.add('B2:B1048576')
 
     # Data validation — Status Geral (coluna F)
-    dv_status = DataValidation(
+    dv_status1 = DataValidation(
         type="list",
-        formula1='"EM ANDAMENTO,APROVADO,REPROVADO"',
+        formula1='"EM ANDAMENTO,APROVADA,REPROVADA,COMITÊ"',
         allow_blank=True
     )
-    dv_status.prompt = "Selecione o status"
-    dv_status.promptTitle = "Status Geral"
-    dv_status.showInputMessage = True
-    ws.add_data_validation(dv_status)
-    dv_status.add(f'F2:F1048576')
+    dv_status1.prompt = "Selecione o status"
+    dv_status1.promptTitle = "Status Geral"
+    dv_status1.showInputMessage = True
+    ws1.add_data_validation(dv_status1)
+    dv_status1.add('F2:F1048576')
+
+    # ========================================
+    # ABA 2: DADOS DETALHADOS (Referências + Provas)
+    # ========================================
+    ws2 = wb.create_sheet("Dados Detalhados")
+
+    headers2 = [
+        "Coleção", "Descrição", "Referência", "Categoria",
+        "Fornecedor", "Nº Prova", "Status", "Data Prova",
+        "Data Recebimento", "Tamanhos", "Time Qualidade",
+        "Time Estilo", "Time Modelagem"
+    ]
+    for col_idx, header in enumerate(headers2, 1):
+        cell = ws2.cell(row=1, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    # Linha de exemplo
+    exemplo2 = [
+        'VERÃO 2025', 'VESTIDO FLORAL', 'REF-001', 'ADULTO',
+        'FORNECEDOR X', 1, 'EM ANDAMENTO', '15/03/2025',
+        '10/03/2025', 'P, M, G', 'ANA SILVA',
+        'CARLOS LIMA', 'MARIA SOUZA'
+    ]
+    for col_idx, valor in enumerate(exemplo2, 1):
+        cell = ws2.cell(row=2, column=col_idx, value=valor)
+        cell.alignment = cell_alignment
+        cell.border = thin_border
+
+    col_widths2 = [20, 30, 15, 12, 20, 10, 16, 14, 16, 15, 18, 18, 18]
+    for col_idx, width in enumerate(col_widths2, 1):
+        ws2.column_dimensions[get_column_letter(col_idx)].width = width
+
+    # Data validation — Categoria (coluna D)
+    dv_categoria = DataValidation(
+        type="list",
+        formula1='"BABY,KIDS,TEEN,ADULTO"',
+        allow_blank=True
+    )
+    dv_categoria.prompt = "Selecione a categoria"
+    dv_categoria.promptTitle = "Categoria"
+    dv_categoria.showInputMessage = True
+    ws2.add_data_validation(dv_categoria)
+    dv_categoria.add('D2:D1048576')
+
+    # Data validation — Status (coluna G)
+    dv_status2 = DataValidation(
+        type="list",
+        formula1='"EM ANDAMENTO,APROVADA,REPROVADA,COMITÊ"',
+        allow_blank=True
+    )
+    dv_status2.prompt = "Selecione o status da prova"
+    dv_status2.promptTitle = "Status"
+    dv_status2.showInputMessage = True
+    ws2.add_data_validation(dv_status2)
+    dv_status2.add('G2:G1048576')
 
     # Salvar e retornar
     with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
@@ -1269,10 +1429,12 @@ def download_modelo_excel():
 @app.route('/importar/excel', methods=['GET', 'POST'])
 @login_required
 def importar_relatorios_excel():
-    """Importa relatórios de um arquivo Excel"""
+    """Importa relatórios de um arquivo Excel (formato com 2 abas)"""
     if request.method == 'POST':
+        temp_path = None
         try:
             from openpyxl import load_workbook
+            from datetime import datetime as dt_import
 
             arquivo = request.files.get('arquivo_excel')
             if not arquivo or arquivo.filename == '':
@@ -1294,52 +1456,162 @@ def importar_relatorios_excel():
             wb = load_workbook(temp_path, data_only=True)
 
             relatorios_importados = 0
+            referencias_importadas = 0
+            provas_importadas = 0
             erros = []
 
-            # Ler aba "Informações Gerais" ou primeira aba
+            def formatar_data(valor):
+                """Converte datetime do Excel para string dd/mm/yyyy"""
+                if valor is None:
+                    return None
+                if hasattr(valor, 'strftime'):
+                    return valor.strftime('%d/%m/%Y')
+                return str(valor).strip()
+
+            # ========================================
+            # PASSO 1: Ler aba "Informações Gerais" (Relatórios)
+            # ========================================
             if "Informações Gerais" in wb.sheetnames:
-                ws = wb["Informações Gerais"]
+                ws1 = wb["Informações Gerais"]
             else:
-                ws = wb.active
+                ws1 = wb.active
 
-            # Processar dados (assumindo formato: linha 1 = header, linha 2+ = dados)
-            headers = [cell.value for cell in ws[1]]
+            headers1 = [cell.value for cell in ws1[1]]
 
-            for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            # Mapa para vincular relatórios criados (chave: descrição+coleção)
+            relatorios_map = {}
+
+            for row_idx, row in enumerate(ws1.iter_rows(min_row=2, values_only=True), start=2):
                 try:
-                    # Criar dicionário de dados da linha
-                    dados = dict(zip(headers, row))
+                    dados = dict(zip(headers1, row))
 
                     if not dados.get('Descrição'):
                         continue  # Pular linhas vazias
 
-                    # Criar relatório
+                    descricao = str(dados.get('Descrição', '')).strip().upper()
+                    colecao = str(dados.get('Coleção', '')).strip().upper() if dados.get('Coleção') else None
+                    ano_val = dados.get('Ano')
+
                     novo_rel = Relatorio(
-                        descricao_geral=str(dados.get('Descrição', '')).upper(),
-                        linha=str(dados.get('Linha', '')).upper() if dados.get('Linha') else None,
-                        colecao=str(dados.get('Coleção', '')).upper() if dados.get('Coleção') else None,
-                        temporada=str(dados.get('Temporada', '')).upper() if dados.get('Temporada') else None,
-                        ano=int(dados.get('Ano')) if dados.get('Ano') and str(dados.get('Ano')).isdigit() else None,
-                        status_geral=str(dados.get('Status Geral', 'EM ANDAMENTO')).upper()
+                        codigo=gerar_codigo_relatorio(),
+                        descricao_geral=descricao,
+                        linha=str(dados.get('Linha', '')).strip().upper() if dados.get('Linha') else None,
+                        colecao=colecao,
+                        temporada=str(dados.get('Temporada', '')).strip().upper() if dados.get('Temporada') else None,
+                        ano=int(float(str(ano_val))) if ano_val and str(ano_val).replace('.0', '').replace('.', '').isdigit() else None,
+                        status_geral=str(dados.get('Status Geral', 'EM ANDAMENTO')).strip().upper(),
+                        created_by=current_user.id if current_user.is_authenticated else None
                     )
                     db.session.add(novo_rel)
+                    db.session.flush()  # Obter ID antes do commit
+
+                    # Chave para vincular com dados detalhados
+                    chave = f"{descricao}|{colecao or ''}"
+                    relatorios_map[chave] = novo_rel
                     relatorios_importados += 1
 
                 except Exception as e:
-                    erros.append(f"Linha {row_idx}: {str(e)}")
+                    erros.append(f"Info Gerais - Linha {row_idx}: {str(e)}")
                     continue
+
+            # ========================================
+            # PASSO 2: Ler aba "Dados Detalhados" (Referências + Provas)
+            # ========================================
+            if "Dados Detalhados" in wb.sheetnames:
+                ws2 = wb["Dados Detalhados"]
+                headers2 = [cell.value for cell in ws2[1]]
+
+                # Mapa de referências já criadas (chave: relatorio_id|numero_ref)
+                refs_map = {}
+
+                for row_idx, row in enumerate(ws2.iter_rows(min_row=2, values_only=True), start=2):
+                    try:
+                        dados = dict(zip(headers2, row))
+
+                        if not dados.get('Referência'):
+                            continue  # Pular linhas vazias
+
+                        # Encontrar relatório correspondente
+                        colecao = str(dados.get('Coleção', '')).strip().upper() if dados.get('Coleção') else ''
+                        descricao = str(dados.get('Descrição', '')).strip().upper() if dados.get('Descrição') else ''
+                        chave_rel = f"{descricao}|{colecao}"
+
+                        relatorio = relatorios_map.get(chave_rel)
+                        if not relatorio:
+                            # Tentar buscar no banco existente
+                            relatorio = Relatorio.query.filter(
+                                db.func.upper(Relatorio.descricao_geral) == descricao,
+                                db.func.upper(db.func.coalesce(Relatorio.colecao, '')) == colecao
+                            ).first()
+
+                        if not relatorio:
+                            erros.append(f"Dados Detalhados - Linha {row_idx}: Relatório não encontrado para '{descricao}' / '{colecao}'")
+                            continue
+
+                        # Criar ou reutilizar Referência
+                        numero_ref = str(dados.get('Referência', '')).strip().upper()
+                        chave_ref = f"{relatorio.id}|{numero_ref}"
+
+                        if chave_ref not in refs_map:
+                            categoria = str(dados.get('Categoria', '')).strip().upper() if dados.get('Categoria') else 'ADULTO'
+                            fornecedor = str(dados.get('Fornecedor', '')).strip().upper() if dados.get('Fornecedor') else None
+
+                            nova_ref = Referencia(
+                                relatorio_id=relatorio.id,
+                                numero_ref=numero_ref,
+                                tipo_categoria=categoria,
+                                fornecedor=fornecedor
+                            )
+                            db.session.add(nova_ref)
+                            db.session.flush()
+                            refs_map[chave_ref] = nova_ref
+                            referencias_importadas += 1
+
+                        ref = refs_map[chave_ref]
+
+                        # Criar Prova
+                        num_prova = dados.get('Nº Prova')
+                        if num_prova is not None:
+                            num_prova_int = int(float(str(num_prova))) if num_prova else 1
+                        else:
+                            num_prova_int = 1
+
+                        nova_prova = Prova(
+                            referencia_id=ref.id,
+                            numero_prova=num_prova_int,
+                            status=str(dados.get('Status', 'EM ANDAMENTO')).strip().upper(),
+                            data_prova=formatar_data(dados.get('Data Prova')),
+                            data_recebimento=formatar_data(dados.get('Data Recebimento')),
+                            tamanhos_recebidos=str(dados.get('Tamanhos', '')).strip() if dados.get('Tamanhos') else None,
+                            time_qualidade=str(dados.get('Time Qualidade', '')).strip() if dados.get('Time Qualidade') else None,
+                            time_estilo=str(dados.get('Time Estilo', '')).strip() if dados.get('Time Estilo') else None,
+                            time_modelagem=str(dados.get('Time Modelagem', '')).strip() if dados.get('Time Modelagem') else None
+                        )
+                        db.session.add(nova_prova)
+                        provas_importadas += 1
+
+                    except Exception as e:
+                        erros.append(f"Dados Detalhados - Linha {row_idx}: {str(e)}")
+                        continue
 
             db.session.commit()
 
-            # Remover arquivo temporário
-            import os
-            os.unlink(temp_path)
-
+            # Mensagens de resultado
+            partes = []
             if relatorios_importados > 0:
-                flash(f'✅ {relatorios_importados} relatório(s) importado(s) com sucesso!', 'success')
+                partes.append(f"{relatorios_importados} relatório(s)")
+            if referencias_importadas > 0:
+                partes.append(f"{referencias_importadas} referência(s)")
+            if provas_importadas > 0:
+                partes.append(f"{provas_importadas} prova(s)")
+
+            if partes:
+                flash(f'Importado com sucesso: {", ".join(partes)}!', 'success')
+            else:
+                flash('Nenhum dado encontrado para importar. Verifique o formato do arquivo.', 'warning')
 
             if erros:
-                flash(f'⚠️ {len(erros)} erro(s) durante importação. Verifique o formato do arquivo.', 'warning')
+                flash(f'{len(erros)} erro(s) durante importação: {"; ".join(erros[:3])}', 'warning')
 
             return redirect(url_for('dashboard'))
 
@@ -1347,6 +1619,14 @@ def importar_relatorios_excel():
             db.session.rollback()
             flash(f'Erro ao importar arquivo: {str(e)}', 'error')
             return redirect(url_for('dashboard'))
+
+        finally:
+            # Garantir limpeza do arquivo temporário
+            if temp_path:
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass
 
     # GET - Mostrar página de upload
     return redirect(url_for('dashboard'))

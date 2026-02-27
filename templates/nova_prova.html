@@ -141,7 +141,7 @@
             </div>
             <div class="mb-3">
                 <label for="tabela_medidas_{{ referencia.tipo_categoria }}" class="form-label">Tabela de Medidas</label>
-                <input type="file" id="tabela_medidas_{{ referencia.tipo_categoria }}" class="form-control" name="tabela_medidas_{{ referencia.tipo_categoria }}">
+                <input type="file" id="tabela_medidas_{{ referencia.tipo_categoria }}" class="form-control" name="tabela_medidas_{{ referencia.tipo_categoria }}" accept=".xlsx,.xls,.pdf,.png,.jpg,.jpeg">
             </div>
 
             <div class="row mb-3">
@@ -157,8 +157,8 @@
 
             <div class="mb-3 checkbox-group" data-type="{{ referencia.tipo_categoria }}">
                 <label class="form-label d-block">Tamanhos recebidos das amostras</label>
-                {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses'], 'kids': ['1', '2', '4',
-                '6', '8'], 'teen': ['10', '12', '14'], 'adulto': ['PP', 'P', 'M', 'G', 'GG']} %}
+                {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses', 'UN'], 'kids': ['1', '2', '4',
+                '6', '8', 'UN'], 'teen': ['10', '12', '14', 'UN'], 'adulto': ['PP', 'P', 'M', 'G', 'GG', 'UN']} %}
                 <div class="btn-group" role="group">
                     {% for tamanho in tamanhos_disponiveis[referencia.tipo_categoria] %}
                     <input type="checkbox" class="btn-check size-checkbox" id="btn_np_{{ loop.index }}"
@@ -175,13 +175,15 @@
 
             <div class="mb-3">
                 <label class="form-label">Fotos da amostra</label>
+                <input type="file" class="form-control mb-2" name="fotos_amostra_{{ referencia.tipo_categoria }}" multiple accept="image/*">
                 <div id="placeholder_fotos_amostra_{{ referencia.tipo_categoria }}"
-                    class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                    class="dynamic-upload-placeholder"></div>
             </div>
             <div class="mb-3">
                 <label class="form-label">Fotos da prova (na modelo)</label>
+                <input type="file" class="form-control mb-2" name="fotos_prova_modelo_{{ referencia.tipo_categoria }}" multiple accept="image/*">
                 <div id="placeholder_fotos_prova_modelo_{{ referencia.tipo_categoria }}"
-                    class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                    class="dynamic-upload-placeholder"></div>
             </div>
 
             <div class="row mb-3">

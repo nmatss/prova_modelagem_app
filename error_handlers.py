@@ -39,6 +39,14 @@ def register_error_handlers(app):
             return jsonify(error="Recurso não encontrado"), 404
         return render_template('errors/404.html'), 404
 
+    @app.errorhandler(413)
+    def request_entity_too_large(error):
+        """Arquivo muito grande"""
+        logger.warning(f"Request Entity Too Large: {request.url} - IP: {request.remote_addr}")
+        if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+            return jsonify(error="O arquivo excede o tamanho máximo permitido (16MB)."), 413
+        return render_template('errors/413.html'), 413
+
     @app.errorhandler(429)
     def too_many_requests(error):
         """Muitas requisições (Rate Limit)"""

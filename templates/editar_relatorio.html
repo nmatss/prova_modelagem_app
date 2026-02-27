@@ -245,13 +245,19 @@
                     <div class="mb-3">
                         <label for="ppt" class="form-label">PPT (apresentação das peças)</label>
                         {% if relatorio.ppt_path %}
-                        <div class="mb-2">
-                            <span class="badge bg-success me-2">
+                        <div class="mb-2 d-flex align-items-center gap-2">
+                            <span class="badge bg-success">
                                 <i class="bi bi-file-earmark-ppt me-1"></i>PPT anexado
                             </span>
                             <a href="{{ url_for('serve_upload', filename=relatorio.ppt_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
-                                <i class="bi bi-eye"></i> Ver atual
+                                <i class="bi bi-eye"></i> Ver
                             </a>
+                            <form action="{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="campo" value="ppt_path">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir o PPT anexado?')">
+                                    <i class="bi bi-trash"></i> Excluir
+                                </button>
+                            </form>
                         </div>
                         {% endif %}
                         <input type="file" class="form-control" id="ppt" name="ppt" accept=".ppt,.pptx,.pdf">
@@ -301,13 +307,23 @@
                             </label>
                             {% if relatorio.imagem_produto %}
                             <div class="mb-2">
-                                <img src="{{ url_for('serve_upload', filename=relatorio.imagem_produto) }}"
-                                     alt="Imagem atual do produto"
-                                     class="img-thumbnail d-block mb-2"
-                                     style="max-width: 150px; max-height: 150px; object-fit: cover;">
-                                <span class="badge bg-success me-2">
-                                    <i class="bi bi-image me-1"></i>Imagem anexada
-                                </span>
+                                <div class="position-relative d-inline-block mb-2">
+                                    <img src="{{ url_for('serve_upload', filename=relatorio.imagem_produto) }}"
+                                         alt="Imagem atual do produto"
+                                         class="img-thumbnail"
+                                         style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-image me-1"></i>Imagem anexada
+                                    </span>
+                                    <form action="{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="campo" value="imagem_produto">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir a imagem do produto?')">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                             {% endif %}
                             <input type="file" class="form-control" id="imagem_produto" name="imagem_produto" accept="image/*">
@@ -321,13 +337,19 @@
                                 <i class="bi bi-file-earmark-text"></i> Ficha Técnica do Produto
                             </label>
                             {% if relatorio.ficha_tecnica %}
-                            <div class="mb-2">
-                                <span class="badge bg-success me-2">
+                            <div class="mb-2 d-flex align-items-center gap-2">
+                                <span class="badge bg-success">
                                     <i class="bi bi-file-earmark-text me-1"></i>Ficha anexada
                                 </span>
                                 <a href="{{ url_for('serve_upload', filename=relatorio.ficha_tecnica) }}" target="_blank" class="btn btn-sm btn-outline-info">
-                                    <i class="bi bi-eye"></i> Ver atual
+                                    <i class="bi bi-eye"></i> Ver
                                 </a>
+                                <form action="{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="campo" value="ficha_tecnica">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir a ficha técnica?')">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </button>
+                                </form>
                             </div>
                             {% endif %}
                             <input type="file" class="form-control" id="ficha_tecnica" name="ficha_tecnica" accept=".pdf,.doc,.docx,.xlsx,.xls">
@@ -339,6 +361,68 @@
                     </div>
                 </div>
             </div>
+
+            <!-- RESUMO DAS REFERÊNCIAS (Conferência Rápida) -->
+            {% set refs_list = [] %}
+            {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
+                {% if referencias_por_tipo.get(tipo) and referencias_por_tipo[tipo].numero_ref %}
+                    {% set _ = refs_list.append(referencias_por_tipo[tipo]) %}
+                {% endif %}
+            {% endfor %}
+
+            {% if refs_list %}
+            <div class="card mt-3">
+                <div class="card-header bg-primary bg-opacity-10">
+                    <h5 class="card-title mb-0"><i class="bi bi-tag-fill me-2"></i>Informações das Referências</h5>
+                </div>
+                <div class="card-body">
+                    {% for tipo in ['baby', 'kids', 'teen', 'adulto'] %}
+                    {% set ref = referencias_por_tipo.get(tipo) %}
+                    {% if ref and ref.numero_ref %}
+                    <div class="{% if not loop.last %}mb-3 pb-3 border-bottom{% endif %}">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-primary me-2">{{ tipo | capitalize }}</span>
+                            <strong>Ref: {{ ref.numero_ref }}</strong>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Origem</small>
+                                <span>{{ ref.origem or '-' }}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Fornecedor</small>
+                                <span>{{ ref.fornecedor or '-' }}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Matéria Prima</small>
+                                <span>{{ ref.materia_prima or '-' }}</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Composição</small>
+                                <span>{{ ref.composicao or '-' }}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Gramatura</small>
+                                <span>{{ ref.gramatura or '-' }}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Aviamentos</small>
+                                <span>{{ ref.aviamentos or '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info mt-3 mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                <small>Nenhuma referência cadastrada. Use as abas de categoria para adicionar.</small>
+            </div>
+            {% endif %}
         </div>
 
         <!-- ABAS POR TIPO -->
@@ -425,9 +509,9 @@
 
                                 <div class="mb-3 checkbox-group">
                                     <label class="form-label d-block">Tamanhos recebidos</label>
-                                    {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses'],
-                                    'kids': ['1', '2', '4', '6', '8'], 'teen': ['10', '12', '14'], 'adulto': ['PP', 'P',
-                                    'M', 'G', 'GG']} %}
+                                    {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses', 'UN'],
+                                    'kids': ['1', '2', '4', '6', '8', 'UN'], 'teen': ['10', '12', '14', 'UN'], 'adulto': ['PP', 'P',
+                                    'M', 'G', 'GG', 'UN']} %}
                                     <div class="btn-group" role="group">
                                         {% for tamanho in tamanhos_disponiveis[tipo] %}
                                         <input type="checkbox" class="btn-check"
@@ -456,7 +540,7 @@
                                                 <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
                                                 <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
                                                     <input type="hidden" name="redirect_to" value="editar">
-                                                    <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                    <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
                                                 </form>
                                             </div>
                                             {% endfor %}
@@ -467,13 +551,19 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Tabela de Medidas</label>
                                         {% if prova.tabela_medidas_path %}
-                                        <div class="mb-2">
+                                        <div class="mb-2 d-flex align-items-center gap-2">
                                             <a href="{{ url_for('serve_upload', filename=prova.tabela_medidas_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
                                                 <i class="bi bi-eye"></i> Ver atual
                                             </a>
+                                            <form action="{{ url_for('excluir_tabela_medidas', prova_id=prova.id) }}" method="POST" class="d-inline">
+                                                <input type="hidden" name="redirect_to" value="editar">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir a tabela de medidas?')">
+                                                    <i class="bi bi-trash"></i> Excluir
+                                                </button>
+                                            </form>
                                         </div>
                                         {% endif %}
-                                        <input type="file" class="form-control" name="tabela_medidas_{{ prova.id }}">
+                                        <input type="file" class="form-control" name="tabela_medidas_{{ prova.id }}" accept=".xlsx,.xls,.pdf,.png,.jpg,.jpeg">
                                     </div>
                                 </div>
 
@@ -488,7 +578,7 @@
                                             <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
                                             <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
                                                 <input type="hidden" name="redirect_to" value="editar">
-                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
                                             </form>
                                         </div>
                                         {% endfor %}
@@ -505,7 +595,7 @@
                                             <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
                                             <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
                                                 <input type="hidden" name="redirect_to" value="editar">
-                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
                                             </form>
                                         </div>
                                         {% endfor %}
@@ -513,14 +603,16 @@
                                 </div>
                                 {% endif %}
 
-                                <!-- Placeholders para novas fotos de amostra/prova_modelo por tamanho -->
+                                <!-- Upload direto de fotos de amostra/prova_modelo -->
                                 <div class="mb-3">
-                                    <label class="form-label">Adicionar fotos da amostra (por tamanho)</label>
-                                    <div id="placeholder_fotos_amostra_existing_{{ prova.id }}" class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                    <label class="form-label">Adicionar fotos da amostra</label>
+                                    <input type="file" class="form-control mb-2" name="fotos_amostra_{{ prova.id }}" multiple accept="image/*">
+                                    <div id="placeholder_fotos_amostra_existing_{{ prova.id }}" class="dynamic-upload-placeholder"></div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Adicionar fotos da prova na modelo (por tamanho)</label>
-                                    <div id="placeholder_fotos_prova_modelo_existing_{{ prova.id }}" class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                    <label class="form-label">Adicionar fotos da prova na modelo</label>
+                                    <input type="file" class="form-control mb-2" name="fotos_prova_modelo_{{ prova.id }}" multiple accept="image/*">
+                                    <div id="placeholder_fotos_prova_modelo_existing_{{ prova.id }}" class="dynamic-upload-placeholder"></div>
                                 </div>
 
                                 <div class="row mb-3">
@@ -570,7 +662,7 @@
                                                             <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
                                                             <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
                                                                 <input type="hidden" name="redirect_to" value="editar">
-                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
                                                             </form>
                                                         </div>
                                                         {% endfor %}
@@ -620,7 +712,7 @@
                                                             <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
                                                             <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
                                                                 <input type="hidden" name="redirect_to" value="editar">
-                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
                                                             </form>
                                                         </div>
                                                         {% endfor %}
@@ -669,7 +761,7 @@
                                                             <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
                                                             <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
                                                                 <input type="hidden" name="redirect_to" value="editar">
-                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 18px; height: 18px; font-size: 0.55rem;" title="Excluir" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-x"></i></button>
+                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
                                                             </form>
                                                         </div>
                                                         {% endfor %}
@@ -733,8 +825,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Tabela de Medidas (PDF/Imagem)</label>
-                            <input type="file" class="form-control" name="tabela_medidas_{{ tipo }}">
+                            <label class="form-label">Tabela de Medidas (Excel/PDF/Imagem)</label>
+                            <input type="file" class="form-control" name="tabela_medidas_{{ tipo }}" accept=".xlsx,.xls,.pdf,.png,.jpg,.jpeg">
                         </div>
 
                         <hr>
@@ -752,9 +844,9 @@
 
                         <div class="mb-3 checkbox-group" data-type="{{ tipo }}">
                             <label class="form-label d-block">Tamanhos recebidos</label>
-                            {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses'],
-                            'kids': ['1', '2', '4', '6', '8'], 'teen': ['10', '12', '14'], 'adulto': ['PP', 'P',
-                            'M', 'G', 'GG']} %}
+                            {% set tamanhos_disponiveis = {'baby': ['3a6meses', '6a9meses', '9a12meses', 'UN'],
+                            'kids': ['1', '2', '4', '6', '8', 'UN'], 'teen': ['10', '12', '14', 'UN'], 'adulto': ['PP', 'P',
+                            'M', 'G', 'GG', 'UN']} %}
                             <div class="btn-group" role="group">
                                 {% for tamanho in tamanhos_disponiveis[tipo] %}
                                 <input type="checkbox" class="btn-check size-checkbox"
@@ -773,13 +865,15 @@
 
                         <div class="mb-3">
                             <label class="form-label">Fotos da amostra</label>
+                            <input type="file" class="form-control mb-2" name="fotos_amostra_{{ tipo }}" multiple accept="image/*">
                             <div id="placeholder_fotos_amostra_{{ tipo }}"
-                                class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                class="dynamic-upload-placeholder"></div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Fotos da prova (na modelo)</label>
+                            <input type="file" class="form-control mb-2" name="fotos_prova_modelo_{{ tipo }}" multiple accept="image/*">
                             <div id="placeholder_fotos_prova_modelo_{{ tipo }}"
-                                class="dynamic-upload-placeholder border p-2 rounded bg-light"></div>
+                                class="dynamic-upload-placeholder"></div>
                         </div>
 
                         <div class="row mb-3">
