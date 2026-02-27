@@ -138,10 +138,11 @@
 
                 <hr class="my-4">
 
-                <!-- Categoria do Produto (was Step 2) -->
+                <!-- Categoria do Produto (múltipla seleção) -->
+                <p class="form-label mb-2">Selecione uma ou mais categorias *</p>
                 <div class="category-selection">
                     <div class="category-option">
-                        <input type="radio" name="tipo_produto" id="cat_baby" value="baby">
+                        <input type="checkbox" name="tipo_produto" id="cat_baby" value="baby">
                         <label for="cat_baby" class="category-card">
                             <div class="category-icon">👶</div>
                             <h3 class="category-name">Baby</h3>
@@ -150,7 +151,7 @@
                     </div>
 
                     <div class="category-option">
-                        <input type="radio" name="tipo_produto" id="cat_kids" value="kids">
+                        <input type="checkbox" name="tipo_produto" id="cat_kids" value="kids">
                         <label for="cat_kids" class="category-card">
                             <div class="category-icon">👧</div>
                             <h3 class="category-name">Kids</h3>
@@ -159,7 +160,7 @@
                     </div>
 
                     <div class="category-option">
-                        <input type="radio" name="tipo_produto" id="cat_teen" value="teen">
+                        <input type="checkbox" name="tipo_produto" id="cat_teen" value="teen">
                         <label for="cat_teen" class="category-card">
                             <div class="category-icon">🧒</div>
                             <h3 class="category-name">Teen</h3>
@@ -168,7 +169,7 @@
                     </div>
 
                     <div class="category-option">
-                        <input type="radio" name="tipo_produto" id="cat_adulto" value="adulto">
+                        <input type="checkbox" name="tipo_produto" id="cat_adulto" value="adulto">
                         <label for="cat_adulto" class="category-card">
                             <div class="category-icon">👩</div>
                             <h3 class="category-name">Adulto</h3>
@@ -717,39 +718,33 @@
 {% block scripts %}
 
 <script>
-    // Mostrar/ocultar seções baseadas na categoria selecionada
-    document.querySelectorAll('input[name="tipo_produto"]').forEach(radio => {
-        radio.addEventListener('change', function () {
+    // Mostrar/ocultar seções baseadas nas categorias selecionadas (múltipla seleção)
+    document.querySelectorAll('input[name="tipo_produto"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
             const tipo = this.value;
+            const refSection = document.getElementById(`ref_section_${tipo}`);
+            const provaSection = document.getElementById(`prova_section_${tipo}`);
 
-            // Esconder todas as seções de referência e prova e DESABILITAR inputs
-            ['baby', 'kids', 'teen', 'adulto'].forEach(t => {
-                const refSection = document.getElementById(`ref_section_${t}`);
-                const provaSection = document.getElementById(`prova_section_${t}`);
-
+            if (this.checked) {
+                // Mostrar e habilitar a seção
+                if (refSection) {
+                    refSection.style.display = 'block';
+                    refSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = false);
+                }
+                if (provaSection) {
+                    provaSection.style.display = 'block';
+                    provaSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = false);
+                }
+            } else {
+                // Esconder e desabilitar a seção
                 if (refSection) {
                     refSection.style.display = 'none';
-                    // Desabilitar inputs para evitar validação
                     refSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = true);
                 }
                 if (provaSection) {
                     provaSection.style.display = 'none';
-                    // Desabilitar inputs para evitar validação
                     provaSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = true);
                 }
-            });
-
-            // Mostrar apenas a seção selecionada e HABILITAR inputs
-            const selectedRefSection = document.getElementById(`ref_section_${tipo}`);
-            const selectedProvaSection = document.getElementById(`prova_section_${tipo}`);
-
-            if (selectedRefSection) {
-                selectedRefSection.style.display = 'block';
-                selectedRefSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = false);
-            }
-            if (selectedProvaSection) {
-                selectedProvaSection.style.display = 'block';
-                selectedProvaSection.querySelectorAll('input, select, textarea').forEach(input => input.disabled = false);
             }
         });
     });

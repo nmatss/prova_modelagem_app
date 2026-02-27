@@ -252,12 +252,10 @@
                             <a href="{{ url_for('serve_upload', filename=relatorio.ppt_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
                                 <i class="bi bi-eye"></i> Ver
                             </a>
-                            <form action="{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}" method="POST" class="d-inline">
-                                <input type="hidden" name="campo" value="ppt_path">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir o PPT anexado?')">
-                                    <i class="bi bi-trash"></i> Excluir
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                onclick="submitDelete('{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}', {campo: 'ppt_path'}, 'Excluir o PPT anexado?')">
+                                <i class="bi bi-trash"></i> Excluir
+                            </button>
                         </div>
                         {% endif %}
                         <input type="file" class="form-control" id="ppt" name="ppt" accept=".ppt,.pptx,.pdf">
@@ -317,12 +315,10 @@
                                     <span class="badge bg-success">
                                         <i class="bi bi-image me-1"></i>Imagem anexada
                                     </span>
-                                    <form action="{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}" method="POST" class="d-inline">
-                                        <input type="hidden" name="campo" value="imagem_produto">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir a imagem do produto?')">
-                                            <i class="bi bi-trash"></i> Excluir
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="submitDelete('{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}', {campo: 'imagem_produto'}, 'Excluir a imagem do produto?')">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </button>
                                 </div>
                             </div>
                             {% endif %}
@@ -344,12 +340,10 @@
                                 <a href="{{ url_for('serve_upload', filename=relatorio.ficha_tecnica) }}" target="_blank" class="btn btn-sm btn-outline-info">
                                     <i class="bi bi-eye"></i> Ver
                                 </a>
-                                <form action="{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}" method="POST" class="d-inline">
-                                    <input type="hidden" name="campo" value="ficha_tecnica">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir a ficha técnica?')">
-                                        <i class="bi bi-trash"></i> Excluir
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="submitDelete('{{ url_for('excluir_arquivo_relatorio', id=relatorio.id) }}', {campo: 'ficha_tecnica'}, 'Excluir a ficha técnica?')">
+                                    <i class="bi bi-trash"></i> Excluir
+                                </button>
                             </div>
                             {% endif %}
                             <input type="file" class="form-control" id="ficha_tecnica" name="ficha_tecnica" accept=".pdf,.doc,.docx,.xlsx,.xls">
@@ -538,10 +532,10 @@
                                             {% for foto in prova.fotos['desenho'] %}
                                             <div class="position-relative d-inline-block">
                                                 <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
-                                                <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
-                                                    <input type="hidden" name="redirect_to" value="editar">
-                                                    <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
-                                                </form>
+                                                <div class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                                                    <button type="button" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto"
+                                                        onclick="submitDelete('{{ url_for('excluir_foto', foto_id=foto.id) }}', {redirect_to: 'editar'}, 'Excluir esta foto?')"><i class="bi bi-trash"></i></button>
+                                                </div>
                                             </div>
                                             {% endfor %}
                                         </div>
@@ -555,12 +549,10 @@
                                             <a href="{{ url_for('serve_upload', filename=prova.tabela_medidas_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
                                                 <i class="bi bi-eye"></i> Ver atual
                                             </a>
-                                            <form action="{{ url_for('excluir_tabela_medidas', prova_id=prova.id) }}" method="POST" class="d-inline">
-                                                <input type="hidden" name="redirect_to" value="editar">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir a tabela de medidas?')">
-                                                    <i class="bi bi-trash"></i> Excluir
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                onclick="submitDelete('{{ url_for('excluir_tabela_medidas', prova_id=prova.id) }}', {redirect_to: 'editar'}, 'Excluir a tabela de medidas?')">
+                                                <i class="bi bi-trash"></i> Excluir
+                                            </button>
                                         </div>
                                         {% endif %}
                                         <input type="file" class="form-control" name="tabela_medidas_{{ prova.id }}" accept=".xlsx,.xls,.pdf,.png,.jpg,.jpeg">
@@ -576,10 +568,10 @@
                                         <div class="position-relative d-inline-block text-center">
                                             <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
                                             <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
-                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
-                                                <input type="hidden" name="redirect_to" value="editar">
-                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
-                                            </form>
+                                            <div class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                                                <button type="button" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto"
+                                                    onclick="submitDelete('{{ url_for('excluir_foto', foto_id=foto.id) }}', {redirect_to: 'editar'}, 'Excluir esta foto?')"><i class="bi bi-trash"></i></button>
+                                            </div>
                                         </div>
                                         {% endfor %}
                                     </div>
@@ -593,10 +585,10 @@
                                         <div class="position-relative d-inline-block text-center">
                                             <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
                                             <small class="d-block text-muted">{{ foto.get('tamanho', '') }}</small>
-                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
-                                                <input type="hidden" name="redirect_to" value="editar">
-                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
-                                            </form>
+                                            <div class="position-absolute top-0 end-0" style="margin: -5px -5px 0 0;">
+                                                <button type="button" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto"
+                                                    onclick="submitDelete('{{ url_for('excluir_foto', foto_id=foto.id) }}', {redirect_to: 'editar'}, 'Excluir esta foto?')"><i class="bi bi-trash"></i></button>
+                                            </div>
                                         </div>
                                         {% endfor %}
                                     </div>
@@ -660,10 +652,10 @@
                                                         {% for foto in prova.fotos['qualidade'] %}
                                                         <div class="position-relative d-inline-block">
                                                             <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
-                                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
-                                                                <input type="hidden" name="redirect_to" value="editar">
-                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
-                                                            </form>
+                                                            <div class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                                                <button type="button" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto"
+                                                                    onclick="submitDelete('{{ url_for('excluir_foto', foto_id=foto.id) }}', {redirect_to: 'editar'}, 'Excluir esta foto?')"><i class="bi bi-trash"></i></button>
+                                                            </div>
                                                         </div>
                                                         {% endfor %}
                                                     </div>
@@ -710,10 +702,10 @@
                                                         {% for foto in prova.fotos['estilo'] %}
                                                         <div class="position-relative d-inline-block">
                                                             <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
-                                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
-                                                                <input type="hidden" name="redirect_to" value="editar">
-                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
-                                                            </form>
+                                                            <div class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                                                <button type="button" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto"
+                                                                    onclick="submitDelete('{{ url_for('excluir_foto', foto_id=foto.id) }}', {redirect_to: 'editar'}, 'Excluir esta foto?')"><i class="bi bi-trash"></i></button>
+                                                            </div>
                                                         </div>
                                                         {% endfor %}
                                                     </div>
@@ -759,10 +751,10 @@
                                                         {% for foto in prova.fotos['modelagem'] %}
                                                         <div class="position-relative d-inline-block">
                                                             <img src="{{ url_for('serve_upload', filename=foto.file_path) }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
-                                                            <form action="{{ url_for('excluir_foto', foto_id=foto.id) }}" method="POST" class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
-                                                                <input type="hidden" name="redirect_to" value="editar">
-                                                                <button type="submit" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto" onclick="return confirm('Excluir esta foto?')"><i class="bi bi-trash"></i></button>
-                                                            </form>
+                                                            <div class="position-absolute top-0 end-0" style="margin: -4px -4px 0 0;">
+                                                                <button type="button" class="btn btn-danger btn-sm rounded-circle p-0" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Excluir foto"
+                                                                    onclick="submitDelete('{{ url_for('excluir_foto', foto_id=foto.id) }}', {redirect_to: 'editar'}, 'Excluir esta foto?')"><i class="bi bi-trash"></i></button>
+                                                            </div>
                                                         </div>
                                                         {% endfor %}
                                                     </div>
@@ -1019,6 +1011,23 @@
 
 {% block scripts %}
 <script>
+    // Função para submeter ações de exclusão sem forms aninhados
+    function submitDelete(action, data, confirmMsg) {
+        if (confirmMsg && !confirm(confirmMsg)) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = action;
+        for (const [key, value] of Object.entries(data)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         // Função para mostrar/esconder secções de referência
         function setupReferenceListener(type) {

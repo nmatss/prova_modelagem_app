@@ -243,13 +243,13 @@ class ReportWizard {
     }
 
     validateCategory() {
-        const categoryRadios = document.querySelectorAll('input[name="tipo_produto"]');
-        const isSelected = Array.from(categoryRadios).some(radio => radio.checked);
+        const categoryCheckboxes = document.querySelectorAll('input[name="tipo_produto"]');
+        const isSelected = Array.from(categoryCheckboxes).some(cb => cb.checked);
 
         if (!isSelected) {
             this.showValidationMessage(
-                categoryRadios[0].closest('.category-selection'),
-                'Por favor, selecione uma categoria'
+                categoryCheckboxes[0].closest('.category-selection'),
+                'Por favor, selecione pelo menos uma categoria'
             );
             return false;
         }
@@ -258,15 +258,17 @@ class ReportWizard {
     }
 
     validateReference() {
-        const selectedCategory = document.querySelector('input[name="tipo_produto"]:checked');
-        if (!selectedCategory) return false;
+        const selectedCategories = document.querySelectorAll('input[name="tipo_produto"]:checked');
+        if (selectedCategories.length === 0) return false;
 
-        const tipo = selectedCategory.value;
-        const refInput = document.getElementById(`ref_${tipo}`);
+        for (const cat of selectedCategories) {
+            const tipo = cat.value;
+            const refInput = document.getElementById(`ref_${tipo}`);
 
-        if (!refInput?.value.trim()) {
-            this.showValidationMessage(refInput, `Por favor, informe a referência ${tipo}`);
-            return false;
+            if (!refInput?.value.trim()) {
+                this.showValidationMessage(refInput, `Por favor, informe a referência ${tipo}`);
+                return false;
+            }
         }
 
         return true;
@@ -314,87 +316,118 @@ class ReportWizard {
         const fichaFile = document.getElementById('ficha_tecnica')?.files[0];
         this.setReviewValue('review_ficha', fichaFile ? fichaFile.name : 'Não enviado');
 
-        // Categoria
-        const categoria = document.querySelector('input[name="tipo_produto"]:checked');
-        this.setReviewValue('review_categoria', categoria ? categoria.value.toUpperCase() : 'Não selecionado');
+        // Categorias (múltipla seleção)
+        const categorias = document.querySelectorAll('input[name="tipo_produto"]:checked');
+        const categoriasNomes = Array.from(categorias).map(cb => cb.value.toUpperCase());
+        this.setReviewValue('review_categoria', categoriasNomes.length > 0 ? categoriasNomes.join(', ') : 'Não selecionado');
 
-        // Referência
-        if (categoria) {
-            const tipo = categoria.value;
+        // Dados por categoria - agregar de todas as selecionadas
+        const refs = [], origens = [], fornecedores = [], materias = [], composicoes = [], gramaturas = [], aviamentosList = [];
+        const datasReceb = [], datasProva = [], tamanhosList = [];
+        let totalFotos = 0;
+        const qualResps = [], qualItems = [], qualComents = [], qualObsList = [];
+        const estResps = [], estItems = [], estComents = [], estObsList = [];
+        const modResps = [], modItems = [], modComents = [], modObsList = [];
+        const datasLacre = [], numerosLacre = [], infosAdicionais = [];
+
+        categorias.forEach(cat => {
+            const tipo = cat.value;
+            const label = tipo.toUpperCase();
+
             const ref = document.getElementById(`ref_${tipo}`)?.value;
-            this.setReviewValue('review_referencia', ref || 'Não informado');
+            if (ref) refs.push(`[${label}] ${ref}`);
 
             const origem = document.querySelector(`select[name="origem_${tipo}"]`)?.value;
-            this.setReviewValue('review_origem', origem || 'Não informado');
+            if (origem) origens.push(`[${label}] ${origem}`);
 
             const fornecedor = document.querySelector(`input[name="fornecedor_${tipo}"]`)?.value;
-            this.setReviewValue('review_fornecedor', fornecedor || 'Não informado');
+            if (fornecedor) fornecedores.push(`[${label}] ${fornecedor}`);
 
             const materiaPrima = document.querySelector(`input[name="materia_prima_${tipo}"]`)?.value;
-            this.setReviewValue('review_materia_prima', materiaPrima || 'Não informado');
+            if (materiaPrima) materias.push(`[${label}] ${materiaPrima}`);
 
             const composicao = document.querySelector(`input[name="composicao_${tipo}"]`)?.value;
-            this.setReviewValue('review_composicao', composicao || 'Não informado');
+            if (composicao) composicoes.push(`[${label}] ${composicao}`);
 
             const gramatura = document.querySelector(`input[name="gramatura_${tipo}"]`)?.value;
-            this.setReviewValue('review_gramatura', gramatura || 'Não informado');
+            if (gramatura) gramaturas.push(`[${label}] ${gramatura}`);
 
-            // Aviamentos
             const aviamentos = document.querySelector(`input[name="aviamentos_${tipo}"]`)?.value;
-            this.setReviewValue('review_aviamentos', aviamentos || 'Não informado');
+            if (aviamentos) aviamentosList.push(`[${label}] ${aviamentos}`);
 
-            // Prova de Modelagem
-            const dataRecebimento = document.querySelector(`input[name="data_recebimento_${tipo}"]`)?.value;
-            this.setReviewValue('review_data_recebimento', dataRecebimento || 'Não informado');
+            const dataReceb = document.querySelector(`input[name="data_recebimento_${tipo}"]`)?.value;
+            if (dataReceb) datasReceb.push(`[${label}] ${dataReceb}`);
 
             const dataProva = document.querySelector(`input[name="data_prova_${tipo}"]`)?.value;
-            this.setReviewValue('review_data_prova', dataProva || 'Não informado');
+            if (dataProva) datasProva.push(`[${label}] ${dataProva}`);
 
             const tamanhos = Array.from(document.querySelectorAll(`input[name="tamanhos_recebidos_${tipo}"]:checked`)).map(cb => cb.value);
-            this.setReviewValue('review_tamanhos', tamanhos.length > 0 ? tamanhos.join(', ') : 'Nenhum selecionado');
+            if (tamanhos.length > 0) tamanhosList.push(`[${label}] ${tamanhos.join(', ')}`);
 
-            // Contar fotos anexadas
-            let totalFotos = 0;
             const fileInputs = document.querySelectorAll(`#prova_section_${tipo} input[type="file"]`);
             fileInputs.forEach(input => { totalFotos += input.files.length; });
-            this.setReviewValue('review_fotos_count', totalFotos > 0 ? `${totalFotos} arquivo(s)` : 'Nenhum');
 
-            // Equipes - Responsáveis, itens e comentários
-            const qualResp = document.querySelector(`input[name="time_qualidade_${tipo}"]`)?.value;
-            this.setReviewValue('review_qualidade_resp', qualResp || 'Não informado');
-            const qualChecked = Array.from(document.querySelectorAll(`input[name="checklist_qualidade_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
-            this.setReviewValue('review_qualidade', qualChecked.length > 0 ? qualChecked.join(', ') : 'Sem itens');
-            const qualComent = document.querySelector(`textarea[name="comentarios_qualidade_${tipo}"]`)?.value;
-            this.setReviewValue('review_qualidade_comentarios', qualComent || 'Sem comentários');
-            const qualObs = document.querySelector(`textarea[name="obs_qualidade_${tipo}"]`)?.value;
-            this.setReviewValue('review_qualidade_obs', qualObs || 'Sem observações');
+            const qr = document.querySelector(`input[name="time_qualidade_${tipo}"]`)?.value;
+            if (qr) qualResps.push(`[${label}] ${qr}`);
+            const qc = Array.from(document.querySelectorAll(`input[name="checklist_qualidade_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
+            if (qc.length) qualItems.push(`[${label}] ${qc.join(', ')}`);
+            const qcom = document.querySelector(`textarea[name="comentarios_qualidade_${tipo}"]`)?.value;
+            if (qcom) qualComents.push(`[${label}] ${qcom}`);
+            const qobs = document.querySelector(`textarea[name="obs_qualidade_${tipo}"]`)?.value;
+            if (qobs) qualObsList.push(`[${label}] ${qobs}`);
 
-            const estResp = document.querySelector(`input[name="time_estilo_${tipo}"]`)?.value;
-            this.setReviewValue('review_estilo_resp', estResp || 'Não informado');
-            const estChecked = Array.from(document.querySelectorAll(`input[name="checklist_estilo_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
-            this.setReviewValue('review_estilo', estChecked.length > 0 ? estChecked.join(', ') : 'Sem itens');
-            const estComent = document.querySelector(`textarea[name="comentarios_estilo_${tipo}"]`)?.value;
-            this.setReviewValue('review_estilo_comentarios', estComent || 'Sem comentários');
-            const estObs = document.querySelector(`textarea[name="obs_estilo_${tipo}"]`)?.value;
-            this.setReviewValue('review_estilo_obs', estObs || 'Sem observações');
+            const er = document.querySelector(`input[name="time_estilo_${tipo}"]`)?.value;
+            if (er) estResps.push(`[${label}] ${er}`);
+            const ec = Array.from(document.querySelectorAll(`input[name="checklist_estilo_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
+            if (ec.length) estItems.push(`[${label}] ${ec.join(', ')}`);
+            const ecom = document.querySelector(`textarea[name="comentarios_estilo_${tipo}"]`)?.value;
+            if (ecom) estComents.push(`[${label}] ${ecom}`);
+            const eobs = document.querySelector(`textarea[name="obs_estilo_${tipo}"]`)?.value;
+            if (eobs) estObsList.push(`[${label}] ${eobs}`);
 
-            const modResp = document.querySelector(`input[name="time_modelagem_${tipo}"]`)?.value;
-            this.setReviewValue('review_modelagem_resp', modResp || 'Não informado');
-            const modChecked = Array.from(document.querySelectorAll(`input[name="checklist_modelagem_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
-            this.setReviewValue('review_modelagem', modChecked.length > 0 ? modChecked.join(', ') : 'Sem itens');
-            const modComent = document.querySelector(`textarea[name="comentarios_modelagem_${tipo}"]`)?.value;
-            this.setReviewValue('review_modelagem_comentarios', modComent || 'Sem comentários');
-            const modObs = document.querySelector(`textarea[name="obs_modelagem_${tipo}"]`)?.value;
-            this.setReviewValue('review_modelagem_obs', modObs || 'Sem observações');
+            const mr = document.querySelector(`input[name="time_modelagem_${tipo}"]`)?.value;
+            if (mr) modResps.push(`[${label}] ${mr}`);
+            const mc = Array.from(document.querySelectorAll(`input[name="checklist_modelagem_${tipo}"]:checked`)).map(cb => cb.value.replace(/_/g, ' ').toLowerCase());
+            if (mc.length) modItems.push(`[${label}] ${mc.join(', ')}`);
+            const mcom = document.querySelector(`textarea[name="comentarios_modelagem_${tipo}"]`)?.value;
+            if (mcom) modComents.push(`[${label}] ${mcom}`);
+            const mobs = document.querySelector(`textarea[name="obs_modelagem_${tipo}"]`)?.value;
+            if (mobs) modObsList.push(`[${label}] ${mobs}`);
 
-            // Finalização
-            const dataLacre = document.querySelector(`input[name="data_lacre_${tipo}"]`)?.value;
-            this.setReviewValue('review_data_lacre', dataLacre || 'Não informado');
-            const numeroLacre = document.querySelector(`input[name="numero_lacre_${tipo}"]`)?.value;
-            this.setReviewValue('review_numero_lacre', numeroLacre || 'Não informado');
-            const infoAdicionais = document.querySelector(`textarea[name="info_adicionais_${tipo}"]`)?.value;
-            this.setReviewValue('review_info_adicionais', infoAdicionais || 'Não informado');
-        }
+            const dl = document.querySelector(`input[name="data_lacre_${tipo}"]`)?.value;
+            if (dl) datasLacre.push(`[${label}] ${dl}`);
+            const nl = document.querySelector(`input[name="numero_lacre_${tipo}"]`)?.value;
+            if (nl) numerosLacre.push(`[${label}] ${nl}`);
+            const ia = document.querySelector(`textarea[name="info_adicionais_${tipo}"]`)?.value;
+            if (ia) infosAdicionais.push(`[${label}] ${ia}`);
+        });
+
+        this.setReviewValue('review_referencia', refs.join(' | ') || 'Não informado');
+        this.setReviewValue('review_origem', origens.join(' | ') || 'Não informado');
+        this.setReviewValue('review_fornecedor', fornecedores.join(' | ') || 'Não informado');
+        this.setReviewValue('review_materia_prima', materias.join(' | ') || 'Não informado');
+        this.setReviewValue('review_composicao', composicoes.join(' | ') || 'Não informado');
+        this.setReviewValue('review_gramatura', gramaturas.join(' | ') || 'Não informado');
+        this.setReviewValue('review_aviamentos', aviamentosList.join(' | ') || 'Não informado');
+        this.setReviewValue('review_data_recebimento', datasReceb.join(' | ') || 'Não informado');
+        this.setReviewValue('review_data_prova', datasProva.join(' | ') || 'Não informado');
+        this.setReviewValue('review_tamanhos', tamanhosList.join(' | ') || 'Nenhum selecionado');
+        this.setReviewValue('review_fotos_count', totalFotos > 0 ? `${totalFotos} arquivo(s)` : 'Nenhum');
+        this.setReviewValue('review_qualidade_resp', qualResps.join(' | ') || 'Não informado');
+        this.setReviewValue('review_qualidade', qualItems.join(' | ') || 'Sem itens');
+        this.setReviewValue('review_qualidade_comentarios', qualComents.join(' | ') || 'Sem comentários');
+        this.setReviewValue('review_qualidade_obs', qualObsList.join(' | ') || 'Sem observações');
+        this.setReviewValue('review_estilo_resp', estResps.join(' | ') || 'Não informado');
+        this.setReviewValue('review_estilo', estItems.join(' | ') || 'Sem itens');
+        this.setReviewValue('review_estilo_comentarios', estComents.join(' | ') || 'Sem comentários');
+        this.setReviewValue('review_estilo_obs', estObsList.join(' | ') || 'Sem observações');
+        this.setReviewValue('review_modelagem_resp', modResps.join(' | ') || 'Não informado');
+        this.setReviewValue('review_modelagem', modItems.join(' | ') || 'Sem itens');
+        this.setReviewValue('review_modelagem_comentarios', modComents.join(' | ') || 'Sem comentários');
+        this.setReviewValue('review_modelagem_obs', modObsList.join(' | ') || 'Sem observações');
+        this.setReviewValue('review_data_lacre', datasLacre.join(' | ') || 'Não informado');
+        this.setReviewValue('review_numero_lacre', numerosLacre.join(' | ') || 'Não informado');
+        this.setReviewValue('review_info_adicionais', infosAdicionais.join(' | ') || 'Não informado');
 
         // Preview da imagem se existir
         const imagemPreview = document.getElementById('image_preview_container');

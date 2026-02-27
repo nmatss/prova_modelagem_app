@@ -246,7 +246,8 @@
     position: relative;
 }
 
-.category-option input[type="radio"] {
+.category-option input[type="radio"],
+.category-option input[type="checkbox"] {
     position: absolute;
     opacity: 0;
     width: 0;
@@ -275,7 +276,8 @@
     box-shadow: 0 8px 25px rgba(230, 0, 126, 0.15);
 }
 
-.category-option input[type="radio"]:checked + .category-card {
+.category-option input[type="radio"]:checked + .category-card,
+.category-option input[type="checkbox"]:checked + .category-card {
     border-color: var(--wizard-primary);
     background: var(--wizard-primary-light);
     box-shadow: 0 8px 25px rgba(230, 0, 126, 0.2);
@@ -288,7 +290,8 @@
     transition: color 0.3s ease;
 }
 
-.category-option input[type="radio"]:checked + .category-card .category-icon {
+.category-option input[type="radio"]:checked + .category-card .category-icon,
+.category-option input[type="checkbox"]:checked + .category-card .category-icon {
     color: var(--wizard-primary);
 }
 
