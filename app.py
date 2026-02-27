@@ -686,7 +686,8 @@ def editar_relatorio(id):
                     
                     # Atualiza provas existentes
                     provas_existentes_ids = request.form.getlist(f'prova_id_{tipo}')
-                    for prova_id in provas_existentes_ids:
+                    for prova_id_str in provas_existentes_ids:
+                        prova_id = int(prova_id_str)
                         prova = Prova.query.get(prova_id)
                         if prova:
                             # Atualizar tabela de medidas se novo arquivo enviado
@@ -851,10 +852,14 @@ def editar_relatorio(id):
 @app.route('/prova/atualizar_status', methods=['POST'])
 @login_required
 def atualizar_status():
-    prova_id = request.form.get('prova_id')
+    prova_id = request.form.get('prova_id', type=int)
     novo_status = request.form.get('novo_status')
     motivo = request.form.get('motivo')
-    
+
+    if not prova_id:
+        flash("ID da prova inválido.", "error")
+        return redirect(url_for('dashboard'))
+
     try:
         prova = Prova.query.get(prova_id)
         if prova:
