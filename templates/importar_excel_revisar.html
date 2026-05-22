@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Revisar Importação - Prova de Modelagem{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+<li class="breadcrumb-item active">Revisar Importação</li>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .summary-card { border-top: 4px solid #667eea; }
+    .summary-num { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+    .summary-num.criar { color: #198754; }
+    .summary-num.atualizar { color: #0d6efd; }
+    .erro-row { background-color: #fff5f5 !important; }
+    .table-revisar { font-size: 0.85rem; }
+    .badge-novo { background: #d1e7dd; color: #0a6b3b; }
+    .badge-update { background: #cfe2ff; color: #084298; }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4 py-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-gray-800">
+                <i class="bi bi-clipboard-data me-2 text-primary"></i>Revisar Importação
+            </h1>
+            <p class="text-muted mb-0 small">
+                Arquivo: <strong>{{ job.arquivo_original }}</strong>
+                · Job #{{ job.id }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <form action="{{ url_for('importar_excel_cancelar', job_id=job.id) }}" method="POST" class="d-inline m-0"
+                  onsubmit="return confirm('Cancelar esta importação? Nada será gravado no banco.');">
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+            </form>
+            <form action="{{ url_for('importar_excel_confirmar', job_id=job.id) }}" method="POST" class="d-inline m-0"
+                  onsubmit="return confirm('Confirmar e aplicar as alterações no banco?');">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>Confirmar Importação
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sumário -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm summary-card h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-folder me-1"></i>Relatórios
+                    </h6>
+                    <div class="d-flex justify-content-around">
+                        <div class="text-center">
+                            <div class="summary-num criar">{{ summary.criar_relatorios }}</div>
+                            <small class="text-muted">A criar</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="summary-num atualizar">{{ summary.atualizar_relatorios }}</div>
+                            <small class="text-muted">A atualizar</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm summary-card h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-tag me-1"></i>Referências
+                    </h6>
+                    <div class="d-flex justify-content-around">
+                        <div class="text-center">
+                            <div class="summary-num criar">{{ summary.criar_referencias }}</div>
+                            <small class="text-muted">A criar</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="summary-num atualizar">{{ summary.atualizar_referencias }}</div>
+                            <small class="text-muted">A atualizar</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm summary-card h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-clipboard-check me-1"></i>Provas
+                    </h6>
+                    <div class="d-flex justify-content-around">
+                        <div class="text-center">
+                            <div class="summary-num criar">{{ summary.criar_provas }}</div>
+                            <small class="text-muted">A criar</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="summary-num atualizar">{{ summary.atualizar_provas }}</div>
+                            <small class="text-muted">A atualizar</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Erros de parsing -->
+    {% if erros %}
+    <div class="alert alert-warning border-0 mb-4">
+        <h6 class="alert-heading fw-bold">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ erros|length }} aviso(s) ao ler a planilha
+        </h6>
+        <ul class="mb-0 small">
+            {% for e in erros[:10] %}
+            <li><strong>{{ e.sheet }} — Linha {{ e.linha }}:</strong> {{ e.mensagem }}</li>
+            {% endfor %}
+            {% if erros|length > 10 %}
+            <li class="text-muted">... e mais {{ erros|length - 10 }} avisos. Cancele, corrija e reimporte.</li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Aba 1: Informações Gerais -->
+    {% if parsed.gerais %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-semibold">
+                <i class="bi bi-folder me-2 text-primary"></i>Informações Gerais ({{ parsed.gerais|length }} linha(s))
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0 table-revisar">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Ação</th>
+                            <th>ID</th>
+                            <th>Descrição</th>
+                            <th>Coleção</th>
+                            <th>Temporada</th>
+                            <th>Ano</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for linha in parsed.gerais %}
+                        <tr>
+                            <td>{{ linha.linha_planilha }}</td>
+                            <td>
+                                {% if linha.id_relatorio %}
+                                <span class="badge badge-update">Atualizar</span>
+                                {% else %}
+                                <span class="badge badge-novo">Criar</span>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ linha.id_relatorio or '—' }}</small></td>
+                            <td>{{ linha.descricao }}</td>
+                            <td>{{ linha.colecao or '—' }}</td>
+                            <td>{{ linha.temporada or '—' }}</td>
+                            <td>{{ linha.ano or '—' }}</td>
+                            <td><small>{{ linha.status_geral }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Aba 2: Dados Detalhados -->
+    {% if parsed.detalhados %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-semibold">
+                <i class="bi bi-clipboard-check me-2 text-primary"></i>Dados Detalhados ({{ parsed.detalhados|length }} linha(s))
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0 table-revisar">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Ação</th>
+                            <th>Descrição</th>
+                            <th>Referência</th>
+                            <th>Categoria</th>
+                            <th>Fornecedor</th>
+                            <th>Nº Prova</th>
+                            <th>Status</th>
+                            <th>Datas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for linha in parsed.detalhados %}
+                        <tr>
+                            <td>{{ linha.linha_planilha }}</td>
+                            <td>
+                                {% if linha.id_prova %}
+                                <span class="badge badge-update">Atualizar Prova</span>
+                                {% elif linha.id_referencia %}
+                                <span class="badge badge-update">Ref existente</span>
+                                {% else %}
+                                <span class="badge badge-novo">Criar</span>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ linha.descricao or '—' }}</small></td>
+                            <td>{{ linha.numero_ref or '—' }}</td>
+                            <td>{{ linha.categoria }}</td>
+                            <td><small>{{ linha.fornecedor or '—' }}</small></td>
+                            <td>{{ linha.numero_prova }}</td>
+                            <td><small>{{ linha.status }}</small></td>
+                            <td>
+                                {% if linha.data_recebimento or linha.data_prova %}
+                                <small>
+                                    {% if linha.data_recebimento %}Rec: {{ linha.data_recebimento }}{% endif %}
+                                    {% if linha.data_prova %}{% if linha.data_recebimento %} · {% endif %}Prova: {{ linha.data_prova }}{% endif %}
+                                </small>
+                                {% else %}
+                                <small class="text-muted">—</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not parsed.gerais and not parsed.detalhados %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+        <h5 class="text-muted mt-3">Nenhum dado encontrado na planilha</h5>
+        <p class="text-muted">Verifique se preencheu pelo menos uma linha nas abas "Informações Gerais" ou "Dados Detalhados".</p>
+        <form action="{{ url_for('importar_excel_cancelar', job_id=job.id) }}" method="POST" class="d-inline m-0">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Voltar
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

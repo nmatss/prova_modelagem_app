@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Importação Concluída - Prova de Modelagem{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+<li class="breadcrumb-item active">Resultado da Importação</li>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4 py-3">
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center py-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 3.5rem;"></i>
+            <h3 class="fw-bold mt-3 mb-1">Importação concluída</h3>
+            <p class="text-muted mb-0">Job #{{ job.id }} · {{ job.arquivo_original }}</p>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-folder text-primary me-1"></i>Relatórios
+                    </h6>
+                    <div class="d-flex justify-content-around">
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-success">{{ criados.relatorios }}</div>
+                            <small class="text-muted">Criados</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-primary">{{ atualizados.relatorios }}</div>
+                            <small class="text-muted">Atualizados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-tag text-primary me-1"></i>Referências
+                    </h6>
+                    <div class="d-flex justify-content-around">
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-success">{{ criados.referencias }}</div>
+                            <small class="text-muted">Criadas</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-primary">{{ atualizados.referencias }}</div>
+                            <small class="text-muted">Atualizadas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-clipboard-check text-primary me-1"></i>Provas
+                    </h6>
+                    <div class="d-flex justify-content-around">
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-success">{{ criados.provas }}</div>
+                            <small class="text-muted">Criadas</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-primary">{{ atualizados.provas }}</div>
+                            <small class="text-muted">Atualizadas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if erros %}
+    <div class="alert alert-warning border-0">
+        <h6 class="alert-heading fw-bold">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ erros|length }} aviso(s) durante a importação
+        </h6>
+        <ul class="mb-0 small" style="max-height: 200px; overflow-y: auto;">
+            {% for e in erros %}
+            <li><strong>{{ e.sheet }} — Linha {{ e.linha }}:</strong> {{ e.mensagem }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar ao Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

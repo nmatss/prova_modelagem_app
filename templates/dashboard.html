@@ -21,10 +21,20 @@
             <p class="text-muted mb-0 small">Gerencie relatórios e provas de forma centralizada</p>
         </div>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#importExcelModal">
-                <i class="bi bi-file-earmark-excel me-1"></i>
-                Importar Excel
-            </button>
+            <div class="btn-group shadow-sm" role="group">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                    <i class="bi bi-file-earmark-excel me-1"></i>
+                    Importar Excel
+                </button>
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#importHelpModal"
+                        title="Como usar o Importar Excel" aria-label="Ajuda Importar Excel">
+                    <i class="bi bi-question-circle"></i>
+                </button>
+            </div>
+            <a href="{{ url_for('exportar_excel_editavel') }}" class="btn btn-outline-primary shadow-sm"
+               title="Exporta todos os relatórios em formato editável. Edite na planilha e reimporte para atualizar.">
+                <i class="bi bi-arrow-repeat me-1"></i>Exportar editável
+            </a>
             <a href="{{ url_for('novo_relatorio') }}" class="btn btn-primary shadow-sm">
                 <i class="bi bi-plus-circle me-1"></i>
                 Novo Relatório
@@ -617,6 +627,104 @@
 
 <!-- Modais de Exclusão (fora do main_content, direto no body) -->
 {% block modals %}
+<!-- Modal Ajuda Importar Excel -->
+<div class="modal fade" id="importHelpModal" tabindex="-1" aria-labelledby="importHelpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold" id="importHelpModalLabel">
+                    <i class="bi bi-question-circle me-2"></i>Como usar o Importar Excel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-4">
+                    O Importar Excel permite cadastrar ou atualizar <strong>vários relatórios, referências e provas de uma só vez</strong>.
+                    Cada linha da planilha vira um item no sistema. Siga os 3 passos abaixo.
+                </p>
+
+                <div class="row g-3">
+                    <!-- Passo 1 -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                     style="width: 56px; height: 56px; background: #d1e7dd; color: #198754; font-weight: 700; font-size: 1.5rem;">
+                                    1
+                                </div>
+                                <h6 class="fw-bold mb-2">
+                                    <i class="bi bi-download me-1 text-success"></i>Baixe o modelo
+                                </h6>
+                                <p class="small text-muted mb-3">
+                                    Use a planilha modelo com cabeçalhos e validações de campos já configurados.
+                                </p>
+                                <a href="{{ url_for('download_modelo_excel') }}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-download me-1"></i>Baixar Modelo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passo 2 -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                     style="width: 56px; height: 56px; background: #d1e7dd; color: #198754; font-weight: 700; font-size: 1.5rem;">
+                                    2
+                                </div>
+                                <h6 class="fw-bold mb-2">
+                                    <i class="bi bi-pencil-square me-1 text-success"></i>Preencha as 2 abas
+                                </h6>
+                                <p class="small text-muted mb-2 text-start">
+                                    <strong>Aba 1 — Informações Gerais:</strong>
+                                    descrição, linha, coleção, temporada, ano, status.
+                                </p>
+                                <p class="small text-muted mb-0 text-start">
+                                    <strong>Aba 2 — Dados Detalhados:</strong>
+                                    uma linha por prova (referência, categoria, fornecedor, nº prova, status, datas, tamanhos, times).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passo 3 -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                     style="width: 56px; height: 56px; background: #d1e7dd; color: #198754; font-weight: 700; font-size: 1.5rem;">
+                                    3
+                                </div>
+                                <h6 class="fw-bold mb-2">
+                                    <i class="bi bi-upload me-1 text-success"></i>Faça o upload
+                                </h6>
+                                <p class="small text-muted mb-3">
+                                    Clique em <strong>Importar Excel</strong>, selecione o arquivo preenchido e envie. O sistema valida cada linha e mostra eventuais erros.
+                                </p>
+                                <button type="button" class="btn btn-sm btn-success" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                                    <i class="bi bi-upload me-1"></i>Abrir Importar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning border-0 mt-4 mb-0 small">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>Dica:</strong> para cadastrar várias provas de uma vez, basta adicionar uma linha por prova na Aba 2.
+                    Use a mesma <em>Descrição</em> + <em>Coleção</em> para agrupar provas sob o mesmo relatório.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Importar Excel -->
 <div class="modal fade" id="importExcelModal" tabindex="-1" aria-labelledby="importExcelModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -755,6 +863,19 @@
 </style>
 
 {% block scripts %}
+<script>
+// Abre o modal de ajuda do Importar Excel quando vier de uma dica externa (?abrir_import=1)
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('abrir_import') === '1') {
+        const modalEl = document.getElementById('importHelpModal');
+        if (modalEl && window.bootstrap) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    }
+})();
+</script>
 <script>
 (function() {
     'use strict';
