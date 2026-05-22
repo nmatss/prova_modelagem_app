@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('Anexar produtos do ERP') }} — {{ relatorio.codigo or relatorio.descricao_geral }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><i class="bi bi-house-door"></i><a href="{{ url_for('dashboard') }}">{{ _('Início') }}</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('detalhes_relatorio', id=relatorio.id) }}">{{ relatorio.codigo or relatorio.descricao_geral }}</a></li>
+<li class="breadcrumb-item active">{{ _('Anexar produtos do ERP') }}</li>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h1 class="h3 mb-1">
+            <i class="bi bi-link-45deg me-2"></i>
+            {{ _('Anexar produtos do ERP em lote') }}
+        </h1>
+        <p class="text-muted mb-0">
+            {{ _('Relatório:') }} <strong>{{ relatorio.codigo or '—' }}</strong>
+            — {{ relatorio.descricao_geral }}
+        </p>
+        <small class="text-muted">
+            {{ _('Cada produto selecionado cria uma referência nova com uma prova inicial. O fornecedor é resolvido ou criado automaticamente quando existe no ERP.') }}
+        </small>
+    </div>
+
+    <!-- Form de busca -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('linx.anexar_produtos', relatorio_id=relatorio.id) }}" class="row g-2 align-items-end" id="formBusca">
+                <div class="col-md-6">
+                    <label class="form-label small mb-1" for="campoBusca">{{ _('Busca (código, descrição ou ref. do fabricante)') }}</label>
+                    <div class="input-group">
+                        <input type="text" id="campoBusca" name="q" class="form-control" value="{{ q }}" placeholder="{{ _('Ex: PRAIA, MAIO, 123456...') }}" autofocus>
+                        {% if q %}
+                        <a href="{{ url_for('linx.anexar_produtos', relatorio_id=relatorio.id) }}" class="btn btn-outline-secondary" title="{{ _('Limpar busca') }}">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-1" for="campoColecao">{{ _('Coleção (opcional)') }}</label>
+                    <select id="campoColecao" name="colecao" class="form-select">
+                        <option value="">— {{ _('todas') }} —</option>
+                        {% for c in colecoes %}
+                        <option value="{{ c.codigo }}" {{ 'selected' if c.codigo == colecao_atual else '' }}>
+                            {{ c.codigo }}{% if c.descricao %} — {{ c.descricao }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100" id="btnBuscar">
+                        <span class="spinner-border spinner-border-sm me-1 d-none" id="spinnerBuscar" role="status"></span>
+                        <i class="bi bi-search" id="iconBuscar"></i> {{ _('Buscar') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de resultados + form de batch -->
+    <form method="POST" action="{{ url_for('linx.anexar_produtos_post', relatorio_id=relatorio.id) }}" id="formAnexar">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    {% if produtos %}
+                    <strong>{{ produtos|length }}</strong> {{ _('produto(s) encontrado(s)') }}
+                    {% elif q %}
+                    {{ _('Nenhum produto encontrado para') }} "<strong>{{ q }}</strong>"
+                    {% else %}
+                    {{ _('Digite uma busca acima para listar produtos') }}
+                    {% endif %}
+                </div>
+                {% if produtos %}
+                <div class="d-flex gap-2 align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="selecionarTodos">
+                        <i class="bi bi-check2-square"></i> {{ _('Marcar todos') }}
+                    </button>
+                    <button type="submit" class="btn btn-success" id="btnAnexar" disabled>
+                        <span class="spinner-border spinner-border-sm me-1 d-none" id="spinnerAnexar" role="status"></span>
+                        <i class="bi bi-link" id="iconAnexar"></i>
+                        {{ _('Anexar') }} <span id="contadorSelecionados">0</span> {{ _('produto(s)') }}
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if produtos %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;"></th>
+                            <th>{{ _('Código') }}</th>
+                            <th>{{ _('Descrição') }}</th>
+                            <th>{{ _('Coleção') }}</th>
+                            <th>{{ _('Linha') }}</th>
+                            <th>{{ _('Fornecedor') }}</th>
+                            <th>{{ _('Ref. fabricante') }}</th>
+                            <th class="text-end">{{ _('Peso') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in produtos %}
+                        <tr>
+                            <td>
+                                <input class="form-check-input chk-produto" type="checkbox" name="codigo" value="{{ p.codigo }}" id="chk-{{ loop.index }}">
+                            </td>
+                            <td><label for="chk-{{ loop.index }}" class="mb-0"><code>{{ p.codigo }}</code></label></td>
+                            <td>{{ p.descricao or '—' }}</td>
+                            <td>{{ p.colecao or '—' }}</td>
+                            <td>{{ p.linha or '—' }}</td>
+                            <td><small class="text-muted">{{ p.fornecedor_codigo or '—' }}</small></td>
+                            <td><small class="text-muted">{{ p.refer_fabricante or '—' }}</small></td>
+                            <td class="text-end">{{ '%.3f'|format(p.peso) if p.peso else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-3 d-flex justify-content-between">
+            <a href="{{ url_for('detalhes_relatorio', id=relatorio.id) }}" class="btn btn-link">
+                <i class="bi bi-arrow-left"></i> {{ _('Voltar ao relatório') }}
+            </a>
+            {% if produtos %}
+            <small class="text-muted align-self-center">
+                {{ _('Limite por importação: 100 produtos.') }}
+            </small>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        const checkboxes = document.querySelectorAll('.chk-produto');
+        const contador = document.getElementById('contadorSelecionados');
+        const btnAnexar = document.getElementById('btnAnexar');
+        const btnTodos = document.getElementById('selecionarTodos');
+        const formBusca = document.getElementById('formBusca');
+        const formAnexar = document.getElementById('formAnexar');
+
+        function atualizarContador() {
+            if (!contador || !btnAnexar) return;
+            const marcados = document.querySelectorAll('.chk-produto:checked').length;
+            contador.textContent = marcados;
+            btnAnexar.disabled = marcados === 0;
+        }
+
+        checkboxes.forEach(c => c.addEventListener('change', atualizarContador));
+
+        if (btnTodos) {
+            let todosMarcados = false;
+            btnTodos.addEventListener('click', () => {
+                todosMarcados = !todosMarcados;
+                checkboxes.forEach(c => { c.checked = todosMarcados; });
+                btnTodos.innerHTML = todosMarcados
+                    ? '<i class="bi bi-square"></i> {{ _("Desmarcar todos") }}'
+                    : '<i class="bi bi-check2-square"></i> {{ _("Marcar todos") }}';
+                atualizarContador();
+            });
+        }
+
+        // Loading state nos dois submits
+        if (formBusca) {
+            formBusca.addEventListener('submit', () => {
+                const spinner = document.getElementById('spinnerBuscar');
+                const icon = document.getElementById('iconBuscar');
+                if (spinner && icon) {
+                    spinner.classList.remove('d-none');
+                    icon.classList.add('d-none');
+                }
+            });
+        }
+        if (formAnexar) {
+            formAnexar.addEventListener('submit', () => {
+                const spinner = document.getElementById('spinnerAnexar');
+                const icon = document.getElementById('iconAnexar');
+                if (spinner && icon) {
+                    spinner.classList.remove('d-none');
+                    icon.classList.add('d-none');
+                }
+                if (btnAnexar) btnAnexar.disabled = true;
+            });
+        }
+
+        atualizarContador();
+    })();
+</script>
+{% endblock %}

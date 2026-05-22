@@ -256,3 +256,17 @@ def buscar_fornecedores(q, limit=10):
 ---
 
 **Status:** análise concluída. Pronto para POC quando Alice priorizar.
+
+---
+
+## Anexo B — Errata confirmada em campo (2026-05-22)
+
+Após implementação real do `linx_client.py` e queries contra `db_puket`, alguns nomes de coluna do mapeamento inicial diferem da realidade. Os corretos:
+
+| Tabela | Nome usado no analysis (errado) | Nome real |
+|---|---|---|
+| `PRT_EXP_PROD_COLECAO` | `COLECAO` | `COD_PRODUTO_COLECAO` |
+| `PRT_EXP_PROD_COLECAO` | (não documentado) | `COD_IDIOMA` (apenas valores 2=EN e 3=ES; não há `1` para PT) |
+| `PRODUTOS_LINHAS` | `DESC_LINHA` | `LINHA` (texto) + `COD_LINHA` (código) |
+
+Queries em `linx_client.py:listar_colecoes` e `:listar_linhas` já refletem o schema real.

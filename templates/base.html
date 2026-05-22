@@ -154,6 +154,14 @@
                         <span class="menu-link-text">{{ _('Checklists') }}</span>
                     </a>
                 </div>
+                {% if linx_enabled %}
+                <div class="menu-item">
+                    <a href="{{ url_for('linx.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('linx.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('ERP Linx') }}">
+                        <i class="bi bi-database"></i>
+                        <span class="menu-link-text">{{ _('ERP Linx') }}</span>
+                    </a>
+                </div>
+                {% endif %}
                 {% endif %}
 
                 <div class="menu-divider"></div>

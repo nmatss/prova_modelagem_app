@@ -1,6 +1,24 @@
 # Backlog — Integração Linx
 
-**Status:** Discovery pendente. Esta integração foi pedida na reunião com Alice (04/05/2026) mas foi adiada deste ciclo de entregas para que entreguemos os 10 outros itens com qualidade. Este documento existe para que, quando a integração for priorizada, o discovery comece com as perguntas certas em vez do zero.
+**Status:** ✅ Implementada (POC mínima) em 2026-05-22. Veja `docs/linx_db_puket_analysis.md` para o mapeamento campo-a-campo e a seção "O que foi implementado" abaixo.
+
+---
+
+## O que foi implementado (POC, 2026-05-22)
+
+- `linx_client.py` — cliente pyodbc read-only ao `db_puket` (db01) com cache TTL e timeout 5s.
+- `linx_bp.py` — blueprint Flask com endpoints autocomplete (`/linx/api/fornecedores`, `/linx/api/produtos`) e fluxos de import (fornecedor único + batch de produtos para um relatório).
+- Template `linx_anexar_produtos.html` — tela de seleção múltipla que **também resolve o item 1 da reunião** ("anexar vários produtos de uma vez"), pois cria N referências de uma vez a partir do catálogo do ERP.
+- Botão "Buscar no ERP" em `fornecedor_form.html` (criar novo fornecedor pré-preenchendo do db_puket).
+- Botão "Anexar produtos do ERP" em `detalhes_relatorio.html`.
+- Link "ERP Linx" na sidebar (admin only, oculto se `LINX_DB_ENABLED=false`).
+- Variáveis de ambiente: `LINX_DB_HOST`, `LINX_DB_PORT`, `LINX_DB_NAME`, `LINX_DB_USER`, `LINX_DB_PASSWORD`, `LINX_DB_DRIVER`, `LINX_DB_TIMEOUT`, `LINX_CACHE_TTL`, `LINX_DB_ENABLED`.
+
+**Para ativar em produção:** preencher credenciais no `.env` do container, garantir ODBC Driver 18 instalado e setar `LINX_DB_ENABLED=true`. Sem credenciais a UI fica invisível — não derruba o app.
+
+---
+
+## Histórico do discovery (original, mantido para contexto)
 
 ---
 

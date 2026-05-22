@@ -217,11 +217,24 @@ from kanban_bp import kanban_bp
 from checklist_bp import checklist_bp
 from manuais_bp import manuais_bp
 from publico_bp import publico_bp
+from linx_bp import linx_bp
+import linx_client
 app.register_blueprint(fornecedor_bp, url_prefix='/fornecedores')
 app.register_blueprint(kanban_bp, url_prefix='/kanban')
 app.register_blueprint(checklist_bp, url_prefix='/admin/checklists')
 app.register_blueprint(manuais_bp, url_prefix='/manuais')
 app.register_blueprint(publico_bp, url_prefix='/publico')
+app.register_blueprint(linx_bp, url_prefix='/linx')
+
+
+@app.context_processor
+def _inject_linx_flag():
+    """Expõe `linx_enabled` aos templates (controla visibilidade dos botões ERP)."""
+    try:
+        return {'linx_enabled': linx_client.is_enabled()}
+    except Exception:
+        return {'linx_enabled': False}
+
 
 # Registrar error handlers
 register_error_handlers(app)

@@ -80,6 +80,26 @@
         </div>
     </div>
 
+    {% if linx_enabled and not fornecedor %}
+    <!-- ========================================
+         BUSCAR NO ERP (Linx)
+         ======================================== -->
+    <div class="card border-0 shadow-sm mb-3" style="border-top: 4px solid #198754 !important;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6 class="mb-0"><i class="bi bi-database me-1 text-success"></i> Pré-preencher com dados do ERP</h6>
+                    <small class="text-muted">Busca em <code>db_puket</code> e popula os campos abaixo</small>
+                </div>
+            </div>
+            <div class="position-relative">
+                <input type="text" id="linx-fornecedor-busca" class="form-control" placeholder="Digite nome ou CNPJ (mín. 2 caracteres)..." autocomplete="off">
+                <div id="linx-fornecedor-resultados" class="list-group position-absolute w-100 shadow" style="z-index: 1050; display: none; max-height: 280px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- ========================================
          FORMULARIO
          ======================================== -->
@@ -259,6 +279,69 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             e.target.value = value;
+        });
+    }
+
+    // Autocomplete ERP Linx (só se elemento estiver na página)
+    const linxInput = document.getElementById('linx-fornecedor-busca');
+    const linxResults = document.getElementById('linx-fornecedor-resultados');
+    if (linxInput && linxResults) {
+        let debounceTimer = null;
+        linxInput.addEventListener('input', function() {
+            const q = this.value.trim();
+            clearTimeout(debounceTimer);
+            if (q.length < 2) {
+                linxResults.style.display = 'none';
+                return;
+            }
+            debounceTimer = setTimeout(() => {
+                fetch(`/linx/api/fornecedores?q=${encodeURIComponent(q)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!Array.isArray(data) || data.length === 0) {
+                            linxResults.innerHTML = '<div class="list-group-item text-muted small">Nenhum resultado no ERP.</div>';
+                            linxResults.style.display = 'block';
+                            return;
+                        }
+                        linxResults.innerHTML = data.map(f => `
+                            <button type="button" class="list-group-item list-group-item-action linx-pick" data-codigo="${f.codigo}">
+                                <div class="d-flex justify-content-between">
+                                    <strong>${f.nome}</strong>
+                                    <small class="text-muted">${f.codigo}</small>
+                                </div>
+                                <small class="text-muted">${f.cnpj || '—'} • ${f.tipo || ''} ${f.beneficiador ? '• Facção' : ''}</small>
+                            </button>
+                        `).join('');
+                        linxResults.style.display = 'block';
+                        linxResults.querySelectorAll('.linx-pick').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const codigo = this.dataset.codigo;
+                                fetch(`/linx/api/fornecedores/${encodeURIComponent(codigo)}`)
+                                    .then(r => r.json())
+                                    .then(forn => {
+                                        if (forn && forn.nome) {
+                                            document.getElementById('nome').value = forn.nome;
+                                            if (forn.cnpj) document.getElementById('cnpj').value = forn.cnpj;
+                                            const obs = document.getElementById('observacoes');
+                                            const linha = `Importado do ERP (cod ${forn.codigo}${forn.tipo ? ', tipo ' + forn.tipo : ''}${forn.beneficiador ? ', facção' : ''}).`;
+                                            obs.value = obs.value ? obs.value + '\n' + linha : linha;
+                                        }
+                                        linxResults.style.display = 'none';
+                                        linxInput.value = '';
+                                    });
+                            });
+                        });
+                    })
+                    .catch(() => {
+                        linxResults.innerHTML = '<div class="list-group-item text-danger small">Erro ao consultar o ERP.</div>';
+                        linxResults.style.display = 'block';
+                    });
+            }, 250);
+        });
+        document.addEventListener('click', (e) => {
+            if (!linxResults.contains(e.target) && e.target !== linxInput) {
+                linxResults.style.display = 'none';
+            }
         });
     }
 });

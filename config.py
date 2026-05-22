@@ -1,9 +1,18 @@
+import glob
 import os
 from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente
+# Carregar variáveis de ambiente (.env normal — defaults e config não-sensível)
 env_file = os.getenv('ENV_FILE', '.env')
 load_dotenv(env_file)
+
+# Vault local: secrets/*.env sobrescreve o .env (gitignored, chmod 600).
+# Estratégia: segredos vivem isolados aqui em vez de misturar com config geral.
+# Em produção, este diretório vira mount de Docker secrets ou systemd LoadCredential.
+_secrets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'secrets')
+if os.path.isdir(_secrets_dir):
+    for _secret_file in sorted(glob.glob(os.path.join(_secrets_dir, '*.env'))):
+        load_dotenv(_secret_file, override=True)
 
 class Config:
     """Configuração base da aplicação"""
@@ -51,6 +60,17 @@ class Config:
     LANGUAGES = ['pt', 'en']
     BABEL_DEFAULT_LOCALE = 'pt'
     BABEL_DEFAULT_TIMEZONE = 'America/Sao_Paulo'
+
+    # Linx ERP (db_puket em db01.grupounico.com — read-only)
+    LINX_DB_ENABLED = os.getenv('LINX_DB_ENABLED', 'false').lower() == 'true'
+    LINX_DB_HOST = os.getenv('LINX_DB_HOST', 'db01.grupounico.com')
+    LINX_DB_PORT = int(os.getenv('LINX_DB_PORT', 1433))
+    LINX_DB_NAME = os.getenv('LINX_DB_NAME', 'db_puket')
+    LINX_DB_USER = os.getenv('LINX_DB_USER', '')
+    LINX_DB_PASSWORD = os.getenv('LINX_DB_PASSWORD', '')
+    LINX_DB_DRIVER = os.getenv('LINX_DB_DRIVER', 'ODBC Driver 18 for SQL Server')
+    LINX_DB_TIMEOUT = int(os.getenv('LINX_DB_TIMEOUT', 5))
+    LINX_CACHE_TTL = int(os.getenv('LINX_CACHE_TTL', 3600))  # 1h
 
     @staticmethod
     def init_app(app):

@@ -33,6 +33,10 @@ services:
       - app_uploads:/app/uploads
       # Logs
       - app_logs:/app/logs
+      # Vault de credenciais (read-only) — secrets/*.env carregados pelo config.py
+      # No host: chmod 700 secrets/, chmod 600 secrets/*.env. Diretório vazio (só README) = OK,
+      # integração Linx fica desabilitada (LINX_DB_ENABLED defaults to false).
+      - ./secrets:/app/secrets:ro
 
     # Health check
     healthcheck:

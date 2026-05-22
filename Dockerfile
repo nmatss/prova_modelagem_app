@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdk-pixbuf-2.0-dev \
     libffi-dev \
     shared-mime-info \
+    unixodbc-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -54,6 +55,8 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000
 
 # Instalar dependências de runtime
+# - msodbcsql18 + unixodbc: necessários para a integração Linx (db_puket via pyodbc)
+# - Pacotes da Microsoft instalados via repositório oficial
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     libcairo2 \
@@ -63,6 +66,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi8 \
     shared-mime-info \
     curl \
+    gnupg \
+    ca-certificates \
+    apt-transport-https \
+    unixodbc \
+    && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-archive-keyring.gpg \
+    && echo "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18 \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar usuário não-root

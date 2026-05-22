@@ -24,6 +24,11 @@ venv.bak/
 .env.backup
 *.env
 
+# Vault local (segredos por integração — NUNCA commitar conteúdo real)
+secrets/*
+!secrets/README.md
+!secrets/.gitkeep
+
 # Database
 *.db
 *.sqlite
