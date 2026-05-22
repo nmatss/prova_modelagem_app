@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required
 from sqlalchemy import desc
 
-from models import db, Relatorio, Referencia, ProvaModelagem as Prova
+from models import db, Relatorio, Referencia, ProvaModelagem as Prova, FotoProva
 
 kanban_bp = Blueprint('kanban', __name__)
 
@@ -13,6 +13,32 @@ KANBAN_COLUNAS = [
     'Aprovado',
     'Reprovado',
 ]
+
+
+_CONTEXTO_PRIORIDADE = ('desenho', 'amostra', 'prova_modelo', 'qualidade', 'estilo', 'modelagem')
+
+
+def _foto_destaque(relatorio, prova_ids):
+    """Escolhe a foto de destaque do card. Prioridade:
+    1. relatorio.imagem_produto
+    2. Primeira FotoProva entre as provas do relatorio (preferindo contexto 'desenho').
+    Retorna o file_path relativo ou None.
+    """
+    if relatorio.imagem_produto:
+        return relatorio.imagem_produto
+
+    if not prova_ids:
+        return None
+
+    fotos = FotoProva.query.filter(FotoProva.prova_id.in_(prova_ids)).all()
+    if not fotos:
+        return None
+
+    fotos.sort(key=lambda f: (
+        _CONTEXTO_PRIORIDADE.index(f.contexto) if f.contexto in _CONTEXTO_PRIORIDADE else 99,
+        f.id,
+    ))
+    return fotos[0].file_path
 
 
 def _build_card(relatorio):
@@ -26,6 +52,7 @@ def _build_card(relatorio):
     total_provas = 0
     ultima_prova_status = None
     ultima_prova_created = None
+    todas_prova_ids = []
 
     for ref in referencias:
         provas = Prova.query.filter_by(
@@ -34,6 +61,7 @@ def _build_card(relatorio):
         ).order_by(desc(Prova.created_at)).all()
 
         total_provas += len(provas)
+        todas_prova_ids.extend(p.id for p in provas)
 
         if provas:
             candidata = provas[0]  # mais recente desta referencia
@@ -53,6 +81,7 @@ def _build_card(relatorio):
         'total_referencias': total_referencias,
         'total_provas': total_provas,
         'ultima_prova_status': ultima_prova_status,
+        'foto_destaque': _foto_destaque(relatorio, todas_prova_ids),
     }
 
 
