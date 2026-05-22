@@ -153,11 +153,45 @@
                     </div>
                 </div>
 
-                <!-- Endereco -->
-                <div class="mb-3">
-                    <label for="endereco" class="form-label fw-semibold">Endereco</label>
-                    <textarea class="form-control" id="endereco" name="endereco" rows="2"
-                              placeholder="Endereco completo do fornecedor">{{ fornecedor.endereco if fornecedor else '' }}</textarea>
+                <!-- Endereco e Pais -->
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="endereco" class="form-label fw-semibold">Endereco</label>
+                        <textarea class="form-control" id="endereco" name="endereco" rows="2"
+                                  placeholder="Endereco completo do fornecedor">{{ fornecedor.endereco if fornecedor else '' }}</textarea>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="pais" class="form-label fw-semibold">
+                            <i class="bi bi-globe2 me-1"></i>Pais
+                        </label>
+                        <input type="text" class="form-control" id="pais" name="pais"
+                               list="paises-list" autocomplete="off"
+                               placeholder="Pais de origem"
+                               value="{{ fornecedor.pais if fornecedor else '' }}">
+                        <datalist id="paises-list">
+                            <option value="Brasil">
+                            <option value="China">
+                            <option value="Bangladesh">
+                            <option value="Vietnã">
+                            <option value="Índia">
+                            <option value="Turquia">
+                            <option value="Itália">
+                            <option value="Portugal">
+                            <option value="Indonésia">
+                            <option value="Camboja">
+                            <option value="Paquistão">
+                            <option value="Coreia do Sul">
+                            <option value="Tailândia">
+                            <option value="Myanmar">
+                            <option value="Argentina">
+                            <option value="Peru">
+                            <option value="Estados Unidos">
+                            <option value="México">
+                            <option value="Espanha">
+                            <option value="França">
+                        </datalist>
+                        <small class="text-muted">Digite ou selecione da lista</small>
+                    </div>
                 </div>
 
                 <!-- Observacoes -->

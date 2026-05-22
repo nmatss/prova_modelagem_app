@@ -24,6 +24,7 @@ def index():
                 Fornecedor.cnpj.ilike(search),
                 Fornecedor.email.ilike(search),
                 Fornecedor.contato.ilike(search),
+                Fornecedor.pais.ilike(search),
             )
         )
 
@@ -61,6 +62,7 @@ def novo():
             email=request.form.get('email', '').strip(),
             telefone=request.form.get('telefone', '').strip(),
             endereco=request.form.get('endereco', '').strip(),
+            pais=request.form.get('pais', '').strip() or None,
             cnpj=cnpj,
             avaliacao=request.form.get('avaliacao', 0, type=int),
             observacoes=request.form.get('observacoes', '').strip(),
@@ -147,6 +149,7 @@ def editar(id):
         fornecedor.email = request.form.get('email', '').strip()
         fornecedor.telefone = request.form.get('telefone', '').strip()
         fornecedor.endereco = request.form.get('endereco', '').strip()
+        fornecedor.pais = request.form.get('pais', '').strip() or None
         fornecedor.cnpj = cnpj
         fornecedor.avaliacao = request.form.get('avaliacao', 0, type=int)
         fornecedor.observacoes = request.form.get('observacoes', '').strip()

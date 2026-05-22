@@ -265,6 +265,15 @@
                     </div>
                 </div>
 
+                {% if fornecedor.pais %}
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <span class="info-label"><i class="bi bi-globe2 me-1"></i> Pais</span>
+                        <span class="info-value">{{ fornecedor.pais }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
                 {% if fornecedor.endereco %}
                 <div class="col-12">
                     <div class="info-item">

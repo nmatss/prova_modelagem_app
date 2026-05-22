@@ -36,7 +36,7 @@
         <div class="card-body py-3">
             <form method="GET" action="{{ url_for('fornecedor.index') }}">
                 <div class="input-group">
-                    <input type="text" class="form-control" name="q" placeholder="Buscar por nome, CNPJ, email ou telefone..."
+                    <input type="text" class="form-control" name="q" placeholder="Buscar por nome, CNPJ, email, contato ou pais..."
                            value="{{ request.args.get('q', '') }}" aria-label="Buscar fornecedores">
                     <button class="btn btn-primary" type="submit">
                         <i class="bi bi-search me-1"></i> Buscar
@@ -82,6 +82,7 @@
                         <tr>
                             <th class="px-4">Nome</th>
                             <th>CNPJ</th>
+                            <th>Pais</th>
                             <th>Email</th>
                             <th>Telefone</th>
                             <th class="text-center">Avaliacao</th>
@@ -100,6 +101,13 @@
                             <td>
                                 {% if f.cnpj %}
                                 <span class="badge bg-light text-dark">{{ f.cnpj }}</span>
+                                {% else %}
+                                <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if f.pais %}
+                                <small><i class="bi bi-globe2 me-1 text-muted"></i>{{ f.pais }}</small>
                                 {% else %}
                                 <small class="text-muted">-</small>
                                 {% endif %}
