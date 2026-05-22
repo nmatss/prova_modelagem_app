@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar Manual' if manual else 'Novo Manual' }} - Prova de Modelagem{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('manuais.index') }}">Manuais</a></li>
+<li class="breadcrumb-item active">{{ 'Editar' if manual else 'Novo' }}</li>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4 py-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 fw-bold text-gray-800">
+            <i class="bi bi-{{ 'pencil-square' if manual else 'plus-circle' }} me-2 text-primary"></i>
+            {{ 'Editar Manual' if manual else 'Novo Manual' }}
+        </h1>
+        <a href="{{ url_for('manuais.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <form action="{{ url_for('manuais.editar', id=manual.id) if manual else url_for('manuais.novo') }}"
+                  method="POST" enctype="multipart/form-data">
+
+                <div class="mb-3">
+                    <label for="titulo" class="form-label fw-semibold">
+                        Título <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="titulo" name="titulo" required
+                           placeholder="Ex: Procedimento de medição de peças"
+                           value="{{ manual.titulo if manual else '' }}">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="categoria" class="form-label fw-semibold">Categoria</label>
+                        <select class="form-select" id="categoria" name="categoria">
+                            {% for cat in categorias %}
+                            <option value="{{ cat }}" {{ 'selected' if manual and manual.categoria == cat else '' }}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="arquivo" class="form-label fw-semibold">
+                            Arquivo {% if not manual %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        <input type="file" class="form-control" id="arquivo" name="arquivo"
+                               accept=".pdf,.docx,.xlsx,.pptx,.doc,.xls,.ppt"
+                               {{ 'required' if not manual else '' }}>
+                        <div class="form-text">
+                            {% if manual %}
+                            Atual: <strong>{{ manual.file_path }}</strong> ({{ manual.file_size_legivel() }}).
+                            Selecione novo arquivo apenas se quiser substituir.
+                            {% else %}
+                            PDF, DOCX, XLSX, PPTX (máx. 16MB)
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="descricao" class="form-label fw-semibold">Descrição</label>
+                    <textarea class="form-control" id="descricao" name="descricao" rows="4"
+                              placeholder="Resumo do que o manual cobre (opcional)">{{ manual.descricao if manual and manual.descricao else '' }}</textarea>
+                </div>
+
+                <div class="d-flex gap-2 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {{ 'Salvar Alterações' if manual else 'Enviar Manual' }}
+                    </button>
+                    <a href="{{ url_for('manuais.index') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
