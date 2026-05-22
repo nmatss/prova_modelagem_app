@@ -248,6 +248,30 @@ def reativar(id):
     return redirect(url_for('checklist.index'))
 
 
+@checklist_bp.route('/api/respostas/<int:prova_id>/<categoria>')
+@login_required
+def api_respostas_prova(prova_id, categoria):
+    """Retorna as ChecklistResposta marcadas para um prova/categoria.
+    Usado pelo frontend para pré-marcar itens dinâmicos ao abrir o editar."""
+    categoria = categoria.strip().lower()
+    if categoria not in CATEGORIAS_VALIDAS:
+        return jsonify({'itens_marcados': [], 'observacoes': {}}), 400
+
+    respostas = (
+        ChecklistResposta.query
+        .join(ChecklistTemplate, ChecklistResposta.template_id == ChecklistTemplate.id)
+        .filter(
+            ChecklistResposta.prova_id == prova_id,
+            ChecklistTemplate.categoria == categoria,
+        )
+        .all()
+    )
+    return jsonify({
+        'itens_marcados': [r.item for r in respostas if r.conforme],
+        'observacoes': {r.item: r.observacao for r in respostas if r.observacao},
+    })
+
+
 @checklist_bp.route('/api/template/<categoria>')
 @login_required
 def api_template_por_categoria(categoria):

@@ -637,6 +637,7 @@
                                                     <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ prova.id }}" value="ORIENTACAO_FORNECEDOR" id="qual_orientacao_{{ prova.id }}" {{ 'checked' if 'ORIENTACAO_FORNECEDOR' in checklist_qual else '' }}><label class="form-check-label" for="qual_orientacao_{{ prova.id }}">Orientação para o Fornecedor</label></div>
                                                     <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_qualidade_{{ prova.id }}" value="OUTROS" id="qual_outros_{{ prova.id }}" {{ 'checked' if 'OUTROS' in checklist_qual else '' }}><label class="form-check-label" for="qual_outros_{{ prova.id }}">Outros</label></div>
                                                 </div>
+                                                <div class="checklist-dinamico" data-categoria="qualidade" data-prova-id="{{ prova.id }}" data-tipo="{{ tipo }}"></div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Comentários</label>
                                                     <textarea class="form-control" name="comentarios_qualidade_{{ prova.id }}" rows="2">{{ prova.comentarios_qualidade or '' }}</textarea>
@@ -687,6 +688,7 @@
                                                     <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ prova.id }}" value="AJUSTE_TECIDO" id="est_tecido_{{ prova.id }}" {{ 'checked' if 'AJUSTE_TECIDO' in checklist_est else '' }}><label class="form-check-label" for="est_tecido_{{ prova.id }}">Ajuste de Tecido</label></div>
                                                     <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_estilo_{{ prova.id }}" value="OUTROS" id="est_outros_{{ prova.id }}" {{ 'checked' if 'OUTROS' in checklist_est else '' }}><label class="form-check-label" for="est_outros_{{ prova.id }}">Outros</label></div>
                                                 </div>
+                                                <div class="checklist-dinamico" data-categoria="estilo" data-prova-id="{{ prova.id }}" data-tipo="{{ tipo }}"></div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Comentários</label>
                                                     <textarea class="form-control" name="comentarios_estilo_{{ prova.id }}" rows="2">{{ prova.comentarios_estilo or '' }}</textarea>
@@ -736,6 +738,7 @@
                                                     <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ prova.id }}" value="MODELO_FORA_MEDIDAS" id="mod_fora_{{ prova.id }}" {{ 'checked' if 'MODELO_FORA_MEDIDAS' in checklist_mod else '' }}><label class="form-check-label" for="mod_fora_{{ prova.id }}">Modelo de Prova Fora das Medidas</label></div>
                                                     <div class="form-check"><input class="form-check-input" type="checkbox" name="checklist_modelagem_{{ prova.id }}" value="OUTROS" id="mod_outros_{{ prova.id }}" {{ 'checked' if 'OUTROS' in checklist_mod else '' }}><label class="form-check-label" for="mod_outros_{{ prova.id }}">Outros</label></div>
                                                 </div>
+                                                <div class="checklist-dinamico" data-categoria="modelagem" data-prova-id="{{ prova.id }}" data-tipo="{{ tipo }}"></div>
                                                 <div class="mb-2">
                                                     <label class="form-label">Comentários</label>
                                                     <textarea class="form-control" name="comentarios_modelagem_{{ prova.id }}" rows="2">{{ prova.comentarios_modelagem or '' }}</textarea>
@@ -1010,6 +1013,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/checklist_dinamico.js') }}"></script>
 <script>
     // Função para submeter ações de exclusão sem forms aninhados
     function submitDelete(action, data, confirmMsg) {
