@@ -3122,13 +3122,18 @@ def reset_all_passwords():
 
 @app.cli.command('create-admin')
 def create_admin():
-    """Cria um usuário administrador padrão."""
+    """Cria um usuário administrador. Senha vem de ADMIN_PASSWORD (env), nunca hardcoded."""
     from models import User
     from werkzeug.security import generate_password_hash
 
     HASH_METHOD = 'pbkdf2:sha256'
-    username = 'admin'
-    senha = 'admin123'
+    username = os.getenv('ADMIN_USERNAME', 'admin')
+    senha = os.getenv('ADMIN_PASSWORD')
+
+    if not senha or len(senha) < 8:
+        print("ERRO: defina ADMIN_PASSWORD (mínimo 8 caracteres) antes de criar admin.")
+        print("  Exemplo: ADMIN_PASSWORD='senha-forte-aqui' flask create-admin")
+        return
 
     # Verificar se já existe
     if User.query.filter_by(username=username).first():
@@ -3137,7 +3142,7 @@ def create_admin():
 
     admin = User(
         username=username,
-        email='admin@sistema.local',
+        email=os.getenv('ADMIN_EMAIL', 'admin@sistema.local'),
         nome_completo='Administrador',
         password_hash=generate_password_hash(senha, method=HASH_METHOD),
         role='admin',
@@ -3151,7 +3156,7 @@ def create_admin():
 
     print(f"Usuário administrador criado!")
     print(f"  Username: {username}")
-    print(f"  Senha: {senha}")
+    print(f"  Senha: (definida via env var ADMIN_PASSWORD — {len(senha)} caracteres)")
     print("  ** Troque a senha após o primeiro login! **")
 
 

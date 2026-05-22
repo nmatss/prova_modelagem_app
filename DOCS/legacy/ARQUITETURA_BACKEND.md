@@ -1096,7 +1096,7 @@ def init_app(app):
         if not User.query.filter_by(username='admin').first():
             admin = User(
                 username='admin',
-                password_hash=generate_password_hash('admin123'),
+                password_hash=generate_password_hash(os.environ['ADMIN_PASSWORD']),  # nunca hardcoded — vem do env/vault
                 is_admin=True
             )
             db.session.add(admin)

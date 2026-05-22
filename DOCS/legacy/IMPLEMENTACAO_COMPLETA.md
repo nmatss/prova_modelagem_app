@@ -252,7 +252,7 @@ python3 app.py
 
 ### Acessar:
 - **Aplicação:** http://127.0.0.1:5000
-- **Login:** admin / !@#$Space1234
+- **Login:** admin / <senha em .env do servidor — ver `secrets/README.md`>
 - **Auditoria:** Menu > Auditoria (após login como admin)
 
 ### Verificar Logs no Banco:

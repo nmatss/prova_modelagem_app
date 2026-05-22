@@ -67,12 +67,26 @@ def migrate_database():
         conn.close()
 
 def update_admin_password():
-    """Atualiza a senha do usuário admin"""
+    """Atualiza a senha do usuário admin.
+
+    Requer variável de ambiente `ADMIN_RESET_PASSWORD` definida.
+    A senha NUNCA é impressa em log/stdout.
+    """
     print("\n" + "=" * 60)
     print("ATUALIZAÇÃO DA SENHA DO ADMIN")
     print("=" * 60)
 
-    nova_senha = "!@#$Space1234"
+    nova_senha = os.getenv("ADMIN_RESET_PASSWORD")
+    if not nova_senha:
+        print("\n❌ Variável ADMIN_RESET_PASSWORD não definida.")
+        print("   Defina antes de rodar:")
+        print("     export ADMIN_RESET_PASSWORD='sua-nova-senha-forte'")
+        print("   Ou via secrets/admin.env e re-execute.")
+        return False
+    if len(nova_senha) < 8:
+        print("\n❌ ADMIN_RESET_PASSWORD muito curta (mínimo 8 caracteres).")
+        return False
+
     senha_hash = generate_password_hash(nova_senha)
 
     conn = sqlite3.connect(DB_PATH)
@@ -95,7 +109,7 @@ def update_admin_password():
             conn.commit()
             print("✅ Usuário admin criado com sucesso!")
             print(f"   Username: admin")
-            print(f"   Senha: {nova_senha}")
+            print(f"   Senha: (definida via ADMIN_RESET_PASSWORD — {len(nova_senha)} caracteres)")
             print(f"   Email: admin@puket.com")
             return True
 
@@ -112,7 +126,7 @@ def update_admin_password():
 
         print("✅ Senha do admin atualizada com sucesso!")
         print(f"   Username: {admin[1]}")
-        print(f"   Nova senha: {nova_senha}")
+        print(f"   Nova senha: (definida via ADMIN_RESET_PASSWORD — {len(nova_senha)} caracteres)")
         print(f"   Email: {admin[2] or 'N/A'}")
 
         return True
@@ -140,7 +154,7 @@ if __name__ == '__main__':
         print("   1. Reinicie a aplicação")
         print("   2. Faça login com:")
         print("      Username: admin")
-        print("      Senha: !@#$Space1234")
+        print("      Senha: (a que você definiu em ADMIN_RESET_PASSWORD)")
         print("   3. Acesse /admin/users para gerenciar usuários")
         print()
     else:

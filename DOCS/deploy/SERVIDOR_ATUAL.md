@@ -1,9 +1,15 @@
 # Documentação do Servidor de Produção
 ## Sistema de Provas de Modelagem Puket
 
-**Última atualização:** 16/01/2026
+**Última atualização:** 16/01/2026 (credenciais redacted em 22/05/2026)
 **Versão do Sistema:** 2.0.0
 **Responsável:** Nicolas Matsuda
+
+> ⚠️ **CREDENCIAIS REMOVIDAS DESTE DOCUMENTO.** Todas as senhas, chaves
+> secretas e tokens vivem no vault local em `secrets/*.env` (chmod 600,
+> gitignored). Em produção, são injetadas via Docker secrets ou
+> systemd `LoadCredential`. Para acesso ao servidor, use chave SSH
+> autorizada (`ssh-copy-id`), não senha. Ver `secrets/README.md`.
 
 ---
 
@@ -14,7 +20,7 @@
 ```
 Host: 192.168.168.124
 Usuário: nicolas
-Senha: Grupo2@2254
+Acesso: SSH key (ssh-copy-id já feito) — senha removida deste doc
 Hostname: n8n
 ```
 
@@ -159,7 +165,7 @@ Uso Atual:
 
 ```bash
 # Segurança
-SECRET_KEY=93328ba9ac3cbee253ddf85fdd5bb411064455b05e493f5b6496046306314d87
+SECRET_KEY=<REDACTED — em .env do servidor; rotacionar e mover para vault>
 
 # Flask
 FLASK_ENV=production
@@ -178,7 +184,7 @@ PORT=5000
 
 # Admin
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=Space1234
+ADMIN_PASSWORD=<REDACTED — definir via env var no servidor; mudar primeira vez>
 ADMIN_EMAIL=nicolas.matsuda@grupounico.com
 ```
 
@@ -868,7 +874,7 @@ Admin: http://192.168.168.124:5000/admin
 
 ```
 Username: admin
-Password: Space1234
+Password: <REDACTED — ver .env / vault no servidor>
 Email: nicolas.matsuda@grupounico.com
 ```
 

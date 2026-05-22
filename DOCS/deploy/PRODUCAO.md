@@ -487,7 +487,7 @@ with app.app_context():
 
     # Criar admin
     admin_user = os.getenv('ADMIN_USERNAME', 'admin')
-    admin_pass = os.getenv('ADMIN_PASSWORD', 'admin123')
+    admin_pass = os.environ['ADMIN_PASSWORD']  # obrigatório — sem fallback hardcoded
     admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
 
     admin = Usuario.query.filter_by(username=admin_user).first()
