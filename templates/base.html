@@ -97,65 +97,81 @@
             <!-- Sidebar Menu -->
             <nav class="sidebar-menu" role="navigation" aria-label="Principal">
                 <div class="menu-item">
-                    <a href="{{ url_for('dashboard') }}" class="menu-link {% if request.endpoint == 'dashboard' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Início">
+                    <a href="{{ url_for('dashboard') }}" class="menu-link {% if request.endpoint == 'dashboard' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Início') }}">
                         <i class="bi bi-house-door-fill"></i>
-                        <span class="menu-link-text">Início</span>
+                        <span class="menu-link-text">{{ _('Início') }}</span>
                     </a>
                 </div>
                 <div class="menu-item">
-                    <a href="{{ url_for('analytics') }}" class="menu-link {% if request.endpoint == 'analytics' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Analytics">
+                    <a href="{{ url_for('analytics') }}" class="menu-link {% if request.endpoint == 'analytics' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Analytics') }}">
                         <i class="bi bi-graph-up-arrow"></i>
-                        <span class="menu-link-text">Analytics</span>
+                        <span class="menu-link-text">{{ _('Analytics') }}</span>
                     </a>
                 </div>
                 <div class="menu-item">
-                    <a href="{{ url_for('novo_relatorio') }}" class="menu-link {% if request.endpoint == 'novo_relatorio' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Novo Relatório">
+                    <a href="{{ url_for('novo_relatorio') }}" class="menu-link {% if request.endpoint == 'novo_relatorio' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Novo Relatório') }}">
                         <i class="bi bi-plus-circle-fill"></i>
-                        <span class="menu-link-text">Novo Relatório</span>
+                        <span class="menu-link-text">{{ _('Novo Relatório') }}</span>
                     </a>
                 </div>
                 <div class="menu-item">
-                    <a href="{{ url_for('kanban.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('kanban.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Kanban">
+                    <a href="{{ url_for('kanban.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('kanban.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Kanban') }}">
                         <i class="bi bi-kanban-fill"></i>
-                        <span class="menu-link-text">Kanban</span>
+                        <span class="menu-link-text">{{ _('Kanban') }}</span>
                     </a>
                 </div>
                 <div class="menu-item">
-                    <a href="{{ url_for('fornecedor.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('fornecedor.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Fornecedores">
+                    <a href="{{ url_for('fornecedor.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('fornecedor.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Fornecedores') }}">
                         <i class="bi bi-truck"></i>
-                        <span class="menu-link-text">Fornecedores</span>
+                        <span class="menu-link-text">{{ _('Fornecedores') }}</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a href="{{ url_for('manuais.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('manuais.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Manuais') }}">
+                        <i class="bi bi-book"></i>
+                        <span class="menu-link-text">{{ _('Manuais') }}</span>
                     </a>
                 </div>
 
                 {% if current_user.is_admin %}
                 <div class="menu-divider"></div>
-                <div class="menu-label">Administração</div>
+                <div class="menu-label">{{ _('Administração') }}</div>
                 <div class="menu-item">
-                    <a href="{{ url_for('admin.users') }}" class="menu-link {% if request.endpoint == 'admin.users' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Usuários">
+                    <a href="{{ url_for('admin.users') }}" class="menu-link {% if request.endpoint == 'admin.users' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Usuários') }}">
                         <i class="bi bi-people-fill"></i>
-                        <span class="menu-link-text">Usuários</span>
+                        <span class="menu-link-text">{{ _('Usuários') }}</span>
                     </a>
                 </div>
                 <div class="menu-item">
-                    <a href="{{ url_for('logs') }}" class="menu-link {% if request.endpoint == 'logs' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Logs de Auditoria">
+                    <a href="{{ url_for('logs') }}" class="menu-link {% if request.endpoint == 'logs' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Logs de Auditoria') }}">
                         <i class="bi bi-shield-check"></i>
-                        <span class="menu-link-text">Logs</span>
+                        <span class="menu-link-text">{{ _('Logs') }}</span>
                     </a>
                 </div>
                 <div class="menu-item">
-                    <a href="{{ url_for('checklist.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('checklist.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Checklists">
+                    <a href="{{ url_for('checklist.index') }}" class="menu-link {% if request.endpoint and request.endpoint.startswith('checklist.') %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Checklists') }}">
                         <i class="bi bi-list-check"></i>
-                        <span class="menu-link-text">Checklists</span>
+                        <span class="menu-link-text">{{ _('Checklists') }}</span>
                     </a>
                 </div>
                 {% endif %}
 
                 <div class="menu-divider"></div>
                 <div class="menu-item">
-                    <a href="#" class="menu-link" data-bs-toggle="tooltip" data-bs-placement="right" title="Redefinir Senha">
+                    <a href="#" class="menu-link" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ _('Redefinir Senha') }}">
                         <i class="bi bi-key-fill"></i>
-                        <span class="menu-link-text">Redefinir Senha</span>
+                        <span class="menu-link-text">{{ _('Redefinir Senha') }}</span>
                     </a>
+                </div>
+
+                <!-- Seletor de Idioma -->
+                <div class="menu-item">
+                    <form action="{{ url_for('trocar_idioma') }}" method="POST" class="px-3 py-2 m-0">
+                        <select name="idioma" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="{{ _('Idioma') }}">
+                            <option value="pt" {{ 'selected' if (current_user.is_authenticated and current_user.idioma == 'pt') or (session.get('idioma') == 'pt') else '' }}>🇧🇷 Português</option>
+                            <option value="en" {{ 'selected' if (current_user.is_authenticated and current_user.idioma == 'en') or (session.get('idioma') == 'en') else '' }}>🇺🇸 English</option>
+                        </select>
+                    </form>
                 </div>
             </nav>
 
@@ -167,7 +183,7 @@
                     </div>
                     <div class="user-info">
                         <span class="user-name">{{ current_user.username }}</span>
-                        <span class="user-role">{{ 'Administrador' if current_user.is_admin else 'Usuário' }}</span>
+                        <span class="user-role">{{ _('Administrador') if current_user.is_admin else _('Usuário') }}</span>
                     </div>
                 </a>
             </div>

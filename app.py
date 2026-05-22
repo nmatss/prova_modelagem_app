@@ -1,7 +1,7 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, send_file, flash, jsonify, make_response
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, send_file, flash, jsonify, make_response, abort
 from flask_compress import Compress
 from weasyprint import HTML, CSS
 from werkzeug.datastructures import MultiDict
@@ -12,11 +12,11 @@ from auth import auth_bp, get_user_by_id
 from admin import admin_bp
 from audit_bp import audit_bp  # ✅ Habilitado - AuditLog existe no banco (models.py)
 from db import init_app as init_db
-from models import db, Relatorio, Referencia, Prova, Foto, AuditLog, Fornecedor, ChecklistTemplate, ChecklistResposta, ArquivoVersao, PreferenciaUsuario
+from models import db, Relatorio, Referencia, Prova, Foto, AuditLog, Fornecedor, ChecklistTemplate, ChecklistResposta, ArquivoVersao, PreferenciaUsuario, ImportJob, LinkPublico, Manual
 from config import Config
 from utils import save_file
 import json
-from excel_export import export_relatorios_to_excel, export_detalhes_to_excel
+from excel_export import export_relatorios_to_excel, export_detalhes_to_excel, export_editavel
 from error_handlers import register_error_handlers
 from security import init_security, SecurityHeaders
 from sqlalchemy import desc
@@ -65,6 +65,54 @@ init_db(app)
 
 # Inicializar segurança
 init_security(app)
+
+# Inicializar i18n (Flask-Babel)
+try:
+    from flask_babel import Babel, gettext, lazy_gettext
+
+    def _get_locale():
+        """Seleciona o locale baseado em (1) ?lang= na URL, (2) preferência salva no usuário, (3) Accept-Language."""
+        from flask import request as _req, session as _sess
+        from flask_login import current_user as _cu
+
+        lang_param = _req.args.get('lang')
+        if lang_param in app.config.get('LANGUAGES', ['pt']):
+            _sess['idioma'] = lang_param
+            return lang_param
+
+        if 'idioma' in _sess and _sess['idioma'] in app.config.get('LANGUAGES', ['pt']):
+            return _sess['idioma']
+
+        if _cu and _cu.is_authenticated and getattr(_cu, 'idioma', None) in app.config.get('LANGUAGES', ['pt']):
+            return _cu.idioma
+
+        return _req.accept_languages.best_match(app.config.get('LANGUAGES', ['pt'])) or 'pt'
+
+    babel = Babel(app, locale_selector=_get_locale)
+
+    # Expor gettext/_l em templates Jinja
+    app.jinja_env.globals['_'] = gettext
+    app.jinja_env.globals['_l'] = lazy_gettext
+except ImportError:
+    # Flask-Babel ainda não instalado — sistema continua em PT fixo
+    app.logger.warning('Flask-Babel não instalado. Site continuará em PT até instalar.')
+    app.jinja_env.globals['_'] = lambda s, **kw: s
+    app.jinja_env.globals['_l'] = lambda s, **kw: s
+
+
+@app.route('/usuario/idioma', methods=['POST'])
+@login_required
+def trocar_idioma():
+    """Atualiza preferência de idioma do usuário logado."""
+    from flask import session as _sess
+    lang = request.form.get('idioma', 'pt').strip().lower()
+    if lang not in app.config.get('LANGUAGES', ['pt']):
+        lang = 'pt'
+    _sess['idioma'] = lang
+    if current_user.is_authenticated:
+        current_user.idioma = lang
+        db.session.commit()
+    return redirect(request.referrer or url_for('dashboard'))
 
 # ========================================
 # COMPRESSÃO GZIP/BROTLI
@@ -167,9 +215,13 @@ app.register_blueprint(audit_bp, url_prefix='/auditoria')  # ✅ Habilitado - Au
 from fornecedor_bp import fornecedor_bp
 from kanban_bp import kanban_bp
 from checklist_bp import checklist_bp
+from manuais_bp import manuais_bp
+from publico_bp import publico_bp
 app.register_blueprint(fornecedor_bp, url_prefix='/fornecedores')
 app.register_blueprint(kanban_bp, url_prefix='/kanban')
 app.register_blueprint(checklist_bp, url_prefix='/admin/checklists')
+app.register_blueprint(manuais_bp, url_prefix='/manuais')
+app.register_blueprint(publico_bp, url_prefix='/publico')
 
 # Registrar error handlers
 register_error_handlers(app)
@@ -521,14 +573,24 @@ def detalhes_relatorio(id):
         
         for prova in provas_ordenadas:
             prova_dict = {c.name: getattr(prova, c.name) for c in prova.__table__.columns}
-            
+
             prova_dict['fotos'] = {}
             for foto in prova.fotos:
                 contexto = foto.contexto
                 if contexto not in prova_dict['fotos']:
                     prova_dict['fotos'][contexto] = []
                 prova_dict['fotos'][contexto].append({c.name: getattr(foto, c.name) for c in foto.__table__.columns})
-            
+
+            # Respostas estruturadas (ChecklistTemplate dinâmico) agrupadas por categoria
+            prova_dict['respostas_dinamicas'] = {'qualidade': [], 'estilo': [], 'modelagem': []}
+            for resposta in (prova.respostas or []):
+                if resposta.template and resposta.template.categoria in prova_dict['respostas_dinamicas']:
+                    prova_dict['respostas_dinamicas'][resposta.template.categoria].append({
+                        'item': resposta.item,
+                        'conforme': resposta.conforme,
+                        'observacao': resposta.observacao,
+                    })
+
             provas_completas.append(prova_dict)
         
         ref_dict['provas'] = provas_completas
@@ -551,18 +613,61 @@ def detalhes_relatorio(id):
         except (ValueError, TypeError):
             pass
 
-    return render_template('detalhes_relatorio.html', relatorio=relatorio, referencias=referencias_completas, prazo_status=prazo_status)
+    # Links públicos ativos deste relatório
+    from models import LinkPublico
+    links_publicos = (
+        LinkPublico.query
+        .filter_by(relatorio_id=relatorio.id, is_active=True)
+        .order_by(LinkPublico.created_at.desc())
+        .all()
+    )
 
-@app.route('/relatorio/<int:id>/pdf')
-@login_required
-def relatorio_pdf(id):
-    """Gera e retorna o PDF do relatório"""
+    return render_template(
+        'detalhes_relatorio.html',
+        relatorio=relatorio,
+        referencias=referencias_completas,
+        prazo_status=prazo_status,
+        links_publicos=links_publicos,
+    )
+
+def _salvar_checklist_dinamico_para_prova(prova_id, categoria, itens_marcados):
+    """Substitui as ChecklistResposta do prova/categoria pelos itens marcados.
+
+    - Busca o ChecklistTemplate ativo da categoria
+    - Remove respostas existentes vinculadas àquele template
+    - Cria novos registros para cada item marcado
+    Se não há template ativo, no-op (não bloqueia o save).
+    """
+    template = (
+        ChecklistTemplate.query
+        .filter_by(categoria=categoria, is_active=True)
+        .order_by(ChecklistTemplate.updated_at.desc(), ChecklistTemplate.id.desc())
+        .first()
+    )
+    if not template:
+        return
+
+    # Remover respostas anteriores deste prova+template
+    ChecklistResposta.query.filter_by(prova_id=prova_id, template_id=template.id).delete()
+
+    for item in itens_marcados or []:
+        item_str = (item or '').strip()
+        if not item_str:
+            continue
+        db.session.add(ChecklistResposta(
+            prova_id=prova_id,
+            template_id=template.id,
+            item=item_str,
+            conforme=True,
+        ))
+
+
+def _construir_payload_pdf(relatorio):
+    """Monta a lista de referencias_completas com fotos em base64 para o template do PDF.
+    Reutilizado por /relatorio/<id>/pdf (login) e /publico/<token>/pdf (sem login)."""
     import base64
     import mimetypes
 
-    relatorio = Relatorio.query.get_or_404(id)
-
-    # Preparar dados para o template (mesma estrutura do detalhes_relatorio)
     referencias_completas = []
     for ref in relatorio.referencias:
         ref_dict = {c.name: getattr(ref, c.name) for c in ref.__table__.columns}
@@ -579,7 +684,6 @@ def relatorio_pdf(id):
                 if contexto not in prova_dict['fotos']:
                     prova_dict['fotos'][contexto] = []
                 foto_dict = {c.name: getattr(foto, c.name) for c in foto.__table__.columns}
-                # Converter imagem para base64 data URI
                 caminho_absoluto = os.path.join(app.config['UPLOAD_FOLDER'], foto.file_path)
                 if os.path.exists(caminho_absoluto):
                     try:
@@ -598,24 +702,36 @@ def relatorio_pdf(id):
 
         ref_dict['provas'] = provas_completas
         referencias_completas.append(ref_dict)
+    return referencias_completas
 
-    # Renderizar o HTML do PDF
-    from datetime import datetime
-    html_string = render_template('relatorio_pdf.html',
-                                   relatorio=relatorio,
-                                   referencias=referencias_completas,
-                                   now=datetime.now)
 
-    # Gerar PDF usando WeasyPrint
+def _gerar_pdf_relatorio_response(relatorio, inline=True):
+    """Gera o PDF do relatório e devolve uma Response Flask."""
+    from datetime import datetime as _dt
+    referencias_completas = _construir_payload_pdf(relatorio)
+    html_string = render_template(
+        'relatorio_pdf.html',
+        relatorio=relatorio,
+        referencias=referencias_completas,
+        now=_dt.now,
+    )
     base_url = 'file://' + app.config.get('UPLOAD_FOLDER', '') + '/'
     pdf = HTML(string=html_string, base_url=base_url).write_pdf()
-
-    # Criar resposta
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'inline; filename=relatorio_{relatorio.id}_{secure_filename(relatorio.descricao_geral)}.pdf'
-
+    disposition = 'inline' if inline else 'attachment'
+    response.headers['Content-Disposition'] = (
+        f"{disposition}; filename=relatorio_{relatorio.id}_{secure_filename(relatorio.descricao_geral)}.pdf"
+    )
     return response
+
+
+@app.route('/relatorio/<int:id>/pdf')
+@login_required
+def relatorio_pdf(id):
+    """Gera e retorna o PDF do relatório (versão autenticada)."""
+    relatorio = Relatorio.query.get_or_404(id)
+    return _gerar_pdf_relatorio_response(relatorio, inline=True)
 
 @app.route('/relatorio/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -713,6 +829,12 @@ def editar_relatorio(id):
                             prova.checklist_modelagem = ", ".join(request.form.getlist(f'checklist_modelagem_{prova_id}'))
                             prova.comentarios_modelagem = request.form.get(f'comentarios_modelagem_{prova_id}')
                             prova.obs_modelagem = request.form.get(f'obs_modelagem_{prova_id}')
+
+                            # Persistir respostas do checklist dinâmico (ChecklistTemplate ativo por categoria)
+                            for cat in ('qualidade', 'estilo', 'modelagem'):
+                                _salvar_checklist_dinamico_para_prova(prova.id, cat,
+                                    request.form.getlist(f'checklist_dinamico_{cat}_{prova_id}'))
+
                             prova.data_lacre = request.form.get(f'data_lacre_{prova_id}')
                             prova.numero_lacre = request.form.get(f'numero_lacre_{prova_id}')
                             prova.info_adicionais = request.form.get(f'info_adicionais_{prova_id}')
@@ -1163,7 +1285,15 @@ def adicionar_nova_prova(referencia_id):
             )
             db.session.add(nova_prova)
             db.session.flush()
-            
+
+            # Persistir respostas do checklist dinâmico para a nova prova
+            # (form usa o tipo como sufixo em vez do prova_id, pois prova é nova)
+            for cat in ('qualidade', 'estilo', 'modelagem'):
+                _salvar_checklist_dinamico_para_prova(
+                    nova_prova.id, cat,
+                    request.form.getlist(f'checklist_dinamico_{cat}_{tipo}'),
+                )
+
             campos_fotos = ['desenho', 'qualidade', 'estilo', 'modelagem']
             for contexto in campos_fotos:
                 for file in request.files.getlist(f'fotos_{contexto}_{tipo}'):
@@ -1263,6 +1393,15 @@ def exportar_relatorio_excel(id):
             ref_data = {
                 'numero_ref': ref.numero_ref,
                 'tipo': ref.tipo_categoria,
+                'origem': ref.origem or '',
+                'fornecedor': (ref.fornecedor_obj.nome if ref.fornecedor_obj else (ref.fornecedor or '')),
+                'fornecedor_pais': (ref.fornecedor_obj.pais if ref.fornecedor_obj and ref.fornecedor_obj.pais else ''),
+                'fornecedor_contato': (ref.fornecedor_obj.contato if ref.fornecedor_obj else (ref.fornecedor_contato or '')),
+                'materia_prima': ref.materia_prima or '',
+                'composicao': ref.composicao or '',
+                'gramatura': ref.gramatura or '',
+                'aviamentos': ref.aviamentos or '',
+                'observacoes': ref.observacoes or '',
                 'provas': []
             }
 
@@ -1431,210 +1570,395 @@ def download_modelo_excel():
     )
 
 
+def _formatar_data_excel(valor):
+    """Converte datetime do Excel para string dd/mm/yyyy."""
+    if valor is None:
+        return None
+    if hasattr(valor, 'strftime'):
+        return valor.strftime('%d/%m/%Y')
+    return str(valor).strip() or None
+
+
+def _to_int_or_none(v):
+    if v is None or v == '':
+        return None
+    try:
+        return int(float(str(v)))
+    except (ValueError, TypeError):
+        return None
+
+
+def _parsear_planilha_importacao(filepath):
+    """Lê o XLSX e retorna (parsed, erros).
+    parsed = {'gerais': [...], 'detalhados': [...]} com cada linha como dict.
+    Inclui IDs quando presentes para detectar UPSERT vs INSERT.
+    """
+    from openpyxl import load_workbook
+    wb = load_workbook(filepath, data_only=True)
+    parsed = {'gerais': [], 'detalhados': []}
+    erros = []
+
+    # ABA Informações Gerais
+    if "Informações Gerais" in wb.sheetnames:
+        ws1 = wb["Informações Gerais"]
+    else:
+        ws1 = wb.active
+
+    headers1 = [c.value for c in ws1[1]]
+    for row_idx, row in enumerate(ws1.iter_rows(min_row=2, values_only=True), start=2):
+        try:
+            dados = dict(zip(headers1, row))
+            if not dados.get('Descrição'):
+                continue
+            parsed['gerais'].append({
+                'linha_planilha': row_idx,
+                'id_relatorio': _to_int_or_none(dados.get('ID Relatorio')),
+                'descricao': str(dados.get('Descrição', '')).strip().upper(),
+                'linha': str(dados.get('Linha', '')).strip().upper() if dados.get('Linha') else None,
+                'colecao': str(dados.get('Coleção', '')).strip().upper() if dados.get('Coleção') else None,
+                'temporada': str(dados.get('Temporada', '')).strip().upper() if dados.get('Temporada') else None,
+                'ano': _to_int_or_none(dados.get('Ano')),
+                'status_geral': str(dados.get('Status Geral', 'EM ANDAMENTO')).strip().upper(),
+            })
+        except Exception as e:
+            erros.append({'sheet': 'Informações Gerais', 'linha': row_idx, 'mensagem': str(e)})
+
+    # ABA Dados Detalhados
+    if "Dados Detalhados" in wb.sheetnames:
+        ws2 = wb["Dados Detalhados"]
+        headers2 = [c.value for c in ws2[1]]
+        for row_idx, row in enumerate(ws2.iter_rows(min_row=2, values_only=True), start=2):
+            try:
+                dados = dict(zip(headers2, row))
+                if not dados.get('Referência') and not dados.get('Descrição'):
+                    continue
+                parsed['detalhados'].append({
+                    'linha_planilha': row_idx,
+                    'id_relatorio': _to_int_or_none(dados.get('ID Relatorio')),
+                    'id_referencia': _to_int_or_none(dados.get('ID Referencia')),
+                    'id_prova': _to_int_or_none(dados.get('ID Prova')),
+                    'colecao': str(dados.get('Coleção', '')).strip().upper() if dados.get('Coleção') else '',
+                    'descricao': str(dados.get('Descrição', '')).strip().upper() if dados.get('Descrição') else '',
+                    'numero_ref': str(dados.get('Referência', '')).strip().upper() if dados.get('Referência') else '',
+                    'categoria': str(dados.get('Categoria', '')).strip().upper() if dados.get('Categoria') else 'ADULTO',
+                    'fornecedor': str(dados.get('Fornecedor', '')).strip().upper() if dados.get('Fornecedor') else None,
+                    'numero_prova': _to_int_or_none(dados.get('Nº Prova')) or 1,
+                    'status': str(dados.get('Status', 'EM ANDAMENTO')).strip().upper(),
+                    'data_prova': _formatar_data_excel(dados.get('Data Prova')),
+                    'data_recebimento': _formatar_data_excel(dados.get('Data Recebimento')),
+                    'tamanhos_recebidos': str(dados.get('Tamanhos', '')).strip() if dados.get('Tamanhos') else None,
+                    'time_qualidade': str(dados.get('Time Qualidade', '')).strip() if dados.get('Time Qualidade') else None,
+                    'time_estilo': str(dados.get('Time Estilo', '')).strip() if dados.get('Time Estilo') else None,
+                    'time_modelagem': str(dados.get('Time Modelagem', '')).strip() if dados.get('Time Modelagem') else None,
+                })
+            except Exception as e:
+                erros.append({'sheet': 'Dados Detalhados', 'linha': row_idx, 'mensagem': str(e)})
+
+    return parsed, erros
+
+
+def _calcular_summary(parsed):
+    """Pré-calcula quantos registros serão criados vs atualizados."""
+    summary = {
+        'criar_relatorios': 0, 'atualizar_relatorios': 0,
+        'criar_referencias': 0, 'atualizar_referencias': 0,
+        'criar_provas': 0, 'atualizar_provas': 0,
+    }
+    for linha in parsed['gerais']:
+        if linha['id_relatorio'] and Relatorio.query.get(linha['id_relatorio']):
+            summary['atualizar_relatorios'] += 1
+        else:
+            summary['criar_relatorios'] += 1
+    for linha in parsed['detalhados']:
+        if linha.get('id_referencia') and Referencia.query.get(linha['id_referencia']):
+            summary['atualizar_referencias'] += 1
+        elif linha.get('numero_ref'):
+            summary['criar_referencias'] += 1
+        if linha.get('id_prova') and Prova.query.get(linha['id_prova']):
+            summary['atualizar_provas'] += 1
+        else:
+            summary['criar_provas'] += 1
+    return summary
+
+
 @app.route('/importar/excel', methods=['GET', 'POST'])
 @login_required
 def importar_relatorios_excel():
-    """Importa relatórios de um arquivo Excel (formato com 2 abas)"""
-    if request.method == 'POST':
-        temp_path = None
+    """Etapa 1: recebe upload, parseia, valida, cria ImportJob e redireciona para revisar."""
+    if request.method != 'POST':
+        return redirect(url_for('dashboard'))
+
+    arquivo = request.files.get('arquivo_excel')
+    if not arquivo or arquivo.filename == '':
+        flash('Nenhum arquivo selecionado!', 'error')
+        return redirect(url_for('dashboard'))
+
+    if not arquivo.filename.endswith(('.xlsx', '.xls')):
+        flash('Formato inválido! Use apenas arquivos Excel (.xlsx ou .xls)', 'error')
+        return redirect(url_for('dashboard'))
+
+    import tempfile as _tempfile
+    with _tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
+        arquivo.save(temp_file.name)
+        temp_path = temp_file.name
+
+    try:
+        parsed, erros = _parsear_planilha_importacao(temp_path)
+        summary = _calcular_summary(parsed)
+    except Exception as e:
         try:
-            from openpyxl import load_workbook
-            from datetime import datetime as dt_import
+            os.unlink(temp_path)
+        except OSError:
+            pass
+        flash(f'Erro ao ler arquivo: {e}', 'error')
+        return redirect(url_for('dashboard'))
 
-            arquivo = request.files.get('arquivo_excel')
-            if not arquivo or arquivo.filename == '':
-                flash('Nenhum arquivo selecionado!', 'error')
-                return redirect(url_for('dashboard'))
+    job = ImportJob(
+        user_id=current_user.id if current_user.is_authenticated else None,
+        arquivo_original=arquivo.filename,
+        arquivo_temp_path=temp_path,
+        status='validated',
+    )
+    job.set_parsed(parsed)
+    job.set_erros(erros)
+    job.set_summary(summary)
+    db.session.add(job)
+    db.session.commit()
 
-            # Verificar extensão
-            if not arquivo.filename.endswith(('.xlsx', '.xls')):
-                flash('Formato inválido! Use apenas arquivos Excel (.xlsx ou .xls)', 'error')
-                return redirect(url_for('dashboard'))
+    return redirect(url_for('importar_excel_revisar', job_id=job.id))
 
-            # Salvar temporariamente
-            import tempfile
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
-                arquivo.save(temp_file.name)
-                temp_path = temp_file.name
 
-            # Carregar workbook
-            wb = load_workbook(temp_path, data_only=True)
+@app.route('/importar/excel/<int:job_id>/revisar')
+@login_required
+def importar_excel_revisar(job_id):
+    """Etapa 2: exibe revisão dos dados parseados antes de commitar."""
+    job = ImportJob.query.get_or_404(job_id)
+    if job.user_id and job.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    return render_template(
+        'importar_excel_revisar.html',
+        job=job,
+        parsed=job.get_parsed(),
+        erros=job.get_erros(),
+        summary=job.get_summary(),
+    )
 
-            relatorios_importados = 0
-            referencias_importadas = 0
-            provas_importadas = 0
-            erros = []
 
-            def formatar_data(valor):
-                """Converte datetime do Excel para string dd/mm/yyyy"""
-                if valor is None:
-                    return None
-                if hasattr(valor, 'strftime'):
-                    return valor.strftime('%d/%m/%Y')
-                return str(valor).strip()
+@app.route('/importar/excel/<int:job_id>/confirmar', methods=['POST'])
+@login_required
+def importar_excel_confirmar(job_id):
+    """Etapa 3: aplica criações/atualizações no banco."""
+    job = ImportJob.query.get_or_404(job_id)
+    if job.user_id and job.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    if job.status != 'validated':
+        flash('Este job já foi processado ou cancelado.', 'warning')
+        return redirect(url_for('dashboard'))
 
-            # ========================================
-            # PASSO 1: Ler aba "Informações Gerais" (Relatórios)
-            # ========================================
-            if "Informações Gerais" in wb.sheetnames:
-                ws1 = wb["Informações Gerais"]
-            else:
-                ws1 = wb.active
+    parsed = job.get_parsed()
+    erros_runtime = []
 
-            headers1 = [cell.value for cell in ws1[1]]
+    criados = {'relatorios': 0, 'referencias': 0, 'provas': 0}
+    atualizados = {'relatorios': 0, 'referencias': 0, 'provas': 0}
 
-            # Mapa para vincular relatórios criados (chave: descrição+coleção)
-            relatorios_map = {}
-
-            for row_idx, row in enumerate(ws1.iter_rows(min_row=2, values_only=True), start=2):
-                try:
-                    dados = dict(zip(headers1, row))
-
-                    if not dados.get('Descrição'):
-                        continue  # Pular linhas vazias
-
-                    descricao = str(dados.get('Descrição', '')).strip().upper()
-                    colecao = str(dados.get('Coleção', '')).strip().upper() if dados.get('Coleção') else None
-                    ano_val = dados.get('Ano')
-
-                    novo_rel = Relatorio(
+    try:
+        # ETAPA A: Informações Gerais (Relatórios)
+        relatorios_map = {}  # chave descricao|colecao -> Relatorio
+        for linha in parsed.get('gerais', []):
+            try:
+                rel = None
+                if linha.get('id_relatorio'):
+                    rel = Relatorio.query.get(linha['id_relatorio'])
+                if rel:
+                    rel.descricao_geral = linha['descricao']
+                    rel.linha = linha.get('linha')
+                    rel.colecao = linha.get('colecao')
+                    rel.temporada = linha.get('temporada')
+                    rel.ano = linha.get('ano')
+                    rel.status_geral = linha.get('status_geral') or rel.status_geral
+                    atualizados['relatorios'] += 1
+                else:
+                    rel = Relatorio(
                         codigo=gerar_codigo_relatorio(),
-                        descricao_geral=descricao,
-                        linha=str(dados.get('Linha', '')).strip().upper() if dados.get('Linha') else None,
-                        colecao=colecao,
-                        temporada=str(dados.get('Temporada', '')).strip().upper() if dados.get('Temporada') else None,
-                        ano=int(float(str(ano_val))) if ano_val and str(ano_val).replace('.0', '').replace('.', '').isdigit() else None,
-                        status_geral=str(dados.get('Status Geral', 'EM ANDAMENTO')).strip().upper(),
-                        created_by=current_user.id if current_user.is_authenticated else None
+                        descricao_geral=linha['descricao'],
+                        linha=linha.get('linha'),
+                        colecao=linha.get('colecao'),
+                        temporada=linha.get('temporada'),
+                        ano=linha.get('ano'),
+                        status_geral=linha.get('status_geral') or 'EM ANDAMENTO',
+                        created_by=current_user.id if current_user.is_authenticated else None,
                     )
-                    db.session.add(novo_rel)
-                    db.session.flush()  # Obter ID antes do commit
+                    db.session.add(rel)
+                    db.session.flush()
+                    criados['relatorios'] += 1
+                chave = f"{linha['descricao']}|{linha.get('colecao') or ''}"
+                relatorios_map[chave] = rel
+            except Exception as e:
+                erros_runtime.append({'sheet': 'Informações Gerais', 'linha': linha.get('linha_planilha'), 'mensagem': str(e)})
 
-                    # Chave para vincular com dados detalhados
-                    chave = f"{descricao}|{colecao or ''}"
-                    relatorios_map[chave] = novo_rel
-                    relatorios_importados += 1
-
-                except Exception as e:
-                    erros.append(f"Info Gerais - Linha {row_idx}: {str(e)}")
+        # ETAPA B: Dados Detalhados (Referências + Provas)
+        refs_map = {}
+        for linha in parsed.get('detalhados', []):
+            try:
+                # Achar relatório
+                rel = None
+                if linha.get('id_relatorio'):
+                    rel = Relatorio.query.get(linha['id_relatorio'])
+                if not rel:
+                    chave = f"{linha.get('descricao', '')}|{linha.get('colecao', '')}"
+                    rel = relatorios_map.get(chave)
+                if not rel and linha.get('descricao'):
+                    rel = Relatorio.query.filter(
+                        db.func.upper(Relatorio.descricao_geral) == linha['descricao'],
+                        db.func.upper(db.func.coalesce(Relatorio.colecao, '')) == linha.get('colecao', ''),
+                    ).first()
+                if not rel:
+                    erros_runtime.append({
+                        'sheet': 'Dados Detalhados',
+                        'linha': linha.get('linha_planilha'),
+                        'mensagem': f"Relatório não encontrado para '{linha.get('descricao')}' / '{linha.get('colecao')}'",
+                    })
                     continue
 
-            # ========================================
-            # PASSO 2: Ler aba "Dados Detalhados" (Referências + Provas)
-            # ========================================
-            if "Dados Detalhados" in wb.sheetnames:
-                ws2 = wb["Dados Detalhados"]
-                headers2 = [cell.value for cell in ws2[1]]
-
-                # Mapa de referências já criadas (chave: relatorio_id|numero_ref)
-                refs_map = {}
-
-                for row_idx, row in enumerate(ws2.iter_rows(min_row=2, values_only=True), start=2):
-                    try:
-                        dados = dict(zip(headers2, row))
-
-                        if not dados.get('Referência'):
-                            continue  # Pular linhas vazias
-
-                        # Encontrar relatório correspondente
-                        colecao = str(dados.get('Coleção', '')).strip().upper() if dados.get('Coleção') else ''
-                        descricao = str(dados.get('Descrição', '')).strip().upper() if dados.get('Descrição') else ''
-                        chave_rel = f"{descricao}|{colecao}"
-
-                        relatorio = relatorios_map.get(chave_rel)
-                        if not relatorio:
-                            # Tentar buscar no banco existente
-                            relatorio = Relatorio.query.filter(
-                                db.func.upper(Relatorio.descricao_geral) == descricao,
-                                db.func.upper(db.func.coalesce(Relatorio.colecao, '')) == colecao
-                            ).first()
-
-                        if not relatorio:
-                            erros.append(f"Dados Detalhados - Linha {row_idx}: Relatório não encontrado para '{descricao}' / '{colecao}'")
-                            continue
-
-                        # Criar ou reutilizar Referência
-                        numero_ref = str(dados.get('Referência', '')).strip().upper()
-                        chave_ref = f"{relatorio.id}|{numero_ref}"
-
-                        if chave_ref not in refs_map:
-                            categoria = str(dados.get('Categoria', '')).strip().upper() if dados.get('Categoria') else 'ADULTO'
-                            fornecedor = str(dados.get('Fornecedor', '')).strip().upper() if dados.get('Fornecedor') else None
-
-                            nova_ref = Referencia(
-                                relatorio_id=relatorio.id,
-                                numero_ref=numero_ref,
-                                tipo_categoria=categoria,
-                                fornecedor=fornecedor
-                            )
-                            db.session.add(nova_ref)
-                            db.session.flush()
-                            refs_map[chave_ref] = nova_ref
-                            referencias_importadas += 1
-
+                # Referência (upsert)
+                ref = None
+                if linha.get('id_referencia'):
+                    ref = Referencia.query.get(linha['id_referencia'])
+                if ref:
+                    if linha.get('numero_ref'):
+                        ref.numero_ref = linha['numero_ref']
+                    if linha.get('categoria'):
+                        ref.tipo_categoria = linha['categoria'].lower() if linha['categoria'].upper() in ('BABY', 'KIDS', 'TEEN', 'ADULTO') else ref.tipo_categoria
+                    if linha.get('fornecedor'):
+                        ref.fornecedor = linha['fornecedor']
+                    atualizados['referencias'] += 1
+                else:
+                    chave_ref = f"{rel.id}|{linha.get('numero_ref', '')}"
+                    if chave_ref in refs_map:
                         ref = refs_map[chave_ref]
-
-                        # Criar Prova
-                        num_prova = dados.get('Nº Prova')
-                        if num_prova is not None:
-                            num_prova_int = int(float(str(num_prova))) if num_prova else 1
-                        else:
-                            num_prova_int = 1
-
-                        nova_prova = Prova(
-                            referencia_id=ref.id,
-                            numero_prova=num_prova_int,
-                            status=str(dados.get('Status', 'EM ANDAMENTO')).strip().upper(),
-                            data_prova=formatar_data(dados.get('Data Prova')),
-                            data_recebimento=formatar_data(dados.get('Data Recebimento')),
-                            tamanhos_recebidos=str(dados.get('Tamanhos', '')).strip() if dados.get('Tamanhos') else None,
-                            time_qualidade=str(dados.get('Time Qualidade', '')).strip() if dados.get('Time Qualidade') else None,
-                            time_estilo=str(dados.get('Time Estilo', '')).strip() if dados.get('Time Estilo') else None,
-                            time_modelagem=str(dados.get('Time Modelagem', '')).strip() if dados.get('Time Modelagem') else None
+                    else:
+                        ref = Referencia(
+                            relatorio_id=rel.id,
+                            numero_ref=linha.get('numero_ref'),
+                            tipo_categoria=(linha.get('categoria') or 'ADULTO').lower(),
+                            fornecedor=linha.get('fornecedor'),
                         )
-                        db.session.add(nova_prova)
-                        provas_importadas += 1
+                        db.session.add(ref)
+                        db.session.flush()
+                        refs_map[chave_ref] = ref
+                        criados['referencias'] += 1
 
-                    except Exception as e:
-                        erros.append(f"Dados Detalhados - Linha {row_idx}: {str(e)}")
-                        continue
+                # Prova (upsert)
+                prova = None
+                if linha.get('id_prova'):
+                    prova = Prova.query.get(linha['id_prova'])
+                if prova:
+                    prova.numero_prova = linha.get('numero_prova') or prova.numero_prova
+                    prova.status = linha.get('status') or prova.status
+                    prova.data_prova = linha.get('data_prova')
+                    prova.data_recebimento = linha.get('data_recebimento')
+                    if linha.get('tamanhos_recebidos'):
+                        prova.tamanhos_recebidos = linha['tamanhos_recebidos']
+                    if linha.get('time_qualidade'):
+                        prova.time_qualidade = linha['time_qualidade']
+                    if linha.get('time_estilo'):
+                        prova.time_estilo = linha['time_estilo']
+                    if linha.get('time_modelagem'):
+                        prova.time_modelagem = linha['time_modelagem']
+                    atualizados['provas'] += 1
+                else:
+                    prova = Prova(
+                        referencia_id=ref.id,
+                        numero_prova=linha.get('numero_prova') or 1,
+                        status=linha.get('status') or 'EM ANDAMENTO',
+                        data_prova=linha.get('data_prova'),
+                        data_recebimento=linha.get('data_recebimento'),
+                        tamanhos_recebidos=linha.get('tamanhos_recebidos'),
+                        time_qualidade=linha.get('time_qualidade'),
+                        time_estilo=linha.get('time_estilo'),
+                        time_modelagem=linha.get('time_modelagem'),
+                    )
+                    db.session.add(prova)
+                    criados['provas'] += 1
+            except Exception as e:
+                erros_runtime.append({'sheet': 'Dados Detalhados', 'linha': linha.get('linha_planilha'), 'mensagem': str(e)})
 
-            db.session.commit()
+        db.session.commit()
+        from datetime import datetime as _dt_now
+        erros_parse_originais = job.get_erros()
+        todos_erros = erros_runtime + erros_parse_originais
+        job.status = 'committed'
+        job.confirmed_at = _dt_now.utcnow()
+        if erros_runtime:
+            job.set_erros(todos_erros)
+        db.session.commit()
 
-            # Mensagens de resultado
-            partes = []
-            if relatorios_importados > 0:
-                partes.append(f"{relatorios_importados} relatório(s)")
-            if referencias_importadas > 0:
-                partes.append(f"{referencias_importadas} referência(s)")
-            if provas_importadas > 0:
-                partes.append(f"{provas_importadas} prova(s)")
+        registrar_log(
+            acao='importar',
+            entidade_tipo='import_job',
+            entidade_id=job.id,
+            entidade_descricao=f'Importação Excel #{job.id}',
+            detalhes=f"criados={criados} atualizados={atualizados} erros={len(erros_runtime)}",
+        )
 
-            if partes:
-                flash(f'Importado com sucesso: {", ".join(partes)}!', 'success')
-            else:
-                flash('Nenhum dado encontrado para importar. Verifique o formato do arquivo.', 'warning')
+        # Limpar arquivo temporário
+        if job.arquivo_temp_path:
+            try:
+                os.unlink(job.arquivo_temp_path)
+            except OSError:
+                pass
 
-            if erros:
-                flash(f'{len(erros)} erro(s) durante importação: {"; ".join(erros[:3])}', 'warning')
+        return render_template(
+            'importar_excel_resultado.html',
+            job=job,
+            criados=criados,
+            atualizados=atualizados,
+            erros=todos_erros,
+        )
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao confirmar importação: {e}', 'error')
+        return redirect(url_for('importar_excel_revisar', job_id=job.id))
 
-            return redirect(url_for('dashboard'))
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Erro ao importar arquivo: {str(e)}', 'error')
-            return redirect(url_for('dashboard'))
-
-        finally:
-            # Garantir limpeza do arquivo temporário
-            if temp_path:
-                try:
-                    os.unlink(temp_path)
-                except OSError:
-                    pass
-
-    # GET - Mostrar página de upload
+@app.route('/importar/excel/<int:job_id>/cancelar', methods=['POST'])
+@login_required
+def importar_excel_cancelar(job_id):
+    """Cancela um job de importação e limpa arquivo temporário."""
+    job = ImportJob.query.get_or_404(job_id)
+    if job.user_id and job.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    if job.arquivo_temp_path:
+        try:
+            os.unlink(job.arquivo_temp_path)
+        except OSError:
+            pass
+    job.status = 'cancelled'
+    db.session.commit()
+    flash('Importação cancelada.', 'info')
     return redirect(url_for('dashboard'))
+
+
+@app.route('/exportar/excel/editavel')
+@login_required
+def exportar_excel_editavel():
+    """Exporta todos os relatórios em formato editável (com IDs ocultos)
+    para o fluxo round-trip (export → editar → reimportar)."""
+    relatorios = Relatorio.query.filter_by(is_active=True).all()
+    try:
+        filepath = export_editavel(relatorios)
+    except Exception as e:
+        flash(f'Erro ao exportar: {e}', 'error')
+        return redirect(url_for('dashboard'))
+
+    from datetime import datetime as _dt_now
+    timestamp = _dt_now.now().strftime('%Y%m%d_%H%M%S')
+    return send_file(
+        filepath,
+        as_attachment=True,
+        download_name=f'relatorios_editavel_{timestamp}.xlsx',
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
 
 
 # ========================================
@@ -2472,6 +2796,68 @@ def duplicar_relatorio(id):
         db.session.rollback()
         flash(f"Erro ao duplicar relatório: {e}", "error")
         return redirect(url_for('detalhes_relatorio', id=id))
+
+
+# ========================================
+# DUPLICAR PROVA
+# ========================================
+
+@app.route('/prova/<int:prova_id>/duplicar', methods=['POST'])
+@login_required
+def duplicar_prova(prova_id):
+    """Duplica uma prova (sem fotos e sem lacre), gerando novo número e status 'Em Andamento'."""
+    prova_original = Prova.query.get_or_404(prova_id)
+    referencia = Referencia.query.get_or_404(prova_original.referencia_id)
+
+    try:
+        # Próximo número de prova para a mesma referência
+        ultimo_numero = (
+            db.session.query(db.func.max(Prova.numero_prova))
+            .filter(Prova.referencia_id == referencia.id)
+            .scalar()
+        ) or 0
+        novo_numero = ultimo_numero + 1
+
+        nova_prova = Prova(
+            referencia_id=referencia.id,
+            numero_prova=novo_numero,
+            status='Em Andamento',
+            data_recebimento=prova_original.data_recebimento,
+            tamanhos_recebidos=prova_original.tamanhos_recebidos,
+            info_medidas=prova_original.info_medidas,
+            data_prova=None,
+            time_qualidade=prova_original.time_qualidade,
+            checklist_qualidade=prova_original.checklist_qualidade,
+            comentarios_qualidade=prova_original.comentarios_qualidade,
+            obs_qualidade=prova_original.obs_qualidade,
+            time_estilo=prova_original.time_estilo,
+            checklist_estilo=prova_original.checklist_estilo,
+            comentarios_estilo=prova_original.comentarios_estilo,
+            obs_estilo=prova_original.obs_estilo,
+            time_modelagem=prova_original.time_modelagem,
+            checklist_modelagem=prova_original.checklist_modelagem,
+            comentarios_modelagem=prova_original.comentarios_modelagem,
+            obs_modelagem=prova_original.obs_modelagem,
+            info_adicionais=prova_original.info_adicionais,
+        )
+        db.session.add(nova_prova)
+        db.session.commit()
+
+        registrar_log(
+            acao='duplicar',
+            entidade_tipo='prova',
+            entidade_id=nova_prova.id,
+            entidade_descricao=f'Duplicada da prova #{prova_original.id} (nº {prova_original.numero_prova})',
+            detalhes=f'Nova prova nº {novo_numero} na referência {referencia.id}'
+        )
+
+        flash(f'Prova duplicada com sucesso! Nova prova nº {novo_numero}.', 'success')
+        return redirect(url_for('editar_relatorio', id=referencia.relatorio_id))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao duplicar prova: {e}', 'danger')
+        return redirect(url_for('detalhes_relatorio', id=referencia.relatorio_id))
 
 
 # ========================================

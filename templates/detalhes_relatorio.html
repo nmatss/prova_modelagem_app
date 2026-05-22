@@ -394,6 +394,9 @@
                 </a>
             </div>
             <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#gerarLinkModal">
+                    <i class="bi bi-share"></i> Compartilhar
+                </button>
                 <form action="{{ url_for('duplicar_relatorio', id=relatorio.id) }}" method="POST" class="d-inline"
                       onsubmit="return confirm('Duplicar este relatório? Será criada uma cópia com todas as referências (sem provas).')">
                     <button type="submit" class="btn btn-outline-primary">
@@ -410,6 +413,77 @@
         </div>
     </div>
 </div>
+
+<!-- Links Públicos Ativos -->
+{% if links_publicos %}
+<div id="links-publicos" class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-link-45deg me-2 text-primary"></i>Links Públicos Ativos
+            <span class="badge bg-primary-subtle text-primary ms-1">{{ links_publicos|length }}</span>
+        </h6>
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#gerarLinkModal">
+            <i class="bi bi-plus-circle me-1"></i>Novo link
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">URL</th>
+                        <th>Título</th>
+                        <th>Criado em</th>
+                        <th>Expira</th>
+                        <th class="text-center">Acessos</th>
+                        <th>Último acesso</th>
+                        <th class="text-end pe-3">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in links_publicos %}
+                    {% set link_url = url_for('publico.visualizar', token=link.token, _external=True) %}
+                    <tr>
+                        <td class="ps-3" style="max-width: 280px;">
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="text" class="form-control form-control-sm font-monospace" value="{{ link_url }}" readonly
+                                       onclick="this.select()" id="link-input-{{ link.id }}" style="font-size: 0.75rem;">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        onclick="navigator.clipboard.writeText(document.getElementById('link-input-{{ link.id }}').value); this.innerHTML='<i class=\'bi bi-check\'></i>';"
+                                        title="Copiar URL">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td><small>{{ link.titulo_personalizado or '—' }}</small></td>
+                        <td><small>{{ link.created_at.strftime('%d/%m/%Y') if link.created_at else '—' }}</small></td>
+                        <td>
+                            {% if link.expires_at %}
+                            <small {% if link.esta_expirado() %}class="text-danger"{% endif %}>
+                                {{ link.expires_at.strftime('%d/%m/%Y') }}
+                            </small>
+                            {% else %}
+                            <small class="text-muted">Sem expiração</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center"><span class="badge bg-light text-dark">{{ link.visualizacoes or 0 }}</span></td>
+                        <td><small class="text-muted">{{ link.ultimo_acesso.strftime('%d/%m %H:%M') if link.ultimo_acesso else '—' }}</small></td>
+                        <td class="text-end pe-3">
+                            <form action="{{ url_for('publico.revogar', link_id=link.id) }}" method="POST" class="d-inline m-0"
+                                  onsubmit="return confirm('Revogar este link? Ele deixará de funcionar imediatamente.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Revogar link">
+                                    <i class="bi bi-shield-x"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- PPT Alert -->
 {% if relatorio.ppt_path %}
@@ -824,6 +898,14 @@
                             {% endfor %}
                         </div>
                         {% endif %}
+                        {% if prova.respostas_dinamicas and prova.respostas_dinamicas.qualidade %}
+                        <p class="small mb-1"><strong><i class="bi bi-stars"></i> Itens adicionais:</strong></p>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% for r in prova.respostas_dinamicas.qualidade %}
+                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle" title="{{ r.observacao or '' }}">{{ r.item }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         <p class="small mb-1"><strong>Comentários:</strong> {{ prova.comentarios_qualidade or 'Sem comentários.' }}</p>
                         {% if prova.obs_qualidade %}
                         <p class="small mb-1"><strong>Observações:</strong> {{ prova.obs_qualidade }}</p>
@@ -856,6 +938,14 @@
                             {% endfor %}
                         </div>
                         {% endif %}
+                        {% if prova.respostas_dinamicas and prova.respostas_dinamicas.estilo %}
+                        <p class="small mb-1"><strong><i class="bi bi-stars"></i> Itens adicionais:</strong></p>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% for r in prova.respostas_dinamicas.estilo %}
+                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle" title="{{ r.observacao or '' }}">{{ r.item }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         <p class="small mb-1"><strong>Comentários:</strong> {{ prova.comentarios_estilo or 'Sem comentários.' }}</p>
                         {% if prova.obs_estilo %}
                         <p class="small mb-1"><strong>Observações:</strong> {{ prova.obs_estilo }}</p>
@@ -885,6 +975,14 @@
                         <div class="d-flex flex-wrap gap-1 mb-2">
                             {% for item in prova.checklist_modelagem.split(', ') %}
                             <span class="badge bg-warning text-dark">{{ item.replace('_', ' ').title() }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if prova.respostas_dinamicas and prova.respostas_dinamicas.modelagem %}
+                        <p class="small mb-1"><strong><i class="bi bi-stars"></i> Itens adicionais:</strong></p>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% for r in prova.respostas_dinamicas.modelagem %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" title="{{ r.observacao or '' }}">{{ r.item }}</span>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -931,39 +1029,53 @@
                 <small class="text-muted"><i class="bi bi-info-circle"></i> Sem lacre registrado</small>
                 {% endif %}
             </div>
-            <div class="btn-group shadow-sm">
-                <button type="button" class="btn btn-success"
-                    data-bs-toggle="modal"
-                    data-bs-target="#statusModal"
-                    data-prova-id="{{ prova.id }}"
-                    data-novo-status="Aprovada"
-                    title="Marcar prova como aprovada">
-                    <i class="bi bi-check-circle"></i> Aprovar
-                </button>
-                <button type="button" class="btn btn-danger"
-                    data-bs-toggle="modal"
-                    data-bs-target="#statusModal"
-                    data-prova-id="{{ prova.id }}"
-                    data-novo-status="Reprovada"
-                    title="Marcar prova como reprovada">
-                    <i class="bi bi-x-circle"></i> Reprovar
-                </button>
-                <button type="button" class="btn btn-warning"
-                    data-bs-toggle="modal"
-                    data-bs-target="#statusModal"
-                    data-prova-id="{{ prova.id }}"
-                    data-novo-status="Comitê"
-                    title="Enviar para comitê">
-                    <i class="bi bi-people"></i> Comitê
-                </button>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <form action="{{ url_for('duplicar_prova', prova_id=prova.id) }}" method="POST" class="m-0"
+                      onsubmit="return confirm('Duplicar esta prova? Uma nova prova será criada com os mesmos dados (sem fotos e sem lacre).');">
+                    <button type="submit" class="btn btn-outline-secondary"
+                            title="Duplicar esta prova como nova">
+                        <i class="bi bi-files"></i> Duplicar
+                    </button>
+                </form>
+                <div class="btn-group shadow-sm">
+                    <button type="button" class="btn btn-success"
+                        data-bs-toggle="modal"
+                        data-bs-target="#statusModal"
+                        data-prova-id="{{ prova.id }}"
+                        data-novo-status="Aprovada"
+                        title="Marcar prova como aprovada">
+                        <i class="bi bi-check-circle"></i> Aprovar
+                    </button>
+                    <button type="button" class="btn btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#statusModal"
+                        data-prova-id="{{ prova.id }}"
+                        data-novo-status="Reprovada"
+                        title="Marcar prova como reprovada">
+                        <i class="bi bi-x-circle"></i> Reprovar
+                    </button>
+                    <button type="button" class="btn btn-warning"
+                        data-bs-toggle="modal"
+                        data-bs-target="#statusModal"
+                        data-prova-id="{{ prova.id }}"
+                        data-novo-status="Comitê"
+                        title="Enviar para comitê">
+                        <i class="bi bi-people"></i> Comitê
+                    </button>
+                </div>
             </div>
         </div>
     </div>
     {% if loop.last and prova.status == 'Reprovada' %}
     <div class="card-footer text-end bg-light">
-        <a href="{{ url_for('adicionar_nova_prova', referencia_id=ref.id) }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-circle"></i> Adicionar Nova Prova
-        </a>
+        <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+            <small class="text-muted">
+                <i class="bi bi-lightbulb"></i> Dica: para várias provas de uma vez, use <a href="{{ url_for('dashboard', abrir_import='1') }}">Importar Excel</a>.
+            </small>
+            <a href="{{ url_for('adicionar_nova_prova', referencia_id=ref.id) }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle"></i> Adicionar Nova Prova
+            </a>
+        </div>
     </div>
     {% endif %}
 </div>
@@ -1040,6 +1152,60 @@
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Gerar Link Público -->
+<div class="modal fade" id="gerarLinkModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-share me-2"></i>Compartilhar com Fornecedor
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form action="{{ url_for('publico.gerar', id=relatorio.id) }}" method="POST">
+                <div class="modal-body">
+                    <div class="alert alert-info border-0 small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Será gerado um link único de visualização. Qualquer pessoa com o link verá o relatório em modo somente leitura — sem precisar de login.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="titulo_personalizado" class="form-label fw-semibold">Título personalizado <small class="text-muted">(opcional)</small></label>
+                        <input type="text" class="form-control" id="titulo_personalizado" name="titulo_personalizado"
+                               placeholder="Ex: Confecção X — Verão 27">
+                        <div class="form-text">Aparece no topo da visualização. Deixe em branco para usar a descrição do relatório.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="expira_em" class="form-label fw-semibold">Data de expiração <small class="text-muted">(opcional)</small></label>
+                        <input type="date" class="form-control" id="expira_em" name="expira_em">
+                        <div class="form-text">Deixe em branco para link sem expiração.</div>
+                    </div>
+
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="permite_download_pdf" id="permite_download_pdf" checked>
+                        <label class="form-check-label" for="permite_download_pdf">
+                            Permitir download do PDF
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="permite_download_fotos" id="permite_download_fotos" checked>
+                        <label class="form-check-label" for="permite_download_fotos">
+                            Permitir download/visualização das fotos
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-link-45deg me-1"></i>Gerar Link
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

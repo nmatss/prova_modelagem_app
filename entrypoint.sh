@@ -60,6 +60,53 @@ else
     mkdir -p /app/data
 fi
 
+# Pré-migrações SQL diretas (executadas ANTES do import do app)
+# Necessário porque db.py:init_app() faz User.query no startup, que falha
+# se a coluna idioma/pais não existir ainda (DB de prod antes desta atualização).
+echo "🔧 Pré-migrações SQL low-level..."
+python3 << 'PREMIG'
+import os
+import sqlite3
+
+db_url = os.getenv('DATABASE_URL', '')
+if 'sqlite' in db_url:
+    # sqlite:////absolute → /absolute ; sqlite:///relative → relative
+    if db_url.startswith('sqlite:////'):
+        path = '/' + db_url[len('sqlite:////'):]
+    elif db_url.startswith('sqlite:///'):
+        path = db_url[len('sqlite:///'):]
+    else:
+        path = None
+
+    if path and os.path.exists(path):
+        conn = sqlite3.connect(path)
+        cur = conn.cursor()
+
+        def add_col(table, column, ddl):
+            try:
+                cur.execute(f"PRAGMA table_info({table})")
+                cols = [r[1] for r in cur.fetchall()]
+                if not cols:
+                    print(f"   ⊘ table {table} ausente — db.create_all() criará")
+                    return
+                if column not in cols:
+                    cur.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
+                    print(f"   + {table}.{column} adicionada (pré-migração)")
+                else:
+                    print(f"   = {table}.{column} já existe")
+            except sqlite3.OperationalError as e:
+                print(f"   ⚠ skip {table}.{column}: {e}")
+
+        add_col('usuarios', 'idioma', "idioma VARCHAR(5) DEFAULT 'pt'")
+        add_col('fornecedores', 'pais', "pais VARCHAR(100)")
+        conn.commit()
+        conn.close()
+    else:
+        print(f"   ℹ DB ainda não existe ({path}) — db.create_all() vai construir")
+else:
+    print("   ℹ Não-SQLite — pré-migração pulada (entrypoint Postgres faz ALTER abaixo)")
+PREMIG
+
 # Inicializar banco de dados
 echo "🗄️  Verificando banco de dados..."
 python3 << 'EOF'
@@ -93,6 +140,24 @@ try:
             if 'checklist_modelagem' not in colunas_existentes:
                 conn.execute(text("ALTER TABLE provas ADD COLUMN checklist_modelagem TEXT"))
                 print("   + Adicionada coluna checklist_modelagem")
+
+            # Migração: pais em fornecedores (Onda 1.2)
+            try:
+                colunas_fornec = [col['name'] for col in inspector.get_columns('fornecedores')]
+                if 'pais' not in colunas_fornec:
+                    conn.execute(text("ALTER TABLE fornecedores ADD COLUMN pais VARCHAR(100)"))
+                    print("   + Adicionada coluna pais em fornecedores")
+            except Exception as _e:
+                print(f"   ⚠ skip pais migration: {_e}")
+
+            # Migração: idioma em usuarios (Onda 3.2)
+            try:
+                colunas_user = [col['name'] for col in inspector.get_columns('usuarios')]
+                if 'idioma' not in colunas_user:
+                    conn.execute(text("ALTER TABLE usuarios ADD COLUMN idioma VARCHAR(5) DEFAULT 'pt'"))
+                    print("   + Adicionada coluna idioma em usuarios")
+            except Exception as _e:
+                print(f"   ⚠ skip idioma migration: {_e}")
 
             conn.commit()
 

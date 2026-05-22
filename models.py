@@ -18,7 +18,8 @@ class Usuario(UserMixin, db.Model):
     email = db.Column(db.String(255), unique=True)
     nome_completo = db.Column(db.String(255))
     role = db.Column(db.String(50), default='usuario')  # admin, gestor, usuario
-    is_admin = db.Column(db.Boolean, default=False)  # Mantido por compatibilidade
+    is_admin = db.Column(db.Boolean, default=False)
+    idioma = db.Column(db.String(5), default='pt')  # i18n preferência do usuário  # Mantido por compatibilidade
     is_active = db.Column(db.Boolean, default=True)
     ultimo_acesso = db.Column(db.DateTime)
     senha_temporaria = db.Column(db.Boolean, default=False)  # Indica se precisa trocar senha
@@ -170,6 +171,7 @@ class Fornecedor(db.Model):
     email = db.Column(db.String(255))
     telefone = db.Column(db.String(50))
     endereco = db.Column(db.String(500))
+    pais = db.Column(db.String(100))
     cnpj = db.Column(db.String(20), unique=True)
     avaliacao = db.Column(db.Integer, default=0)  # 0-5
     observacoes = db.Column(db.Text)
@@ -214,12 +216,15 @@ class ChecklistResposta(db.Model):
     __tablename__ = 'checklist_respostas'
 
     id = db.Column(db.Integer, primary_key=True)
-    prova_id = db.Column(db.Integer, db.ForeignKey('provas.id'), nullable=False)
+    prova_id = db.Column(db.Integer, db.ForeignKey('provas.id'), nullable=False, index=True)
     template_id = db.Column(db.Integer, db.ForeignKey('checklist_templates.id'), nullable=False)
     item = db.Column(db.String(200), nullable=False)
     conforme = db.Column(db.Boolean, default=False)
     observacao = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relacionamento reverso para Prova (acesso via prova.respostas)
+    prova = db.relationship('ProvaModelagem', backref=db.backref('respostas', lazy=True, cascade='all, delete-orphan'))
 
 # =============================================================================
 # F8: VERSIONAMENTO DE ARQUIVOS
@@ -289,6 +294,127 @@ class AuditLog(db.Model):
 
     def __repr__(self):
         return f'<AuditLog {self.usuario_nome} {self.acao} {self.entidade_tipo}#{self.entidade_id}>'
+
+
+# =============================================================================
+# IMPORT JOBS (round-trip Excel: upload → revisar → confirmar)
+# =============================================================================
+
+class ImportJob(db.Model):
+    """Job de importação Excel com fluxo em 3 etapas (validar antes de commitar)."""
+    __tablename__ = 'import_jobs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    arquivo_original = db.Column(db.String(500))  # nome original do arquivo enviado
+    arquivo_temp_path = db.Column(db.String(500))  # caminho do arquivo temporário
+    status = db.Column(db.String(20), default='pending')  # pending, validated, committed, cancelled
+    parsed_data = db.Column(db.Text)  # JSON com linhas parseadas
+    erros = db.Column(db.Text)  # JSON [{sheet, linha, mensagem}]
+    summary = db.Column(db.Text)  # JSON com contadores de criar/atualizar
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    confirmed_at = db.Column(db.DateTime, nullable=True)
+
+    user = db.relationship('Usuario')
+
+    def get_parsed(self):
+        if self.parsed_data:
+            try:
+                return json.loads(self.parsed_data)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return {}
+
+    def set_parsed(self, data):
+        self.parsed_data = json.dumps(data, default=str, ensure_ascii=False)
+
+    def get_erros(self):
+        if self.erros:
+            try:
+                return json.loads(self.erros)
+            except (json.JSONDecodeError, TypeError):
+                return []
+        return []
+
+    def set_erros(self, lista):
+        self.erros = json.dumps(lista, ensure_ascii=False)
+
+    def get_summary(self):
+        if self.summary:
+            try:
+                return json.loads(self.summary)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return {}
+
+    def set_summary(self, d):
+        self.summary = json.dumps(d, ensure_ascii=False)
+
+
+# =============================================================================
+# LINKS PÚBLICOS (compartilhamento read-only com fornecedor)
+# =============================================================================
+
+class LinkPublico(db.Model):
+    """Link público (token-based) para compartilhar um relatório em modo view-only."""
+    __tablename__ = 'links_publicos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    relatorio_id = db.Column(db.Integer, db.ForeignKey('relatorios.id'), nullable=False, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    titulo_personalizado = db.Column(db.String(200))
+    expires_at = db.Column(db.DateTime, nullable=True)
+    permite_download_pdf = db.Column(db.Boolean, default=True)
+    permite_download_fotos = db.Column(db.Boolean, default=True)
+    visualizacoes = db.Column(db.Integer, default=0)
+    ultimo_acesso = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    relatorio = db.relationship('Relatorio')
+    criador = db.relationship('Usuario')
+
+    def esta_expirado(self):
+        if not self.expires_at:
+            return False
+        return datetime.utcnow() > self.expires_at
+
+    def esta_valido(self):
+        return self.is_active and not self.esta_expirado()
+
+
+# =============================================================================
+# MANUAIS / DOCUMENTOS ESTÁTICOS
+# =============================================================================
+
+class Manual(db.Model):
+    """Documentos/manuais anexáveis pelo setor (procedimentos, guias, normas)."""
+    __tablename__ = 'manuais'
+
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text)
+    categoria = db.Column(db.String(100), index=True)  # Estilo, Modelagem, Qualidade, Procedimentos, Outros
+    file_path = db.Column(db.String(500), nullable=False)
+    file_size = db.Column(db.Integer)  # bytes
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    downloads = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    uploader = db.relationship('Usuario')
+
+    def file_size_legivel(self):
+        """Formata o tamanho do arquivo para exibição (KB / MB)."""
+        if not self.file_size:
+            return '—'
+        if self.file_size < 1024:
+            return f'{self.file_size} B'
+        if self.file_size < 1024 * 1024:
+            return f'{self.file_size / 1024:.1f} KB'
+        return f'{self.file_size / (1024 * 1024):.1f} MB'
 
 
 # Manter compatibilidade com código antigo (aliases)
