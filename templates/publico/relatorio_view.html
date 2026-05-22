@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{{ link.titulo_personalizado or relatorio.descricao_geral }} · Visualização</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .pub-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+        .pub-watermark {
+            background: rgba(255,255,255,0.15);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            display: inline-block;
+        }
+        .pub-card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 1.5rem;
+        }
+        .pub-info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .pub-info-value {
+            font-size: 1rem;
+            color: #212529;
+        }
+        .pub-foto {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .pub-section-title {
+            font-weight: 700;
+            color: #495057;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 1rem;
+        }
+        .pub-footer {
+            padding: 2rem 0;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.85rem;
+            border-top: 1px solid #e9ecef;
+            margin-top: 3rem;
+        }
+        .pub-categoria-badge {
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .pub-header { background: #667eea !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="pub-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <span class="pub-watermark">
+                    <i class="bi bi-eye"></i> Visualização do fornecedor · somente leitura
+                </span>
+                <h1 class="h3 mt-2 mb-0 fw-bold">{{ link.titulo_personalizado or relatorio.descricao_geral }}</h1>
+                {% if relatorio.colecao %}
+                <small class="opacity-75">{{ relatorio.colecao }}{% if relatorio.temporada %} · {{ relatorio.temporada }}{% endif %}{% if relatorio.ano %} · {{ relatorio.ano }}{% endif %}</small>
+                {% endif %}
+            </div>
+            <div class="no-print d-flex gap-2">
+                {% if link.permite_download_pdf %}
+                <a href="{{ url_for('publico.baixar_pdf', token=link.token) }}" class="btn btn-light">
+                    <i class="bi bi-file-earmark-pdf"></i> Baixar PDF
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-outline-light" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Informações gerais -->
+    <div class="card pub-card">
+        <div class="card-body">
+            <h5 class="pub-section-title"><i class="bi bi-info-circle me-1"></i>Informações Gerais</h5>
+            <div class="row g-3">
+                <div class="col-md-3"><div class="pub-info-label">Descrição</div><div class="pub-info-value">{{ relatorio.descricao_geral or '—' }}</div></div>
+                <div class="col-md-3"><div class="pub-info-label">Coleção</div><div class="pub-info-value">{{ relatorio.colecao or '—' }}</div></div>
+                <div class="col-md-3"><div class="pub-info-label">Temporada</div><div class="pub-info-value">{{ relatorio.temporada or '—' }}</div></div>
+                <div class="col-md-3"><div class="pub-info-label">Ano</div><div class="pub-info-value">{{ relatorio.ano or '—' }}</div></div>
+                {% if relatorio.linha %}
+                <div class="col-md-3"><div class="pub-info-label">Linha</div><div class="pub-info-value">{{ relatorio.linha }}</div></div>
+                {% endif %}
+                {% if relatorio.data_limite %}
+                <div class="col-md-3"><div class="pub-info-label">Data Limite</div><div class="pub-info-value">{{ relatorio.data_limite }}</div></div>
+                {% endif %}
+                <div class="col-md-3"><div class="pub-info-label">Status</div><div class="pub-info-value">{{ relatorio.status_geral or '—' }}</div></div>
+            </div>
+        </div>
+    </div>
+
+    {% if relatorio.imagem_produto and link.permite_download_fotos %}
+    <div class="card pub-card">
+        <div class="card-body text-center">
+            <h5 class="pub-section-title"><i class="bi bi-image me-1"></i>Imagem do Produto</h5>
+            <img src="{{ url_for('serve_upload', filename=relatorio.imagem_produto) }}"
+                 alt="Imagem do produto" style="max-height: 400px; max-width: 100%; border-radius: 8px;">
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Referências e Provas -->
+    {% for ref in relatorio.referencias %}
+    {% if ref.is_active %}
+    <div class="card pub-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-tag-fill text-primary me-1"></i>
+                    {{ ref.numero_ref or ref.codigo_referencia or 'Referência' }}
+                </h5>
+                {% if ref.tipo_categoria %}
+                <span class="badge bg-primary-subtle text-primary pub-categoria-badge">{{ ref.tipo_categoria }}</span>
+                {% endif %}
+            </div>
+
+            <div class="row g-3">
+                {% if ref.fornecedor_obj %}
+                <div class="col-md-3"><div class="pub-info-label">Fornecedor</div><div class="pub-info-value">{{ ref.fornecedor_obj.nome }}</div></div>
+                {% if ref.fornecedor_obj.pais %}
+                <div class="col-md-3"><div class="pub-info-label">País</div><div class="pub-info-value">{{ ref.fornecedor_obj.pais }}</div></div>
+                {% endif %}
+                {% elif ref.fornecedor %}
+                <div class="col-md-3"><div class="pub-info-label">Fornecedor</div><div class="pub-info-value">{{ ref.fornecedor }}</div></div>
+                {% endif %}
+                {% if ref.materia_prima %}
+                <div class="col-md-3"><div class="pub-info-label">Matéria-prima</div><div class="pub-info-value">{{ ref.materia_prima }}</div></div>
+                {% endif %}
+                {% if ref.composicao %}
+                <div class="col-md-3"><div class="pub-info-label">Composição</div><div class="pub-info-value">{{ ref.composicao }}</div></div>
+                {% endif %}
+                {% if ref.gramatura %}
+                <div class="col-md-3"><div class="pub-info-label">Gramatura</div><div class="pub-info-value">{{ ref.gramatura }}</div></div>
+                {% endif %}
+            </div>
+
+            {% if ref.observacoes %}
+            <div class="mt-3 pt-3 border-top">
+                <div class="pub-info-label mb-1">Observações</div>
+                <p class="mb-0" style="white-space: pre-wrap;">{{ ref.observacoes }}</p>
+            </div>
+            {% endif %}
+
+            {# Provas #}
+            {% for prova in ref.provas|sort(attribute='numero_prova') %}
+            {% if prova.is_active %}
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <h6 class="mb-0"><i class="bi bi-clipboard-check me-1"></i>Prova {{ prova.numero_prova }}</h6>
+                    {% if prova.status %}
+                    <span class="badge {% if prova.status == 'Aprovada' %}bg-success{% elif prova.status == 'Reprovada' %}bg-danger{% elif prova.status == 'Comitê' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                        {{ prova.status }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="row g-2 small">
+                    {% if prova.data_recebimento %}
+                    <div class="col-md-3"><strong>Recebimento:</strong> {{ prova.data_recebimento }}</div>
+                    {% endif %}
+                    {% if prova.data_prova %}
+                    <div class="col-md-3"><strong>Data da prova:</strong> {{ prova.data_prova }}</div>
+                    {% endif %}
+                    {% if prova.tamanhos_recebidos %}
+                    <div class="col-md-6"><strong>Tamanhos:</strong> {{ prova.tamanhos_recebidos }}</div>
+                    {% endif %}
+                </div>
+
+                {% if prova.info_medidas %}
+                <div class="mt-2 small"><strong>Informações de medidas:</strong> {{ prova.info_medidas }}</div>
+                {% endif %}
+
+                {# Fotos por contexto #}
+                {% if link.permite_download_fotos %}
+                {% set fotos_por_contexto = {} %}
+                {% for f in prova.fotos %}
+                {% if fotos_por_contexto.update({f.contexto: fotos_por_contexto.get(f.contexto, []) + [f]}) %}{% endif %}
+                {% endfor %}
+
+                {% for contexto, fotos in fotos_por_contexto.items() %}
+                <div class="mt-3">
+                    <div class="pub-info-label mb-2">{{ contexto|replace('_', ' ')|title }}</div>
+                    <div class="row g-2">
+                        {% for foto in fotos %}
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a href="{{ url_for('publico.baixar_foto', token=link.token, foto_id=foto.id) }}" target="_blank">
+                                <img src="{{ url_for('publico.baixar_foto', token=link.token, foto_id=foto.id) }}"
+                                     alt="{{ contexto }}" class="pub-foto" loading="lazy">
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <div class="pub-footer">
+        <p class="mb-1">
+            <i class="bi bi-shield-check"></i> Documento compartilhado com você por meio de um link seguro.
+            {% if link.expires_at %}Expira em <strong>{{ link.expires_at.strftime('%d/%m/%Y') }}</strong>.{% endif %}
+        </p>
+        <small>© Grupo Único · Prova de Modelagem</small>
+    </div>
+</div>
+
+</body>
+</html>
