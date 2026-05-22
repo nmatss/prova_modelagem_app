@@ -47,6 +47,11 @@ class Config:
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     LOG_FILE = os.getenv('LOG_FILE', None)
 
+    # i18n (Flask-Babel)
+    LANGUAGES = ['pt', 'en']
+    BABEL_DEFAULT_LOCALE = 'pt'
+    BABEL_DEFAULT_TIMEZONE = 'America/Sao_Paulo'
+
     @staticmethod
     def init_app(app):
         """Inicializa configurações no app Flask"""

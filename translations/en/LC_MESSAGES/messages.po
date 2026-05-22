@@ -1,0 +1,60 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: prova-modelagem 1.0\n"
+"Report-Msgid-Bugs-To: nicolas.matsuda@grupounico.com\n"
+"POT-Creation-Date: 2026-05-04 12:00-0300\n"
+"PO-Revision-Date: 2026-05-04 12:00-0300\n"
+"Last-Translator: Nicolas Matsuda <nicolas.matsuda@grupounico.com>\n"
+"Language: en\n"
+"Language-Team: en <nicolas.matsuda@grupounico.com>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Manual 1.0\n"
+
+# Navegação
+msgid "Início"
+msgstr "Home"
+
+msgid "Analytics"
+msgstr "Analytics"
+
+msgid "Novo Relatório"
+msgstr "New Report"
+
+msgid "Kanban"
+msgstr "Kanban"
+
+msgid "Fornecedores"
+msgstr "Suppliers"
+
+msgid "Manuais"
+msgstr "Manuals"
+
+msgid "Administração"
+msgstr "Administration"
+
+msgid "Usuários"
+msgstr "Users"
+
+msgid "Logs de Auditoria"
+msgstr "Audit Logs"
+
+msgid "Logs"
+msgstr "Logs"
+
+msgid "Checklists"
+msgstr "Checklists"
+
+msgid "Redefinir Senha"
+msgstr "Reset Password"
+
+msgid "Idioma"
+msgstr "Language"
+
+msgid "Administrador"
+msgstr "Administrator"
+
+msgid "Usuário"
+msgstr "User"
